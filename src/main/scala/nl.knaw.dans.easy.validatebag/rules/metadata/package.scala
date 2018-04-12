@@ -83,7 +83,7 @@ package object metadata {
   def filesXmlFileElementsAllHaveFilepathAttribute(t: TargetBag): Try[Unit] = Try {
     val xml = t.tryFilesXml.get // TODO: inside Try
     val files = xml \ "file"
-    if (files.map(_ \@ "filepath").size != files.size) fail("Not al 'file' elements have a 'filepath' attribute")
+    if (files.map(_ \@ "filepath").size != files.size) fail("Not all 'file' elements have a 'filepath' attribute")
   }
 
   def filesXmlAllFilesDescribedOnce(t: TargetBag): Try[Unit] = Try {
