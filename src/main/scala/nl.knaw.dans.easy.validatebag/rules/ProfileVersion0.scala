@@ -33,7 +33,6 @@ object ProfileVersion0 {
 
     // Validity
     NumberedRule("1.1.1", bagMustBeValid, SIP),
-    NumberedRule("1.1.2", bagMustBeVirtuallyValid, AIP),
 
     // bag-info.txt
     NumberedRule("1.2.1", bagMustContainFile(Paths.get("bag-info.txt"))),
@@ -55,8 +54,9 @@ object ProfileVersion0 {
     // STRUCTURAL
     NumberedRule("2.1", bagMustContainDir(Paths.get("metadata"))),
     NumberedRule("2.2", bagMustContainFile(Paths.get("metadata/dataset.xml")), dependsOn = Some("2.1")),
-    NumberedRule("2.3", bagMustContainFile(Paths.get("metadata/files.xml")), dependsOn = Some("2.1")),
-    NumberedRule("2.4", bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")), dependsOn = Some("2.1")),
+    NumberedRule("2.2", bagMustContainFile(Paths.get("metadata/files.xml")), dependsOn = Some("2.1")),
+    // 2.3 does not state restrictions, so it does not need checking
+    NumberedRule("2.5", bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml", "agreements.xml")), dependsOn = Some("2.1")),
 
     // METADATA
 
@@ -66,6 +66,8 @@ object ProfileVersion0 {
     // TODO: 3.1.3
     NumberedRule("3.1.4", ddmDaisMustBeValid, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.5", ddmGmlPolygonPosListMustMeetExtraConstraints, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.6", polygonsInSameMultiSurfaceMustHaveSameSrsName, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.7", pointsHaveAtLeastTwoValues, dependsOn = Some("3.1.1")),
 
     // files.xml
     NumberedRule("3.2.1", xmlFileMayConformToSchemaIfDefaultNamespace(xmlValidators("files.xml")), dependsOn = Some("2.3")),
@@ -73,9 +75,16 @@ object ProfileVersion0 {
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = Some("3.2.2")),
 
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = Some("3.2.3")),
+    // Second part of 3.2.4 (directories not described) is implicitly checked by 3.2.5
     NumberedRule("3.2.5", filesXmlAllFilesDescribedOnce, dependsOn = Some("3.2.4")),
-    // 3.2.5 already checked by 3.2.4-rule
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = Some("3.2.3")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyDcTerms, dependsOn = Some("3.2.3")),
+
+    // agreements.xml
+    NumberedRule("3.3.1", xmlFileIfExistsMustConformToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml")))
+
+    // message-from-depositor.txt
+
+
   )
 }

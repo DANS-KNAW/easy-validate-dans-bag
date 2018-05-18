@@ -33,6 +33,13 @@ package object metadata extends DebugEnhancedLogging {
   val namespaceSchemaInstance = new URI("http://www.w3.org/2001/XMLSchema-instance")
   val namespaceDcterms = new URI("http://purl.org/dc/terms/")
 
+  def xmlFileIfExistsMustConformToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
+    trace(xmlFile)
+    require(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
+    if ((t.bagDir / xmlFile.toString).exists) xmlFileMustConformToSchema(xmlFile, schemaName, validator)(t)
+    else Success(())
+  }
+
   def xmlFileMustConformToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(xmlFile)
     require(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
@@ -164,7 +171,7 @@ package object metadata extends DebugEnhancedLogging {
     t.tryFilesXml.map(xml => if (xml.label != "files") fail("files.xml: document element must be 'files'"))
   }
 
-  def polygonsInSameMultiSurfaceMustHaveSameSrsName(t: TargetBag) = Try {
+  def polygonsInSameMultiSurfaceMustHaveSameSrsName(t: TargetBag): Try[Unit] = {
     trace(())
     for {
       ddm <- t.tryDdm
@@ -181,6 +188,24 @@ package object metadata extends DebugEnhancedLogging {
     val polygons = getPolygons(ms)
     if (polygons.map(_.attribute("srsName").map(_.text)).distinct.size == 1) Success(())
     else Try(fail("Found MultiSurface element containing polygons with different srsNames"))
+  }
+
+  def pointsHaveAtLeastTwoValues(t: TargetBag): Try[Unit] = {
+    trace(())
+    for {
+      ddm <- t.tryDdm
+      points <- getGmlPoints(ddm)
+      _ = points.map(validatePoint)
+    } yield ()
+  }
+
+  private def getGmlPoints(ddm: Elem) = Try {
+    ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == validatebag.gmlNamespace).asInstanceOf[Seq[Elem]]
+  }
+
+  private def validatePoint(point: Elem) = {
+    if (point.text.split("""\s+""").size > 1) Success(())
+    else Try(fail(s"Point with only one coordinate: ${point.text}"))
   }
 
   def filesXmlHasOnlyFiles(t: TargetBag): Try[Unit] = {
@@ -250,5 +275,12 @@ package object metadata extends DebugEnhancedLogging {
         if (!hasOnlyDcTermsInFileElements) fail("files.xml: non-dcterms elements found in some file elements")
       }
     }
+  }
+
+  def fileMustBeUtf8Decodable(f: Path)(t: TargetBag): Try[Unit] = {
+    require(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
+    // TODO: Try to validate whether the file contains bytes that are possibly UTF-8.
+
+    ???
   }
 }
