@@ -18,13 +18,6 @@ package nl.knaw.dans.easy.validatebag.rules.bagit
 import nl.knaw.dans.easy.validatebag.TestSupportFixture
 
 class BagInfoTxtRulesSpec extends TestSupportFixture {
-  "bagMustContainBagInfoTxt" should "fail if bag-info.txt is not found" in {
-    testRuleViolation(
-      bagMustContainBagInfoTxt,
-      inputBag = "missing-bag-info.txt",
-      includedInErrorMsg = "bag-info.txt")
-  }
-
   "bagInfoTxtMayContainOne(\"ELEMENT\")" should "fail if bag-info.txt contains two ELEMENT elements" in {
     testRuleViolation(bagInfoTxtMayContainOne("ELEMENT"),
       inputBag = "two-many-ELEMENT-in-bag-info.txt",
@@ -45,6 +38,10 @@ class BagInfoTxtRulesSpec extends TestSupportFixture {
       inputBag = "one-ELEMENT-VALUE-in-bag-info",
       doubleCheckBagItValidity = true)
   }
+
+  // TODO: TEST it should succeed if element does not exist
+
+  // TODO: TEST bagInfoTxtMustContainExactlyOne
 
   "bagInfoTxtCreatedMustBeIsoDate" should "fail if 'Created' is lacking time and time zone" in {
     testRuleViolation(bagInfoTxtCreatedMustBeIsoDate,
@@ -79,4 +76,5 @@ class BagInfoTxtRulesSpec extends TestSupportFixture {
       inputBag = "minimal",
       doubleCheckBagItValidity = true)
   }
+
 }

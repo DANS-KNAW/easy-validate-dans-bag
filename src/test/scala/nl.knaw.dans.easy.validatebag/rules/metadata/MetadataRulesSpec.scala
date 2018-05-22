@@ -57,6 +57,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "metadata-correct")
   }
 
+  // TODO: TEST ddmMayContainDctermsLicenseFromList
+
   // General syntax will be checked by DDM XML Schema
   "daisAreValid" should "report a DAI that has an invalid check digit" in {
     testRuleViolation(
@@ -65,6 +67,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       includedInErrorMsg = "Invalid DAIs",
       doubleCheckBagItValidity = true)
   }
+
+  // TODO: TEST should accept DAI with valid checkdigit
 
   "ddmGmlPolygonPosListMustMeetExtraConstraints" should "report error if odd number of values in posList" in {
     testRuleViolation(
@@ -101,6 +105,10 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     )
   }
 
+  // TODO: TEST polygonsInSameMultiSurfaceMustHaveSameSrsName
+  // TODO: TEST pointsHaveAtLeastTwoValues
+  // TODO: TEST xmlFileMayConformToSchemaIfDefaultNamespace
+
   "filesXmlHasDocumentElementFiles" should "fail if files.xml has document element other than 'files'" in {
     testRuleViolation(
       rule = filesXmlHasDocumentElementFiles,
@@ -110,4 +118,11 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     )
   }
 
+  // TODO: TEST success if document element is files
+  // TODO: TEST filesXmlHasOnlyFiles
+  // TODO: TEST filesXmlFileElementsAllHaveFilepathAttribute
+  // TODO: TEST filesXmlAllFilesDescribedOnce
+  // TODO: TEST filesXmlAllFilesHaveFormat
+  // TODO: TEST filesXmlFilesHaveOnlyDcTerms
+  // TODO: TEST xmlFileIfExistsMustConformToSchema
 }

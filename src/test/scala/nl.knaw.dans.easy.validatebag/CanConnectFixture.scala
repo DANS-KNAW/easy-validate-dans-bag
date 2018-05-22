@@ -29,8 +29,8 @@ trait CanConnectFixture {
       urls.map(url => {
         new URL(url).openConnection match {
           case connection: HttpURLConnection =>
-            connection.setConnectTimeout(1000)
-            connection.setReadTimeout(1000)
+            connection.setConnectTimeout(5000)
+            connection.setReadTimeout(5000)
             connection.connect()
             connection.disconnect()
             true

@@ -87,13 +87,6 @@ package object bagit extends DebugEnhancedLogging {
         case cause: RuleViolationDetailsException =>
           Try(fail(s"${ cause.details } (WARNING: bag may still be virtually-valid, but this version of the service cannot check that."))
       }
-    // TODO: implement proper virtual-validity check.
-  }
-
-  def bagMustContainBagInfoTxt(t: TargetBag) = Try {
-    trace(())
-    if (!(t.bagDir / "bag-info.txt").exists)
-      fail("Mandatory file 'bag-info.txt' not found in bag. ")
   }
 
   def bagInfoTxtMayContainOne(element: String)(t: TargetBag): Try[Unit] = {

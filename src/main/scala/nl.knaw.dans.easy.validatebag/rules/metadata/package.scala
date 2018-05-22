@@ -111,7 +111,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   // Calculated the check digit of a DAI. Implementation copied from easy-ddm.
-  private def digest(message: String, modeMax: Int): Char = {
+  def digest(message: String, modeMax: Int): Char = {
     val reverse = message.reverse
     var f = 2
     var w = 0
@@ -279,8 +279,7 @@ package object metadata extends DebugEnhancedLogging {
 
   def fileMustBeUtf8Decodable(f: Path)(t: TargetBag): Try[Unit] = {
     require(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
-    // TODO: Try to validate whether the file contains bytes that are possibly UTF-8.
-
+    // TODO: IMPLEMENT fileMustBeUtf8Decodable
     ???
   }
 }
