@@ -34,7 +34,4 @@ class ManifestRulesSpec extends TestSupportFixture {
       inputBag = "two-payload-files-without-md5",
       doubleCheckBagItValidity = true)
   }
-
-
-
 }
