@@ -67,6 +67,8 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   def ddmMayContainDctermsLicenseFromList(ddmPath: Path, allowedLicenses: Seq[URI])(t: TargetBag): Try[Unit] = {
+    // TODO: normalize licenses from licenses.txt to https/no trailing slash.
+    // TODO: normalize URL found in dataset.xml in the same way.
     trace(())
     t.tryDdm.map {
       ddm =>
