@@ -39,9 +39,33 @@ class BagInfoTxtRulesSpec extends TestSupportFixture {
       doubleCheckBagItValidity = true)
   }
 
-  // TODO: TEST it should succeed if element does not exist
+  it should "succeed if ELEMENT does NOT exist (as it is optional)" in {
+    testRuleSuccess(bagInfoTxtElementMustHaveValue(
+      element = "ELEMENT",
+      value = "VALUE"),
+      inputBag = "minimal",
+      doubleCheckBagItValidity = true)
+  }
 
-  // TODO: TEST bagInfoTxtMustContainExactlyOne
+  "bagInfoTxtMustContainExactlyOne" should "succeed if exactly one ELEMENT present" in {
+    testRuleSuccess(bagInfoTxtMustContainExactlyOne("ELEMENT"),
+      inputBag = "one-ELEMENT-VALUE-in-bag-info",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail no ELEMENT present" in {
+    testRuleViolation(bagInfoTxtMustContainExactlyOne("ELEMENT"),
+      inputBag = "zero-ELEMENT-in-bag-info",
+      includedInErrorMsg = "must contain exactly one",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if TWO ELEMENTs present" in {
+    testRuleViolation(bagInfoTxtMustContainExactlyOne("ELEMENT"),
+      inputBag = "two-many-ELEMENT-in-bag-info.txt",
+      includedInErrorMsg = "must contain exactly one",
+      doubleCheckBagItValidity = true)
+  }
 
   "bagInfoTxtCreatedMustBeIsoDate" should "fail if 'Created' is lacking time and time zone" in {
     testRuleViolation(bagInfoTxtCreatedMustBeIsoDate,
