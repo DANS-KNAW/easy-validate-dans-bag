@@ -25,7 +25,13 @@ class StructuralRulesSpec extends TestSupportFixture {
     testRuleViolation(bagMustContainDir(Paths.get("metadata")), "missingMetadata", "not found in bag")
   }
 
-  // TODO: TEST success if exists
+  it should "fail if target is a file instead of a directory" in {
+    testRuleViolation(bagMustContainDir(Paths.get("bagit.txt")), "minimal", "not found in bag")
+  }
+
+  it should "succeed if directory exists" in {
+    testRuleSuccess(bagMustContainDir(Paths.get("metadata")), "metadata-correct")
+  }
 
   "bagMustContainFile" should "fail if file name is different case" in {
     /*
@@ -35,7 +41,43 @@ class StructuralRulesSpec extends TestSupportFixture {
     testRuleViolationRegex(bagMustContainFile(Paths.get("Metadata")), "metadata-correct", "(not found in bag|differs in case)".r)
   }
 
-  // TODO: TEST bagDirectoryMustNotContainAnythingElseThan
+  it should "fail if target is a directory instead of a file" in {
+    testRuleViolation(bagMustContainFile(Paths.get("data")), "minimal", "not found in bag")
+  }
+
+  it should "succeed if file exists" in {
+    testRuleSuccess(bagMustContainFile(Paths.get("bagit.txt")), "metadata-correct")
+  }
+
+  "bagDirectoryMustNotContainAnythingElseThan" should "fail if other file is present" in {
+    testRuleViolation(
+      rule = bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
+      inputBag = "metadata-extra-file",
+      includedInErrorMsg = "contains files or directories that are not allowed",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if other directory is present" in {
+    testRuleViolation(
+      rule = bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
+      inputBag = "metadata-extra-subdir",
+      includedInErrorMsg = "contains files or directories that are not allowed",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "succeed less than specified is present" in {
+    testRuleSuccess(
+      rule = bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
+      inputBag = "metadata-no-files-xml",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "succeed exactly the files/directories specified are present" in {
+    testRuleSuccess(
+      rule = bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
+      inputBag = "metadata-correct",
+      doubleCheckBagItValidity = true)
+  }
 }
 
 

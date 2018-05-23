@@ -35,7 +35,7 @@ package object structural extends DebugEnhancedLogging {
     trace(f)
     require(!f.isAbsolute, s"File $f must be a relative path")
     val fileToCheck = t.bagDir / f.toString
-    if (!fileToCheck.exists)
+    if (!fileToCheck.isRegularFile)
       fail(s"Mandatory file '$f' not found in bag.")
     val relativeRealPath = t.bagDir.path.relativize(fileToCheck.path.toRealPath())
     val relativeRequiredPath = t.bagDir.path.relativize(fileToCheck.path)
@@ -54,6 +54,6 @@ package object structural extends DebugEnhancedLogging {
     trace(d, ps)
     require(!d.isAbsolute, s"Directory $d must be a relative path")
     val extraFiles = (t.bagDir / d.toString).list.filterNot(ps contains _.name).map(t.bagDir relativize _.path)
-    if (extraFiles.nonEmpty) fail(s"Directory $d contains files that are not allowed: ${ extraFiles.mkString(", ") }")
+    if (extraFiles.nonEmpty) fail(s"Directory $d contains files or directories that are not allowed: ${ extraFiles.mkString(", ") }")
   }
 }
