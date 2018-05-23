@@ -17,9 +17,11 @@ package nl.knaw.dans.easy.validatebag.rules
 
 import java.io.ByteArrayInputStream
 import java.net.URI
-import java.nio.charset.StandardCharsets
+import java.nio.ByteBuffer
+import java.nio.charset.{ CharacterCodingException, Charset, StandardCharsets }
 import java.nio.file.Path
 
+import better.files.File
 import nl.knaw.dans.easy.validatebag
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.easy.validatebag.validation._
@@ -277,9 +279,20 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  def fileMustBeUtf8Decodable(f: Path)(t: TargetBag): Try[Unit] = {
+  def optionalFileIsUtf8Decodable(f: Path)(t: TargetBag): Try[Unit] = {
     require(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
-    // TODO: IMPLEMENT fileMustBeUtf8Decodable
-    ???
+    val file = t.bagDir / f.toString
+    if (file.exists) isValidUtf8(file.byteArray).recoverWith {
+      case e: CharacterCodingException => Try(fail(s"Input not valid UTF-8: ${e.getMessage}"))
+    }
+    else Success(())
   }
+
+  private def isValidUtf8(input: Array[Byte]): Try[Unit] = {
+    val cs = Charset.forName("UTF-8").newDecoder
+    Try {
+      cs.decode(ByteBuffer.wrap(input))
+    }
+  }
+
 }

@@ -156,12 +156,6 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagMustContainSha1PayloadManifest(t: TargetBag) = Try {
-    trace(())
-    if (!(t.bagDir / "manifest-sha1.txt").exists)
-      fail("Mandatory file 'manifest-sha1.txt' not found in bag.")
-  }
-
   def bagSha1PayloadManifestMustContainAllPayloadFiles(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryBag.map { bag =>

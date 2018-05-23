@@ -46,7 +46,7 @@ object ProfileVersion1 {
     NumberedRule("1.2.6", bagInfoTxtMustNotContain("EASY-User-Account"), SIP, dependsOn = Some("1.2.1")),
 
     // Manifests
-    NumberedRule("1.3.1", bagMustContainSha1PayloadManifest),
+    NumberedRule("1.3.1", bagMustContainFile(Paths.get("manifest-sha1.txt"))),
     NumberedRule("1.3.1", bagSha1PayloadManifestMustContainAllPayloadFiles, dependsOn = Some("1.3.1")),
     // 1.3.2 does not state restrictions, so it does not need checking
 

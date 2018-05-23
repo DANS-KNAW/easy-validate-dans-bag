@@ -47,7 +47,7 @@ object ProfileVersion0 {
     NumberedRule("1.2.6", bagInfoTxtMustNotContain("EASY-User-Account"), SIP, dependsOn = Some("1.2.1")),
 
     // Manifests
-    NumberedRule("1.3.1", bagMustContainSha1PayloadManifest),
+    NumberedRule("1.3.1", bagMustContainFile(Paths.get("manifest-sha1.txt"))),
     NumberedRule("1.3.1", bagSha1PayloadManifestMustContainAllPayloadFiles, dependsOn = Some("1.3.1")),
     // 1.3.2 does not state restrictions, so it does not need checking
 
@@ -80,10 +80,9 @@ object ProfileVersion0 {
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyDcTerms, dependsOn = Some("3.2.3")),
 
     // agreements.xml
-    NumberedRule("3.3.1", xmlFileIfExistsMustConformToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml")))
+    NumberedRule("3.3.1", xmlFileIfExistsMustConformToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
 
     // message-from-depositor.txt
-    // TODO: ADD RULE 3.4.1 fileMustBeUtf8Decodable
-
+    NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/message-from-depositor")))
   )
 }
