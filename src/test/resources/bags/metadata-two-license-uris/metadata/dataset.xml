@@ -27,7 +27,8 @@
         <ddm:accessRights>OPEN_ACCESS_FOR_REGISTERED_USERS</ddm:accessRights>
     </ddm:profile>
     <ddm:dcmiMetadata>
-        <dct:license xsi:type="dct:URI">http://creativecommons.org/licenses/by-sa/4.0</dct:license>
+        <dct:license xsi:type="dct:URI">http://opensource.org/licenses/BSD-2-Clause</dct:license>
+        <dct:license xsi:type="dct:URI">http://opensource.org/licenses/BSD-3-Clause</dct:license>
         <dct:rightsHolder>Mr. Rights</dct:rightsHolder>
     </ddm:dcmiMetadata>
 </ddm:DDM>

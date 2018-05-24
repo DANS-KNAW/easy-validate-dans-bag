@@ -15,9 +15,11 @@
  */
 package nl.knaw.dans.easy.validatebag.rules.metadata
 
-import java.net.URL
+import java.net.{ URI, URL }
+import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
+import better.files.File
 import javax.xml.validation.SchemaFactory
 import nl.knaw.dans.easy.validatebag.{ CanConnectFixture, TestSupportFixture, XmlValidator }
 import nl.knaw.dans.lib.error._
@@ -26,7 +28,11 @@ import scala.util.Try
 
 class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
-  private val xsdUrls = Seq("https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd", "")
+  private lazy val licenses = File("src/main/assembly/dist/cfg/licenses.txt")
+    .contentAsString(StandardCharsets.UTF_8)
+    .split("""\s*\n\s*""")
+    .filterNot(_.isEmpty)
+    .map(s => normalizeLicenseUri(new URI(s))).toSeq.collectResults.unsafeGetOrThrow
 
   override def beforeEach() {
     assumeCanConnect("https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd",
@@ -57,7 +63,51 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "metadata-correct")
   }
 
-  // TODO: TEST ddmMayContainDctermsLicenseFromList
+  "ddmMayContainDctermsLicenseFromList" should "succeed if license is on list" in {
+    testRuleSuccess(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "metadata-correct",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "succeed even if license is specified with https rather than http" in {
+    testRuleSuccess(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "metadata-correct-license-uri-with-https-scheme",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "succeed even if license is specified with a trailing slash" in {
+    testRuleSuccess(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "metadata-correct-license-uri-with-trailing-slash",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if there is no rights holder" in {
+    testRuleViolation(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "metadata-license-uri-but-no-rightsholder",
+      includedInErrorMsg = "rightsHolder",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if the license is not on the list" in {
+    testRuleViolation(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "metadata-license-uri-not-on-list",
+      includedInErrorMsg = "unknown or unsupported license",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if there are two license elements with xsi:type URI" in {
+    testRuleViolation(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "metadata-two-license-uris",
+      includedInErrorMsg = "Only one license is allowed",
+      doubleCheckBagItValidity = true)
+
+  }
 
   // General syntax will be checked by DDM XML Schema
   "daisAreValid" should "report a DAI that has an invalid check digit" in {
@@ -75,8 +125,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
       inputBag = "ddm-poslist-odd-number-of-values",
       includedInErrorMsg = "with odd number of values",
-      doubleCheckBagItValidity = true
-    )
+      doubleCheckBagItValidity = true)
   }
 
   it should "report error if less than 8 values found" in {
@@ -84,8 +133,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
       inputBag = "ddm-poslist-too-few-values",
       includedInErrorMsg = "too few values",
-      doubleCheckBagItValidity = true
-    )
+      doubleCheckBagItValidity = true)
   }
 
   it should "report error if start and end pair are different" in {
@@ -93,16 +141,14 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
       inputBag = "ddm-poslist-start-and-end-different",
       includedInErrorMsg = "unequal first and last pairs",
-      doubleCheckBagItValidity = true
-    )
+      doubleCheckBagItValidity = true)
   }
 
   it should "succeed for correct polygon" in {
     testRuleSuccess(
       rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
       inputBag = "ddm-poslist-correct",
-      doubleCheckBagItValidity = true
-    )
+      doubleCheckBagItValidity = true)
   }
 
   // TODO: TEST polygonsInSameMultiSurfaceMustHaveSameSrsName
@@ -114,8 +160,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       rule = filesXmlHasDocumentElementFiles,
       inputBag = "filesxml-no-files-as-document-element",
       includedInErrorMsg = "document element must be 'files'",
-      doubleCheckBagItValidity = true
-    )
+      doubleCheckBagItValidity = true)
   }
 
   // TODO: TEST success if document element is files

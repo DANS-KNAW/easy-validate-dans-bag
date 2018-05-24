@@ -62,7 +62,7 @@ object ProfileVersion0 {
 
     // dataset.xml
     NumberedRule("3.1.1", xmlFileMustConformToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = Some("2.2")),
-    NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(Paths.get("metadata/dataset.xml"), allowedLicences), dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = Some("3.1.1")),
     NumberedRule("3.1.4", ddmDaisMustBeValid, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.5", ddmGmlPolygonPosListMustMeetExtraConstraints, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.6", polygonsInSameMultiSurfaceMustHaveSameSrsName, dependsOn = Some("3.1.1")),

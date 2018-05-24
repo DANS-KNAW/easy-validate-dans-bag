@@ -28,6 +28,5 @@
     </ddm:profile>
     <ddm:dcmiMetadata>
         <dct:license xsi:type="dct:URI">http://creativecommons.org/licenses/by-sa/4.0</dct:license>
-        <dct:rightsHolder>Mr. Rights</dct:rightsHolder>
     </ddm:dcmiMetadata>
 </ddm:DDM>

@@ -21,7 +21,6 @@ import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset, StandardCharsets }
 import java.nio.file.Path
 
-import better.files.File
 import nl.knaw.dans.easy.validatebag
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.easy.validatebag.validation._
@@ -66,9 +65,7 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  def ddmMayContainDctermsLicenseFromList(ddmPath: Path, allowedLicenses: Seq[URI])(t: TargetBag): Try[Unit] = {
-    // TODO: normalize licenses from licenses.txt to https/no trailing slash.
-    // TODO: normalize URL found in dataset.xml in the same way.
+  def ddmMayContainDctermsLicenseFromList(allowedLicenses: Seq[URI])(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryDdm.map {
       ddm =>
@@ -78,7 +75,7 @@ package object metadata extends DebugEnhancedLogging {
         lazy val rightsHolders = (metadata \ "rightsHolder").toList
         licenses match {
           case license :: Nil if hasXsiType(namespaceDcterms, "URI")(license) =>
-            val licenseUri = new URI(license.text)
+            val licenseUri = normalizeLicenseUri(new URI(license.text)).get
             if (!allowedLicenses.contains(licenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
             if (rightsHolders.isEmpty) fail("Valid license found, but no rightsHolder specified")
           case Nil | _ :: Nil =>
@@ -87,6 +84,28 @@ package object metadata extends DebugEnhancedLogging {
         }
     }
   }
+
+  /**
+   * Converts all license URIs to one with scheme http and without any trailing slashes. Technically, these are not the same URIs but
+   * for the purpose of identifying licenses this is good enough.
+   *
+   * @param uri the URI to normalize
+   * @return normalized URI
+   */
+  def normalizeLicenseUri(uri: URI): Try[URI] = Try {
+    def normalizeLicenseUriPath(p: String) = {
+      val nTrailingSlashes = p.toCharArray.reverse.takeWhile(_ == '/').length
+      p.substring(0, p.length - nTrailingSlashes)
+    }
+
+    def normalizeLicenseUriScheme(s: String) = {
+      if (s == "http" || s == "https") "http"
+      else throw new IllegalArgumentException(s"Only http or https license URIs allowed. URI scheme found: $s")
+    }
+
+    new URI(normalizeLicenseUriScheme(uri.getScheme), uri.getUserInfo, uri.getHost, uri.getPort, normalizeLicenseUriPath(uri.getPath), uri.getQuery, uri.getFragment)
+  }
+
 
   private def hasXsiType(attrNamespace: URI, attrValue: String)(e: Node): Boolean = {
     e.attribute(namespaceSchemaInstance.toString, "type")
@@ -209,7 +228,7 @@ package object metadata extends DebugEnhancedLogging {
 
   private def validatePoint(point: Elem) = {
     if (point.text.split("""\s+""").size > 1) Success(())
-    else Try(fail(s"Point with only one coordinate: ${point.text}"))
+    else Try(fail(s"Point with only one coordinate: ${ point.text }"))
   }
 
   def filesXmlHasOnlyFiles(t: TargetBag): Try[Unit] = {
@@ -285,7 +304,7 @@ package object metadata extends DebugEnhancedLogging {
     require(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
     val file = t.bagDir / f.toString
     if (file.exists) isValidUtf8(file.byteArray).recoverWith {
-      case e: CharacterCodingException => Try(fail(s"Input not valid UTF-8: ${e.getMessage}"))
+      case e: CharacterCodingException => Try(fail(s"Input not valid UTF-8: ${ e.getMessage }"))
     }
     else Success(())
   }

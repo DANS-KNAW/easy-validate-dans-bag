@@ -24,6 +24,8 @@ import org.apache.commons.configuration.PropertiesConfiguration
 import resource.managed
 
 import scala.io.Source
+import rules.metadata.normalizeLicenseUri
+import nl.knaw.dans.lib.error._
 
 case class Configuration(version: String, properties: PropertiesConfiguration, allowedLicenses: Seq[URI])
 
@@ -42,7 +44,11 @@ object Configuration {
         setDelimiterParsingDisabled(true)
         load(cfgPath.resolve("application.properties").toFile)
       },
-      allowedLicenses = (File(cfgPath) / "licenses.txt").contentAsString(StandardCharsets.UTF_8).split("""\s*\n\s*""").filterNot(_.isEmpty).map(new URI(_))
+      allowedLicenses = (File(cfgPath) / "licenses.txt")
+        .contentAsString(StandardCharsets.UTF_8)
+        .split("""\s*\n\s*""")
+        .filterNot(_.isEmpty)
+        .map(s => normalizeLicenseUri(new URI(s))).toSeq.collectResults.unsafeGetOrThrow
     )
   }
 }
