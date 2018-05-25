@@ -24,14 +24,14 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scala.util.Try
 
 package object structural extends DebugEnhancedLogging {
-  def bagMustContainDir(d: Path)(t: TargetBag) = Try {
+  def containsDir(d: Path)(t: TargetBag) = Try {
     trace(d)
     require(!d.isAbsolute, s"Directory $d must be a relative path")
     if (!(t.bagDir / d.toString).isDirectory)
       fail(s"Mandatory directory '$d' not found in bag.")
   }
 
-  def bagMustContainFile(f: Path)(t: TargetBag) = Try {
+  def containsFile(f: Path)(t: TargetBag) = Try {
     trace(f)
     require(!f.isAbsolute, s"File $f must be a relative path")
     val fileToCheck = t.bagDir / f.toString
@@ -43,14 +43,14 @@ package object structural extends DebugEnhancedLogging {
       fail(s"Path name differs in case; found: $relativeRealPath, required: $relativeRequiredPath")
   }
 
-  def bagMustNotContainFile(f: Path)(t: TargetBag) = Try {
+  def doesNotContainFile(f: Path)(t: TargetBag) = Try {
     trace(f)
     require(!f.isAbsolute, s"File $f must be a relative path")
     if ((t.bagDir / f.toString).exists)
       fail(s"File '$f' MUST NOT exist in bag (of this information package type).")
   }
 
-  def bagDirectoryMustNotContainAnythingElseThan(d: Path, ps: Seq[String])(t: TargetBag) = Try {
+  def containsNothingElseThan(d: Path, ps: Seq[String])(t: TargetBag) = Try {
     trace(d, ps)
     require(!d.isAbsolute, s"Directory $d must be a relative path")
     val extraFiles = (t.bagDir / d.toString).list.filterNot(ps contains _.name).map(t.bagDir relativize _.path)

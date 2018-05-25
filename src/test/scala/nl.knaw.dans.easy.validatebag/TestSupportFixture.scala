@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.validatebag
 import java.nio.file.Paths
 
 import better.files._
-import nl.knaw.dans.easy.validatebag.rules.bagit.bagMustBeValid
+import nl.knaw.dans.easy.validatebag.rules.bagit.bagIsValid
 import nl.knaw.dans.easy.validatebag.validation.RuleViolationDetailsException
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.scalatest._
@@ -39,7 +39,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
 
   private def shouldBeValidAccordingToBagIt(inputBag: String): Unit = {
-    bagMustBeValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]]// Profile version does not matter here
+    bagIsValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]]// Profile version does not matter here
   }
 
   protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {

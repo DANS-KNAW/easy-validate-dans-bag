@@ -21,15 +21,15 @@ class ValidityRulesSpec extends TestSupportFixture {
   /*
    * We largely rely on bagit-java's validation to be correct.
    */
-  "bagMustBeValid" should "fail if bagit.txt is missing" in {
-    testRuleViolation(bagMustBeValid, "missing-bagit.txt", "bagit.txt")
+  "bagIsValid" should "fail if bagit.txt is missing" in {
+    testRuleViolation(bagIsValid, "missing-bagit.txt", "bagit.txt")
   }
 
   it should "fail if there is a payload file that is not listed in any of the manifests" in {
-    testRuleViolation(bagMustBeValid, "unchecksummed-payload-file", "isn't listed in any manifest")
+    testRuleViolation(bagIsValid, "unchecksummed-payload-file", "isn't listed in any manifest")
   }
 
   it should "fail if the checksum of a tag file is incorrect" in {
-    testRuleViolationRegex(bagMustBeValid, "incorrect-tagfile-checksum", "SHA-1.*but was computed".r)
+    testRuleViolationRegex(bagIsValid, "incorrect-tagfile-checksum", "SHA-1.*but was computed".r)
   }
 }

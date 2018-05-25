@@ -41,7 +41,7 @@ package object bagit extends DebugEnhancedLogging {
     bagVerifier.close()
   }
 
-  def bagMustBeValid(t: TargetBag): Try[Unit] = {
+  def bagIsValid(t: TargetBag): Try[Unit] = {
     trace(())
 
     def failBecauseInvalid(t: Throwable): Try[Unit] = {
@@ -80,16 +80,16 @@ package object bagit extends DebugEnhancedLogging {
       }
   }
 
-  def bagMustBeVirtuallyValid(t: TargetBag): Try[Unit] = {
+  def bagIsVirtuallyValid(t: TargetBag): Try[Unit] = {
     trace(())
-    bagMustBeValid(t)
+    bagIsValid(t)
       .recoverWith {
         case cause: RuleViolationDetailsException =>
           Try(fail(s"${ cause.details } (WARNING: bag may still be virtually-valid, but this version of the service cannot check that."))
       }
   }
 
-  def bagInfoTxtMayContainOne(element: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoContainsAtMostOneOf(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
       Option(bag.getMetadata.get(element))
@@ -98,7 +98,7 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagInfoTxtMustContainExactlyOne(element: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoContainsExactlyOneOf(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
       val values = bag.getMetadata.get(element)
@@ -107,14 +107,14 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagInfoTxtMustNotContain(element: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoDoesNotContain(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
       if (bag.getMetadata.contains(element)) fail(s"bag-info.txt must not contain element: $element")
     }
   }
 
-  def bagInfoTxtElementMustHaveValue(element: String, value: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoElementIfExistsHasValue(element: String, value: String)(t: TargetBag): Try[Unit] = {
     trace(element, value)
     getBagInfoTxtValue(t, element).map {
       _.foreach {
@@ -136,7 +136,7 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagInfoTxtCreatedMustBeIsoDate(t: TargetBag): Try[Unit] = {
+  def bagInfoCreatedElementIsIso8601Date(t: TargetBag): Try[Unit] = {
     trace(())
     val result = for {
       bag <- t.tryBag
@@ -156,7 +156,7 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagSha1PayloadManifestMustContainAllPayloadFiles(t: TargetBag): Try[Unit] = {
+  def bagShaPayloadManifestContainsAllPayloadFiles(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryBag.map { bag =>
       bag.getPayLoadManifests.asScala.find(_.getAlgorithm == SHA1)
