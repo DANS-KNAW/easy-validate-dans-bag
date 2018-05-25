@@ -41,11 +41,19 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       "http://schema.datacite.org/meta/kernel-4/metadata.xsd")
   }
 
-  private val ddmValidator = Try {
+  private lazy val ddmValidator = Try {
     logger.info("Creating ddm.xml validator...")
     val ddmSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"))
     val v = new XmlValidator(ddmSchema)
     logger.info("ddm.xml validator created.")
+    v
+  }.unsafeGetOrThrow
+
+  private lazy val filesXmlValidator = Try {
+    logger.info("Creating files.xml validator...")
+    val filesXmlSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/bag/metadata/files/files.xsd"))
+    val v = new XmlValidator(filesXmlSchema)
+    logger.info("files.xml validator created.")
     v
   }.unsafeGetOrThrow
 
@@ -118,7 +126,11 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
-  // TODO: TEST should accept DAI with valid checkdigit
+  it should "accept a DAI with a valid check digit" in {
+    testRuleSuccess(
+      rule = ddmDaisMustBeValid,
+      inputBag = "ddm-correct-dai")
+  }
 
   "ddmGmlPolygonPosListMustMeetExtraConstraints" should "report error if odd number of values in posList" in {
     testRuleViolation(
@@ -153,7 +165,14 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   // TODO: TEST polygonsInSameMultiSurfaceMustHaveSameSrsName
   // TODO: TEST pointsHaveAtLeastTwoValues
-  // TODO: TEST xmlFileMayConformToSchemaIfDefaultNamespace
+
+  "xmlFileMayConformToSchemaIfDefaultNamespace" should "fail if a file element is described twice" in {
+    testRuleViolation(
+      rule = filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),
+      inputBag = "filesxml-file-described-twice",
+      includedInErrorMsg = "Duplicate unique value",
+      doubleCheckBagItValidity = true)
+  }
 
   "filesXmlHasDocumentElementFiles" should "fail if files.xml has document element other than 'files'" in {
     testRuleViolation(
@@ -163,14 +182,42 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
-  // TODO: TEST success if document element is files
-  // TODO: TEST filesXmlHasOnlyFiles
-  // TODO: TEST filesXmlFileElementsAllHaveFilepathAttribute
-  // TODO: TEST filesXmlAllFilesDescribedOnce
+  "filesXmlHasOnlyFiles" should "fail if files.xml/files has non-file child" in {
+    testRuleViolation(
+      rule = filesXmlHasOnlyFiles,
+      inputBag = "filesxml-non-file-element",
+      includedInErrorMsg = "non-file elements",
+      doubleCheckBagItValidity = true)
+  }
+
+  "filesXmlFileElementsAllHaveFilepathAttribute" should "fail if a file element has no filepath attribute" in {
+    testRuleViolation(
+      rule = filesXmlFileElementsAllHaveFilepathAttribute,
+      inputBag = "filesxml-file-element-without-filepath",
+      includedInErrorMsg = "Not al 'file' elements have a 'filepath' attribute",
+      doubleCheckBagItValidity = true)
+  }
+
+  "filesXmlAllFilesDescribedOnce" should "fail if a file is described twice" in {
+    testRuleViolation(
+      rule = filesXmlAllFilesDescribedOnce,
+      inputBag = "filesxml-file-described-twice",
+      includedInErrorMsg = "Duplicate filepaths found",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if a file is not described" in {
+    testRuleViolation(
+      rule = filesXmlAllFilesDescribedOnce,
+      inputBag = "filesxml-file-described-twice",
+      includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder",
+      doubleCheckBagItValidity = true)
+  }
+
+  // TODO: TEST success if files.xml is correct
   // TODO: TEST filesXmlAllFilesHaveFormat
   // TODO: TEST filesXmlFilesHaveOnlyDcTerms
   // TODO: TEST xmlFileIfExistsMustConformToSchema
-
 
   "optionalFileIsUtf8Decodable" should "succeed if file exists and contains valid UTF-8" in {
     testRuleSuccess(

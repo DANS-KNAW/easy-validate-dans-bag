@@ -26,6 +26,10 @@ import org.scalatest._
 import scala.util.{ Failure, Success }
 import scala.util.matching.Regex
 
+// TODO: systematiseren namen van testbags (<target>-<feature(s)>, ddm-license-uri-unknown, bagit-missing-bagittxt, baginfo-non-iso8601-in-created-element etc)
+// todo: systematiseren namen van rules (gewenste conditie formuleren, zonder "must" e.d.)
+// todo: maak doubleCheckBagValidaty default 'true' en verbeter de foutmelding als bag niet valid blijkt.
+
 trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach with DebugEnhancedLogging {
   lazy val testDir: File = File(s"target/test/${ getClass.getSimpleName }")
 

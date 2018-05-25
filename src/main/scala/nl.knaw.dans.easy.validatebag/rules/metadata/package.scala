@@ -15,11 +15,10 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.io.ByteArrayInputStream
 import java.net.URI
 import java.nio.ByteBuffer
-import java.nio.charset.{ CharacterCodingException, Charset, StandardCharsets }
-import java.nio.file.Path
+import java.nio.charset.{ CharacterCodingException, Charset }
+import java.nio.file.{ Path, Paths }
 
 import nl.knaw.dans.easy.validatebag
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
@@ -49,19 +48,18 @@ package object metadata extends DebugEnhancedLogging {
     }
   }.get()
 
-  def xmlFileMayConformToSchemaIfDefaultNamespace(validator: XmlValidator)(t: TargetBag): Try[Unit] = {
+  def filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(())
-    t.tryFilesXml.map {
+    t.tryFilesXml.flatMap {
       xml =>
         if (xml.namespace == validatebag.filesXmlNamespace) {
           logger.debug("Validating files.xml against XML Schema")
-          resource.managed(new ByteArrayInputStream(xml.toString.getBytes(StandardCharsets.UTF_8))).acquireAndGet { is =>
-            validator.validate(is).recoverWith {
-              case t: Throwable => Try(fail(t.getMessage))
-            }
-          }
+          xmlFileMustConformToSchema(Paths.get("metadata/files.xml"), "files.xml", validator)(t)
         }
-        else logger.info(s"files.xml does not declare namespace ${ validatebag.filesXmlNamespace }, NOT validating with XML Schema")
+        else {
+          logger.info(s"files.xml does not declare namespace ${ validatebag.filesXmlNamespace }, NOT validating with XML Schema")
+          Success(())
+        }
     }
   }
 
@@ -235,7 +233,7 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     t.tryFilesXml.map {
       files =>
-        val nonFiles = (files \ "*").filterNot(_.label == "file")
+        val nonFiles = (files \ "_").filterNot(_.label == "file")
         if (nonFiles.nonEmpty) fail(s"files.xml: children of document element must only be 'file'. Found non-file elements: ${ nonFiles.mkString(", ") }")
     }
   }
@@ -245,7 +243,7 @@ package object metadata extends DebugEnhancedLogging {
     t.tryFilesXml.map {
       xml =>
         val files = xml \ "file"
-        if (files.map(_ \@ "filepath").size != files.size) fail("Not al 'file' elements have a 'filepath' attribute")
+        if (files.exists(_.attribute("filepath").isEmpty)) fail("Not al 'file' elements have a 'filepath' attribute")
     }
   }
 
