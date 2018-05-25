@@ -37,6 +37,7 @@ package object validatebag {
   val filesXmlNamespace = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/"
   val dcxDaiNamespace = "http://easy.dans.knaw.nl/schemas/dcx/dai/"
   val gmlNamespace = "http://www.opengis.net/gml"
+  val dctermsNamespace = "http://purl.org/dc/terms/"
 
   object InfoPackageType extends Enumeration {
     type InfoPackageType = Value

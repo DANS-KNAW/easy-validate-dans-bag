@@ -214,9 +214,23 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
+  "filesXmlAllFilesHaveFormat" should "fail if there is a file element without a dct:format child" in {
+    testRuleViolation(
+      rule = filesXmlAllFilesHaveFormat,
+      inputBag = "filesxml-no-dct-format",
+      includedInErrorMsg = "not all <file> elements contain a <dcterms:format>",
+      doubleCheckBagItValidity = true)
+   }
+
+  "filesXmlFilesHaveOnlyDcTerms" should "fail if there is a file element with a non dct child" in {
+    testRuleViolation(
+      rule = filesXmlFilesHaveOnlyDcTerms,
+      inputBag = "filesxml-non-dct-child",
+      includedInErrorMsg = "non-dcterms elements found in some file elements",
+      doubleCheckBagItValidity = true)
+  }
+
   // TODO: TEST success if files.xml is correct
-  // TODO: TEST filesXmlAllFilesHaveFormat
-  // TODO: TEST filesXmlFilesHaveOnlyDcTerms
   // TODO: TEST xmlFileIfExistsMustConformToSchema
 
   "optionalFileIsUtf8Decodable" should "succeed if file exists and contains valid UTF-8" in {
