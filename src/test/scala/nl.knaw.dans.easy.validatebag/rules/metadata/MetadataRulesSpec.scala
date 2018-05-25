@@ -21,7 +21,7 @@ import java.nio.file.Paths
 
 import better.files.File
 import javax.xml.validation.SchemaFactory
-import nl.knaw.dans.easy.validatebag.{ CanConnectFixture, TestSupportFixture, XmlValidator }
+import nl.knaw.dans.easy.validatebag.{ CanConnectFixture, Rule, TestSupportFixture, XmlValidator }
 import nl.knaw.dans.lib.error._
 
 import scala.util.Try
@@ -230,7 +230,19 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
-  // TODO: TEST success if files.xml is correct
+  "all files.xml rules" should "succeed if files.xml is correct" in {
+    case class RC(rule: Rule)
+    Seq[RC](
+      RC(filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator)),
+      RC(filesXmlHasDocumentElementFiles),
+      RC(filesXmlHasOnlyFiles),
+      RC(filesXmlFileElementsAllHaveFilepathAttribute),
+      RC(filesXmlAllFilesDescribedOnce),
+      RC(filesXmlAllFilesHaveFormat),
+      RC(filesXmlFilesHaveOnlyDcTerms))
+      .foreach(rc => testRuleSuccess(rc.rule, inputBag = "metadata-correct", doubleCheckBagItValidity = true))
+  }
+
   // TODO: TEST xmlFileIfExistsMustConformToSchema
 
   "optionalFileIsUtf8Decodable" should "succeed if file exists and contains valid UTF-8" in {
