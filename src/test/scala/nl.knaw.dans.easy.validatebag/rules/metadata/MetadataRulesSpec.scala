@@ -163,8 +163,37 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
-  // TODO: TEST polygonsInSameMultiSurfaceMustHaveSameSrsName
-  // TODO: TEST pointsHaveAtLeastTwoValues
+  "polygonsInSameMultiSurfaceMustHaveSameSrsName" should "fail if polygons in the same multi-surface have different srsNames" in {
+    testRuleViolation(
+      rule = polygonsInSameMultiSurfaceMustHaveSameSrsName,
+      inputBag = "ddm-different-srs-names",
+      includedInErrorMsg = "Found MultiSurface element containing polygons with different srsNames",
+      doubleCheckBagItValidity = true)
+  }
+
+  "pointsHaveAtLeastTwoValues" should "fail if a Point with one coordinate is found" in {
+    testRuleViolation(
+      rule = pointsHaveAtLeastTwoValues,
+      inputBag = "ddm-point-with-one-value",
+      includedInErrorMsg = "Point with only one coordinate",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if a lowerCorner with one coordinate is found" in {
+    testRuleViolation(
+      rule = pointsHaveAtLeastTwoValues,
+      inputBag = "ddm-lowercorner-with-one-value",
+      includedInErrorMsg = "Point with only one coordinate",
+      doubleCheckBagItValidity = true)
+  }
+
+  it should "fail if a upperCorner with one coordinate is found" in {
+    testRuleViolation(
+      rule = pointsHaveAtLeastTwoValues,
+      inputBag = "ddm-uppercorner-with-one-value",
+      includedInErrorMsg = "Point with only one coordinate",
+      doubleCheckBagItValidity = true)
+  }
 
   "xmlFileMayConformToSchemaIfDefaultNamespace" should "fail if a file element is described twice" in {
     testRuleViolation(
@@ -231,7 +260,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   "all files.xml rules" should "succeed if files.xml is correct" in {
-    case class RC(rule: Rule)
+    case class RC(rule: Rule) // Cannot add the rules to a Seq without a container
     Seq[RC](
       RC(filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator)),
       RC(filesXmlHasDocumentElementFiles),
@@ -243,7 +272,14 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       .foreach(rc => testRuleSuccess(rc.rule, inputBag = "metadata-correct", doubleCheckBagItValidity = true))
   }
 
-  // TODO: TEST xmlFileIfExistsMustConformToSchema
+  // Reusing some test data. This rules is actually not used for files.xml.
+  "xmlFileIfExistsMustConformToSchema" should "fail if file exists but does not conform" in {
+    testRuleViolation(
+      rule = xmlFileIfExistsMustConformToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
+      inputBag = "filesxml-file-described-twice",
+      includedInErrorMsg = "Duplicate unique value",
+      doubleCheckBagItValidity = true)
+  }
 
   "optionalFileIsUtf8Decodable" should "succeed if file exists and contains valid UTF-8" in {
     testRuleSuccess(

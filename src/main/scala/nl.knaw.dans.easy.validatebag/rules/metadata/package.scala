@@ -194,11 +194,15 @@ package object metadata extends DebugEnhancedLogging {
 
   def polygonsInSameMultiSurfaceMustHaveSameSrsName(t: TargetBag): Try[Unit] = {
     trace(())
-    for {
+    val result = for {
       ddm <- t.tryDdm
       multiSurfaces <- getMultiSurfaces(ddm)
-      _ = multiSurfaces.map(validateMultiSurface)
+      _ <- multiSurfaces.map(validateMultiSurface).collectResults
     } yield ()
+
+    result.recoverWith {
+      case ce: CompositeException => Try(fail(ce.getMessage))
+    }
   }
 
   private def getMultiSurfaces(ddm: Elem) = Try {
@@ -213,11 +217,15 @@ package object metadata extends DebugEnhancedLogging {
 
   def pointsHaveAtLeastTwoValues(t: TargetBag): Try[Unit] = {
     trace(())
-    for {
+    val result = for {
       ddm <- t.tryDdm
       points <- getGmlPoints(ddm)
-      _ = points.map(validatePoint)
+      _ <- points.map(validatePoint).collectResults
     } yield ()
+
+    result.recoverWith {
+      case ce: CompositeException => Try(fail(ce.getMessage))
+    }
   }
 
   private def getGmlPoints(ddm: Elem) = Try {
@@ -225,8 +233,8 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def validatePoint(point: Elem) = {
-    if (point.text.split("""\s+""").size > 1) Success(())
-    else Try(fail(s"Point with only one coordinate: ${ point.text }"))
+    if (point.text.trim.split("""\s+""").length > 1) Success(())
+    else Try(fail(s"Point with only one coordinate: ${ point.text.trim }"))
   }
 
   def filesXmlHasOnlyFiles(t: TargetBag): Try[Unit] = {
