@@ -284,19 +284,19 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   "optionalFileIsUtf8Decodable" should "succeed if file exists and contains valid UTF-8" in {
     testRuleSuccess(
       rule = optionalFileIsUtf8Decodable(Paths.get("bag-info.txt")), // bag-info.txt is not really optional, just using it here for convenience
-      inputBag = "minimal")
+      inputBag = "generic-minimal")
   }
 
   it should "succeed if file does NOT exist (as it is OPTIONAL)" in {
     testRuleSuccess(
       rule = optionalFileIsUtf8Decodable(Paths.get("NON-EXISTENT-FILE.TXT")), // bag-info.txt is not really optional, just using it here for convenience
-      inputBag = "minimal")
+      inputBag = "generic-minimal")
   }
 
   it should "fail if file contains non-UTF-8 bytes" in {
     testRuleViolation(
       rule = optionalFileIsUtf8Decodable(Paths.get("data/ceci-n-est-pas-d-utf8.jpg")),
-      inputBag = "minimal-with-binary-data",
+      inputBag = "generic-minimal-with-binary-data",
       includedInErrorMsg = "Input not valid UTF-8",
       doubleCheckBagItValidity = true)
   }

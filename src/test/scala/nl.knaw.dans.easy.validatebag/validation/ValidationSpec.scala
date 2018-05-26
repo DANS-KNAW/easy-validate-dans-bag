@@ -23,7 +23,7 @@ import scala.language.implicitConversions
 import scala.util.{ Failure, Success, Try }
 
 class ValidationSpec extends TestSupportFixture {
-  private val dummy = bagsDir / "minimal" // Not actually used, but must exist
+  private val dummy = bagsDir / "generic-minimal" // Not actually used, but must exist
   private val calls = ListBuffer[String]()
 
   override def beforeEach() {

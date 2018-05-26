@@ -26,7 +26,7 @@ class StructuralRulesSpec extends TestSupportFixture {
   }
 
   it should "fail if target is a file instead of a directory" in {
-    testRuleViolation(containsDir(Paths.get("bagit.txt")), "minimal", "not found in bag")
+    testRuleViolation(containsDir(Paths.get("bagit.txt")), "generic-minimal", "not found in bag")
   }
 
   it should "succeed if directory exists" in {
@@ -42,7 +42,7 @@ class StructuralRulesSpec extends TestSupportFixture {
   }
 
   it should "fail if target is a directory instead of a file" in {
-    testRuleViolation(containsFile(Paths.get("data")), "minimal", "not found in bag")
+    testRuleViolation(containsFile(Paths.get("data")), "generic-minimal", "not found in bag")
   }
 
   it should "succeed if file exists" in {

@@ -21,7 +21,7 @@ class ManifestRulesSpec extends TestSupportFixture {
   "bagShaPayloadManifestContainsAllPayloadFiles" should "fail if not all payload files have a SHA-1 checksum" in {
     testRuleViolationRegex(
       bagShaPayloadManifestContainsAllPayloadFiles,
-      inputBag = "two-payload-files-without-sha1",
+      inputBag = "bagit-two-payload-files-without-sha1",
       includedInErrorMsg = """All payload files must have an SHA-1 checksum.*sine-sha1.txt""".r,
       doubleCheckBagItValidity = true)
   }
@@ -29,7 +29,7 @@ class ManifestRulesSpec extends TestSupportFixture {
   it should "succeed if not all payload files have an MD5 checksum" in {
     testRuleSuccess(
       bagShaPayloadManifestContainsAllPayloadFiles,
-      inputBag = "two-payload-files-without-md5",
+      inputBag = "bagit-two-payload-files-without-md5",
       doubleCheckBagItValidity = true)
   }
 }
