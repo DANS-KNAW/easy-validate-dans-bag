@@ -188,7 +188,7 @@ package object metadata extends DebugEnhancedLogging {
     if (values.take(2) != values.takeRight(2)) fail(s"Found posList with unequal first and last pairs. ${ offendingPosListMsg(values) }")
   }
 
-  def polygonsInSameMultiSurfaceMustHaveSameSrsName(t: TargetBag): Try[Unit] = {
+  def polygonsInSameMultiSurfaceHaveSameSrsName(t: TargetBag): Try[Unit] = {
     trace(())
     val result = for {
       ddm <- t.tryDdm

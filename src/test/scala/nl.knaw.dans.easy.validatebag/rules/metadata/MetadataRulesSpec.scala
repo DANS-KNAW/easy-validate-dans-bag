@@ -57,7 +57,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     v
   }.unsafeGetOrThrow
 
-  "xmlFileMustConformToSchema" should "report validation errors if XML not valid" in {
+  "xmlFileConformsToSchema" should "report validation errors if XML not valid" in {
     testRuleViolationRegex(
       rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "metadata-unknown-element",
@@ -81,7 +81,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   it should "succeed even if license is specified with https rather than http" in {
     testRuleSuccess(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "metadata-correct-license-uri-with-https-scheme",
+      inputBag = "ddm-correct-license-uri-with-https-scheme",
       doubleCheckBagItValidity = true)
   }
 
@@ -118,7 +118,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   // General syntax will be checked by DDM XML Schema
-  "daisAreValid" should "report a DAI that has an invalid check digit" in {
+  "ddmDaisAreValid" should "report a DAI that has an invalid check digit" in {
     testRuleViolation(
       rule = ddmDaisAreValid,
       inputBag = "ddm-incorrect-dai",
@@ -132,7 +132,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "ddm-correct-dai")
   }
 
-  "ddmGmlPolygonPosListMustMeetExtraConstraints" should "report error if odd number of values in posList" in {
+  "ddmGmlPolygonPosListIsWellFormed" should "report error if odd number of values in posList" in {
     testRuleViolation(
       rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-odd-number-of-values",
@@ -163,9 +163,9 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
-  "polygonsInSameMultiSurfaceMustHaveSameSrsName" should "fail if polygons in the same multi-surface have different srsNames" in {
+  "polygonsInSameMultiSurfaceHaveSameSrsName" should "fail if polygons in the same multi-surface have different srsNames" in {
     testRuleViolation(
-      rule = polygonsInSameMultiSurfaceMustHaveSameSrsName,
+      rule = polygonsInSameMultiSurfaceHaveSameSrsName,
       inputBag = "ddm-different-srs-names",
       includedInErrorMsg = "Found MultiSurface element containing polygons with different srsNames",
       doubleCheckBagItValidity = true)
@@ -195,7 +195,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       doubleCheckBagItValidity = true)
   }
 
-  "xmlFileMayConformToSchemaIfDefaultNamespace" should "fail if a file element is described twice" in {
+  "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "fail if a file element is described twice" in {
     testRuleViolation(
       rule = filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
@@ -273,7 +273,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   // Reusing some test data. This rules is actually not used for files.xml.
-  "xmlFileIfExistsMustConformToSchema" should "fail if file exists but does not conform" in {
+  "xmlFileIfExistsConformsToSchema" should "fail if file exists but does not conform" in {
     testRuleViolation(
       rule = xmlFileIfExistsConformsToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
       inputBag = "filesxml-file-described-twice",

@@ -65,7 +65,7 @@ object ProfileVersion0 {
     NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = Some("3.1.1")),
     NumberedRule("3.1.4", ddmDaisAreValid, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.5", ddmGmlPolygonPosListIsWellFormed, dependsOn = Some("3.1.1")),
-    NumberedRule("3.1.6", polygonsInSameMultiSurfaceMustHaveSameSrsName, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.6", polygonsInSameMultiSurfaceHaveSameSrsName, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.7", pointsHaveAtLeastTwoValues, dependsOn = Some("3.1.1")),
 
     // files.xml
