@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.{ URI, URL }
+import java.net.URI
 import java.nio.file.Paths
 
 import nl.knaw.dans.easy.validatebag.{ NumberedRule, XmlValidator }
@@ -32,50 +32,57 @@ object ProfileVersion0 {
     // BAGIT-RELATED
 
     // Validity
-    NumberedRule("1.1.1", bagMustBeValid, SIP),
-    NumberedRule("1.1.2", bagMustBeVirtuallyValid, AIP),
+    NumberedRule("1.1.1", bagIsValid, SIP),
 
     // bag-info.txt
-    NumberedRule("1.2.1", bagMustContainFile(Paths.get("bag-info.txt"))),
-    NumberedRule("1.2.2", bagInfoTxtMayContainOne("BagIt-Profile-Version"), dependsOn = Some("1.2.1")),
-    NumberedRule("1.2.2", bagInfoTxtElementMustHaveValue("BagIt-Profile-Version", versionNumber.toString), dependsOn = Some("1.2.2")),
-    NumberedRule("1.2.3", bagInfoTxtMayContainOne("BagIt-Profile-URI"), dependsOn = Some("1.2.1")),
-    NumberedRule("1.2.3", bagInfoTxtElementMustHaveValue("BagIt-Profile-URI", versionUri), dependsOn = Some("1.2.3")),
-    NumberedRule("1.2.4", bagInfoTxtMustContainExactlyOne("Created"), dependsOn = Some("1.2.1")),
-    NumberedRule("1.2.4", bagInfoTxtCreatedMustBeIsoDate, dependsOn = Some("1.2.4")),
-    NumberedRule("1.2.5", bagInfoTxtMayContainOne("Is-Version-Of"), dependsOn = Some("1.2.1")),
-    NumberedRule("1.2.6", bagInfoTxtMustContainExactlyOne("EASY-User-Account"), AIP, dependsOn = Some("1.2.1")),
-    NumberedRule("1.2.6", bagInfoTxtMustNotContain("EASY-User-Account"), SIP, dependsOn = Some("1.2.1")),
+    NumberedRule("1.2.1", containsFile(Paths.get("bag-info.txt"))),
+    NumberedRule("1.2.2", bagInfoContainsAtMostOneOf("BagIt-Profile-Version"), dependsOn = Some("1.2.1")),
+    NumberedRule("1.2.2", bagInfoElementIfExistsHasValue("BagIt-Profile-Version", versionNumber.toString), dependsOn = Some("1.2.2")),
+    NumberedRule("1.2.3", bagInfoContainsAtMostOneOf("BagIt-Profile-URI"), dependsOn = Some("1.2.1")),
+    NumberedRule("1.2.3", bagInfoElementIfExistsHasValue("BagIt-Profile-URI", versionUri), dependsOn = Some("1.2.3")),
+    NumberedRule("1.2.4", bagInfoContainsExactlyOneOf("Created"), dependsOn = Some("1.2.1")),
+    NumberedRule("1.2.4", bagInfoCreatedElementIsIso8601Date, dependsOn = Some("1.2.4")),
+    NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = Some("1.2.1")),
+    NumberedRule("1.2.6", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = Some("1.2.1")),
+    NumberedRule("1.2.6", bagInfoDoesNotContain("EASY-User-Account"), SIP, dependsOn = Some("1.2.1")),
 
     // Manifests
-    NumberedRule("1.3.1", bagMustContainSha1PayloadManifest),
-    NumberedRule("1.3.1", bagSha1PayloadManifestMustContainAllPayloadFiles, dependsOn = Some("1.3.1")),
+    NumberedRule("1.3.1", containsFile(Paths.get("manifest-sha1.txt"))),
+    NumberedRule("1.3.1", bagShaPayloadManifestContainsAllPayloadFiles, dependsOn = Some("1.3.1")),
     // 1.3.2 does not state restrictions, so it does not need checking
 
     // STRUCTURAL
-    NumberedRule("2.1", bagMustContainDir(Paths.get("metadata"))),
-    NumberedRule("2.2", bagMustContainFile(Paths.get("metadata/dataset.xml")), dependsOn = Some("2.1")),
-    NumberedRule("2.3", bagMustContainFile(Paths.get("metadata/files.xml")), dependsOn = Some("2.1")),
-    NumberedRule("2.4", bagDirectoryMustNotContainAnythingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")), dependsOn = Some("2.1")),
+    NumberedRule("2.1", containsDir(Paths.get("metadata"))),
+    NumberedRule("2.2", containsFile(Paths.get("metadata/dataset.xml")), dependsOn = Some("2.1")),
+    NumberedRule("2.2", containsFile(Paths.get("metadata/files.xml")), dependsOn = Some("2.1")),
+    // 2.3 does not state restrictions, so it does not need checking
+    NumberedRule("2.5", containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml", "agreements.xml")), dependsOn = Some("2.1")),
 
     // METADATA
 
     // dataset.xml
-    NumberedRule("3.1.1", xmlFileMustConformToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = Some("2.2")),
-    NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(Paths.get("metadata/dataset.xml"), allowedLicences), dependsOn = Some("3.1.1")),
-    // TODO: 3.1.3
-    NumberedRule("3.1.4", ddmDaisMustBeValid, dependsOn = Some("3.1.1")),
-    NumberedRule("3.1.5", ddmGmlPolygonPosListMustMeetExtraConstraints, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.1", xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = Some("2.2")),
+    NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.4", ddmDaisAreValid, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.5", ddmGmlPolygonPosListIsWellFormed, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.6", polygonsInSameMultiSurfaceHaveSameSrsName, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.7", pointsHaveAtLeastTwoValues, dependsOn = Some("3.1.1")),
 
     // files.xml
-    NumberedRule("3.2.1", xmlFileMayConformToSchemaIfDefaultNamespace(xmlValidators("files.xml")), dependsOn = Some("2.3")),
+    NumberedRule("3.2.1", filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(xmlValidators("files.xml")), dependsOn = Some("2.3")),
     NumberedRule("3.2.2", filesXmlHasDocumentElementFiles, dependsOn = Some("2.3")),
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = Some("3.2.2")),
 
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = Some("3.2.3")),
+    // Second part of 3.2.4 (directories not described) is implicitly checked by 3.2.5
     NumberedRule("3.2.5", filesXmlAllFilesDescribedOnce, dependsOn = Some("3.2.4")),
-    // 3.2.5 already checked by 3.2.4-rule
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = Some("3.2.3")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyDcTerms, dependsOn = Some("3.2.3")),
+
+    // agreements.xml
+    NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
+
+    // message-from-depositor.txt
+    NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/message-from-depositor")))
   )
 }

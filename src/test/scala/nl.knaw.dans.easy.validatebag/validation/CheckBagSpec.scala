@@ -40,7 +40,7 @@ class CheckBagSpec extends TestSupportFixture {
   }
 
   it should "fail if the bag directory is unreadable" in {
-    val minimal = bagsDir / "minimal"
+    val minimal = bagsDir / "generic-minimal"
     val result = checkRules(new TargetBag(minimal), emptyRuleBase)(expectUnreadable(minimal))
     result shouldBe a[Failure[_]]
     inside(result) {
@@ -50,7 +50,7 @@ class CheckBagSpec extends TestSupportFixture {
   }
 
   it should "fail if there is a non-readable file in the bag directory" in {
-    val minimal = bagsDir / "minimal"
+    val minimal = bagsDir / "generic-minimal"
     val leegTxt = minimal / "data/leeg.txt"
     inside(checkRules(new TargetBag(minimal), emptyRuleBase)(expectUnreadable(leegTxt))) {
       case Failure(iae: IllegalArgumentException) =>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ddm:DDM xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/" xmlns="http://easy.dans.knaw.nl/schemas/bag/metadata/files/" xmlns:abr="http://www.den.nl/standaard/166/Archeologisch-Basisregister/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcx-dai="http://easy.dans.knaw.nl/schemas/dcx/dai/" xmlns:dcx-gml="http://easy.dans.knaw.nl/schemas/dcx/gml/" xmlns:id-type="http://easy.dans.knaw.nl/schemas/vocab/identifier-type/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd">
+    <ddm:profile>
+        <dc:title>PAN-00008136 - knobbed sickle</dc:title>
+        <dcterms:description xml:lang="en">This find is registered at Portable Antiquities of the Netherlands with number PAN-00008136</dcterms:description>
+        <dcx-dai:creatorDetails>
+            <dcx-dai:organization>
+                <dcx-dai:name xml:lang="en">Portable Antiquities of the Netherlands</dcx-dai:name>
+                <dcx-dai:role>DataCurator</dcx-dai:role>
+            </dcx-dai:organization>
+        </dcx-dai:creatorDetails>
+        <ddm:created>2017-10-23T17:06:11+02:00</ddm:created>
+        <ddm:available>2017-10-23T17:06:11+02:00</ddm:available>
+        <ddm:audience>D37000</ddm:audience>
+        <ddm:accessRights>OPEN_ACCESS</ddm:accessRights>
+    </ddm:profile>
+    <ddm:dcmiMetadata>
+        <dcx-gml:spatial>
+            <MultiSurface xmlns="http://www.opengis.net/gml">
+                <name>A random surface with multiple polygons</name>
+                <surfaceMember>
+                    <Polygon srsName="http://www.opengis.net/def/crs/EPSG/0/4326">
+                        <description>A triangle between BP, De Horeca Academie en the railway station</description>
+                        <exterior>
+                            <LinearRing>
+                                <posList>52.079710 4.342778 52.079710 4.342778 52.07913 4.34332 52.079710 4.342778</posList>
+                            </LinearRing>
+                        </exterior>
+                    </Polygon>
+		</surfaceMember>
+                <surfaceMember>
+                    <Polygon srsName="http://www.opengis.net/def/crs/EPSG/0/4327">
+                        <description>A triangle between BP, De Horeca Academie en the railway station</description>
+                        <exterior>
+                            <LinearRing>
+                                <posList>52.079710 4.342778 52.079710 4.342778 52.07913 4.34332 52.079710 4.342778</posList>
+                            </LinearRing>
+                        </exterior>
+                    </Polygon>
+		</surfaceMember>
+            </MultiSurface>
+	</dcx-gml:spatial>
+        <dcterms:spatial>Overbetuwe</dcterms:spatial>
+        <dcterms:isFormatOf>PAN-00008136</dcterms:isFormatOf>
+        <ddm:references href="https://www.portable-antiquities.nl/pan/#/object/public/8136">Portable Antiquities of The Netherlands</ddm:references>
+        <ddm:subject schemeURI="https://data.cultureelerfgoed.nl/term/id/pan/PAN" subjectScheme="PAN thesaurus ideaaltypes" valueURI="https://data.cultureelerfgoed.nl/term/id/pan/17-01-01" xml:lang="en">knobbed sickle</ddm:subject>
+        <ddm:subject schemeURI="http://vocab.getty.edu/aat/" subjectScheme="Art and Architecture Thesaurus" valueURI="http://vocab.getty.edu/aat/300264860" xml:lang="en">Unknown</ddm:subject>
+        <dc:subject>metaal</dc:subject>
+        <dc:subject>koperlegering</dc:subject>
+        <dcterms:identifier>PAN-00008136</dcterms:identifier>
+        <dcterms:temporal xsi:type="abr:ABRperiode">BRONSMB</dcterms:temporal>
+        <dcterms:temporal xsi:type="abr:ABRperiode">BRONSL</dcterms:temporal>
+        <dcterms:temporal>-1500 until -800</dcterms:temporal>
+        <dc:language xsi:type="dcterms:ISO639-2">eng</dc:language>
+        <dc:publisher xmlns:dc="http://purl.org/dc/terms/">DANS/KNAW</dc:publisher>
+        <dc:type xsi:type="dcterms:DCMIType" xmlns:dc="http://purl.org/dc/terms/">Dataset</dc:type>
+        <dc:format xsi:type="dcterms:IMT">image/jpeg</dc:format>
+        <dc:format xsi:type="dcterms:IMT">application/xml</dc:format>
+        <dcterms:license xsi:type="dcterms:URI">http://creativecommons.org/licenses/by-nc-sa/4.0/</dcterms:license>
+        <dcterms:rightsHolder>Vrije Universiteit Amsterdam</dcterms:rightsHolder>
+    </ddm:dcmiMetadata>
+</ddm:DDM>

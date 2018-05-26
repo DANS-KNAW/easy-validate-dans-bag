@@ -33,11 +33,6 @@ package object validatebag {
     1 -> "doi:10.17026/dans-zf3-q54n"
   )
 
-  val datasetXmlNamespace = "http://easy.dans.knaw.nl/schemas/md/ddm/"
-  val filesXmlNamespace = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/"
-  val dcxDaiNamespace = "http://easy.dans.knaw.nl/schemas/dcx/dai/"
-  val gmlNamespace = "http://www.opengis.net/gml"
-
   object InfoPackageType extends Enumeration {
     type InfoPackageType = Value
     val SIP, AIP, BOTH = Value

@@ -18,19 +18,18 @@ package nl.knaw.dans.easy.validatebag.rules.bagit
 import nl.knaw.dans.easy.validatebag.TestSupportFixture
 
 class ManifestRulesSpec extends TestSupportFixture {
-  "bagSha1PayloadManifestMustContainAllPayloadFiles" should "fail if not all payload files have a SHA-1 checksum" in {
+  "bagShaPayloadManifestContainsAllPayloadFiles" should "fail if not all payload files have a SHA-1 checksum" in {
     testRuleViolationRegex(
-      bagSha1PayloadManifestMustContainAllPayloadFiles,
-      inputBag = "two-payload-files-without-sha1",
-      includedInErrorMsg = """All payload files must have an SHA-1 checksum.*sine-sha1.txt""".r,
-      doubleCheckBagItValidity = true)
+      bagShaPayloadManifestContainsAllPayloadFiles,
+      inputBag = "bagit-two-payload-files-without-sha1",
+      includedInErrorMsg = """All payload files must have an SHA-1 checksum.*sine-sha1.txt""".r
+    )
   }
 
   it should "succeed if not all payload files have an MD5 checksum" in {
     testRuleSuccess(
-      bagSha1PayloadManifestMustContainAllPayloadFiles,
-      inputBag = "two-payload-files-without-md5",
-      doubleCheckBagItValidity = true)
+      bagShaPayloadManifestContainsAllPayloadFiles,
+      inputBag = "bagit-two-payload-files-without-md5"
+    )
   }
-
 }

@@ -15,11 +15,13 @@
  */
 package nl.knaw.dans.easy.validatebag
 
-import java.net.{ URI, URL }
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
 
 import better.files.File
+import nl.knaw.dans.easy.validatebag.rules.metadata.normalizeLicenseUri
+import nl.knaw.dans.lib.error._
 import org.apache.commons.configuration.PropertiesConfiguration
 import resource.managed
 
@@ -42,7 +44,11 @@ object Configuration {
         setDelimiterParsingDisabled(true)
         load(cfgPath.resolve("application.properties").toFile)
       },
-      allowedLicenses = (File(cfgPath) / "licenses.txt").contentAsString(StandardCharsets.UTF_8).split("""\s*\n\s*""").filterNot(_.isEmpty).map(new URI(_))
+      allowedLicenses = (File(cfgPath) / "licenses.txt")
+        .contentAsString(StandardCharsets.UTF_8)
+        .split("""\s*\n\s*""")
+        .filterNot(_.isEmpty)
+        .map(s => normalizeLicenseUri(new URI(s))).toSeq.collectResults.unsafeGetOrThrow
     )
   }
 }

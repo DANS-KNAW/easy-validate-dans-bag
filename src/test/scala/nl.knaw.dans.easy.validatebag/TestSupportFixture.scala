@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.validatebag
 import java.nio.file.Paths
 
 import better.files._
-import nl.knaw.dans.easy.validatebag.rules.bagit.bagMustBeValid
+import nl.knaw.dans.easy.validatebag.rules.bagit.bagIsValid
 import nl.knaw.dans.easy.validatebag.validation.RuleViolationDetailsException
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.scalatest._
@@ -35,10 +35,10 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
 
   private def shouldBeValidAccordingToBagIt(inputBag: String): Unit = {
-    bagMustBeValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]]// Profile version does not matter here
+    bagIsValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]] // Profile version does not matter here
   }
 
-  protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {
+  protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
@@ -48,7 +48,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     }
   }
 
-  protected def testRuleViolation(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {
+  protected def testRuleViolation(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
@@ -59,7 +59,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     }
   }
 
-  protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {
+  protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     rule(new TargetBag(bagsDir / inputBag, profileVersion)) shouldBe a[Success[_]]
   }

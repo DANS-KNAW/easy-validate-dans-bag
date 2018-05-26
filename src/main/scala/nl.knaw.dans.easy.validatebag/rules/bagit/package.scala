@@ -41,7 +41,7 @@ package object bagit extends DebugEnhancedLogging {
     bagVerifier.close()
   }
 
-  def bagMustBeValid(t: TargetBag): Try[Unit] = {
+  def bagIsValid(t: TargetBag): Try[Unit] = {
     trace(())
 
     def failBecauseInvalid(t: Throwable): Try[Unit] = {
@@ -50,53 +50,51 @@ package object bagit extends DebugEnhancedLogging {
       Try(fail(details))
     }
 
-    t.tryBag
-      .recoverWith {
-        case cause: NoSuchFileException if cause.getMessage.endsWith("bagit.txt") =>
+    if (!t.bagDir.exists) {
+      Try(fail(s"Bag directory does not exist: ${ t.bagDir }"))
+    }
+    else {
+      t.tryBag
+        .recoverWith {
+          case cause: NoSuchFileException if cause.getMessage.endsWith("bagit.txt") =>
+            /*
+             * This seems to be the only reason when failing to read the bag should be construed as its being non-valid.
+             */
+            Try(fail("Mandatory file 'bagit.txt' is missing.")).asInstanceOf[Try[Bag]]
+        }
+        .map(bagVerifier.isValid(_, false))
+        .recoverWith {
           /*
-           * This seems to be the only reason when failing to read the bag should be construed as its being non-valid.
+           * Any of these (unfortunately unrelated) exception types mean that the bag is non-valid. The reason is captured in the
+           * exception. Any other (non-fatal) exception type means the verification process itself failed;
+           * this should lead to a Failure. (Btw fatal errors will NOT be wrapped in a Failure by above Try block!)
+           *
+           * Note that VerificationException is not included below, as it indicates a error during validation rather
+           * than that the bag is non-valid.
            */
-          Try(fail("Mandatory file 'bagit.txt' is missing.")).asInstanceOf[Try[Bag]]
-      }
-      .map(bagVerifier.isValid(_, false))
-      .recoverWith {
-        /*
-         * Any of these (unfortunately unrelated) exception types mean that the bag is non-valid. The reason is captured in the
-         * exception. Any other (non-fatal) exception type means the verification process itself failed;
-         * this should lead to a Failure. (Btw fatal errors will NOT be wrapped in a Failure by above Try block!)
-         *
-         * Note that VerificationException is not included below, as it indicates a error during validation rather
-         * than that the bag is non-valid.
-         */
-        case cause: MissingPayloadManifestException => failBecauseInvalid(cause)
-        case cause: MissingBagitFileException => failBecauseInvalid(cause)
-        case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause)
-        case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause)
-        case cause: FileNotInManifestException => failBecauseInvalid(cause)
-        case cause: MaliciousPathException => failBecauseInvalid(cause)
-        case cause: CorruptChecksumException => failBecauseInvalid(cause)
-        case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause)
-        case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause)
-      }
+          case cause: MissingPayloadManifestException => failBecauseInvalid(cause)
+          case cause: MissingBagitFileException => failBecauseInvalid(cause)
+          case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause)
+          case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause)
+          case cause: FileNotInManifestException => failBecauseInvalid(cause)
+          case cause: MaliciousPathException => failBecauseInvalid(cause)
+          case cause: CorruptChecksumException => failBecauseInvalid(cause)
+          case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause)
+          case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause)
+        }
+    }
   }
 
-  def bagMustBeVirtuallyValid(t: TargetBag): Try[Unit] = {
+  def bagIsVirtuallyValid(t: TargetBag): Try[Unit] = {
     trace(())
-    bagMustBeValid(t)
+    bagIsValid(t)
       .recoverWith {
         case cause: RuleViolationDetailsException =>
           Try(fail(s"${ cause.details } (WARNING: bag may still be virtually-valid, but this version of the service cannot check that."))
       }
-    // TODO: implement proper virtual-validity check.
   }
 
-  def bagMustContainBagInfoTxt(t: TargetBag) = Try {
-    trace(())
-    if (!(t.bagDir / "bag-info.txt").exists)
-      fail("Mandatory file 'bag-info.txt' not found in bag. ")
-  }
-
-  def bagInfoTxtMayContainOne(element: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoContainsAtMostOneOf(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
       Option(bag.getMetadata.get(element))
@@ -105,7 +103,7 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagInfoTxtMustContainExactlyOne(element: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoContainsExactlyOneOf(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
       val values = bag.getMetadata.get(element)
@@ -114,14 +112,14 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagInfoTxtMustNotContain(element: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoDoesNotContain(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
       if (bag.getMetadata.contains(element)) fail(s"bag-info.txt must not contain element: $element")
     }
   }
 
-  def bagInfoTxtElementMustHaveValue(element: String, value: String)(t: TargetBag): Try[Unit] = {
+  def bagInfoElementIfExistsHasValue(element: String, value: String)(t: TargetBag): Try[Unit] = {
     trace(element, value)
     getBagInfoTxtValue(t, element).map {
       _.foreach {
@@ -143,7 +141,7 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagInfoTxtCreatedMustBeIsoDate(t: TargetBag): Try[Unit] = {
+  def bagInfoCreatedElementIsIso8601Date(t: TargetBag): Try[Unit] = {
     trace(())
     val result = for {
       bag <- t.tryBag
@@ -163,13 +161,7 @@ package object bagit extends DebugEnhancedLogging {
     }
   }
 
-  def bagMustContainSha1PayloadManifest(t: TargetBag) = Try {
-    trace(())
-    if (!(t.bagDir / "manifest-sha1.txt").exists)
-      fail("Mandatory file 'manifest-sha1.txt' not found in bag.")
-  }
-
-  def bagSha1PayloadManifestMustContainAllPayloadFiles(t: TargetBag): Try[Unit] = {
+  def bagShaPayloadManifestContainsAllPayloadFiles(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryBag.map { bag =>
       bag.getPayLoadManifests.asScala.find(_.getAlgorithm == SHA1)

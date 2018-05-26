@@ -1,0 +1,5 @@
+Payload-Oxum: 79141.2
+Bagging-Date: 2018-05-23
+Bag-Size: 77.7 KB
+Created: 2015-05-19T00:00:00.000+02:00
+Is-Version-Of: urn:uuid:d5e8f0fb-7c37-486e-b918-cb06dd5ae5e7

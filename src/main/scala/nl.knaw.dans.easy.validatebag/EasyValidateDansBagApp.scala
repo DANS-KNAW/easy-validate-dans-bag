@@ -32,25 +32,18 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   logger.info("XML Schema factory created.")
 
-  private val ddmValidator = Try {
-    logger.info("Creating ddm.xml validator...")
-    val ddmSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/md/2018/03/ddm.xsd"))
+  private def createValidator(schemaUrl: URL): XmlValidator = Try {
+    logger.info(s"Creating validator for $schemaUrl ...")
+    val ddmSchema = schemaFactory.newSchema(schemaUrl)
     val v = new XmlValidator(ddmSchema)
-    logger.info("ddm.xml validator created.")
-    v
-  }.unsafeGetOrThrow
-
-  private val filesValidator = Try {
-    logger.info("Creating files.xml validator...")
-    val filesSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/bag/metadata/files/2018/04/files.xsd"))
-    val v = new XmlValidator(filesSchema)
-    logger.info("files.xml validator created.")
+    logger.info("Validator created.")
     v
   }.unsafeGetOrThrow
 
   private val xmlValidators: Map[String, XmlValidator] = Map(
-    "dataset.xml" -> ddmValidator,
-    "files.xml" -> filesValidator
+    "dataset.xml" -> createValidator(new URL("https://easy.dans.knaw.nl/schemas/md/2018/03/ddm.xsd")),
+    "files.xml" -> createValidator(new URL("https://easy.dans.knaw.nl/schemas/bag/metadata/files/2018/04/files.xsd")),
+    "agreements.xml" -> createValidator(new URL("https://easy.dans.knaw.nl/schemas/bag/metadata/agreements/2018/05/agreements.xsd"))
   )
 
   private val allRules: Map[ProfileVersion, RuleBase] = {
