@@ -50,34 +50,39 @@ package object bagit extends DebugEnhancedLogging {
       Try(fail(details))
     }
 
-    t.tryBag
-      .recoverWith {
-        case cause: NoSuchFileException if cause.getMessage.endsWith("bagit.txt") =>
+    if (!t.bagDir.exists) {
+      Try(fail(s"Bag directory does not exist: ${ t.bagDir }"))
+    }
+    else {
+      t.tryBag
+        .recoverWith {
+          case cause: NoSuchFileException if cause.getMessage.endsWith("bagit.txt") =>
+            /*
+             * This seems to be the only reason when failing to read the bag should be construed as its being non-valid.
+             */
+            Try(fail("Mandatory file 'bagit.txt' is missing.")).asInstanceOf[Try[Bag]]
+        }
+        .map(bagVerifier.isValid(_, false))
+        .recoverWith {
           /*
-           * This seems to be the only reason when failing to read the bag should be construed as its being non-valid.
+           * Any of these (unfortunately unrelated) exception types mean that the bag is non-valid. The reason is captured in the
+           * exception. Any other (non-fatal) exception type means the verification process itself failed;
+           * this should lead to a Failure. (Btw fatal errors will NOT be wrapped in a Failure by above Try block!)
+           *
+           * Note that VerificationException is not included below, as it indicates a error during validation rather
+           * than that the bag is non-valid.
            */
-          Try(fail("Mandatory file 'bagit.txt' is missing.")).asInstanceOf[Try[Bag]]
-      }
-      .map(bagVerifier.isValid(_, false))
-      .recoverWith {
-        /*
-         * Any of these (unfortunately unrelated) exception types mean that the bag is non-valid. The reason is captured in the
-         * exception. Any other (non-fatal) exception type means the verification process itself failed;
-         * this should lead to a Failure. (Btw fatal errors will NOT be wrapped in a Failure by above Try block!)
-         *
-         * Note that VerificationException is not included below, as it indicates a error during validation rather
-         * than that the bag is non-valid.
-         */
-        case cause: MissingPayloadManifestException => failBecauseInvalid(cause)
-        case cause: MissingBagitFileException => failBecauseInvalid(cause)
-        case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause)
-        case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause)
-        case cause: FileNotInManifestException => failBecauseInvalid(cause)
-        case cause: MaliciousPathException => failBecauseInvalid(cause)
-        case cause: CorruptChecksumException => failBecauseInvalid(cause)
-        case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause)
-        case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause)
-      }
+          case cause: MissingPayloadManifestException => failBecauseInvalid(cause)
+          case cause: MissingBagitFileException => failBecauseInvalid(cause)
+          case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause)
+          case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause)
+          case cause: FileNotInManifestException => failBecauseInvalid(cause)
+          case cause: MaliciousPathException => failBecauseInvalid(cause)
+          case cause: CorruptChecksumException => failBecauseInvalid(cause)
+          case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause)
+          case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause)
+        }
+    }
   }
 
   def bagIsVirtuallyValid(t: TargetBag): Try[Unit] = {

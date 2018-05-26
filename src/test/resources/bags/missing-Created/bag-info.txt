@@ -1,4 +1,0 @@
-Payload-Oxum: 0.1
-Bagging-Date: 2018-01-31
-Bag-Size: 0.2 KB
-Is-Version-Of: urn:uuid:d5e8f0fb-7c37-486e-b918-cb06dd5ae5e7

@@ -60,7 +60,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   "xmlFileConformsToSchema" should "report validation errors if XML not valid" in {
     testRuleViolationRegex(
       rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
-      inputBag = "metadata-unknown-element",
+      inputBag = "ddm-unknown-element",
       includedInErrorMsg = "UNKNOWN-ELEMENT".r
     )
   }
@@ -88,14 +88,14 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   it should "succeed even if license is specified with a trailing slash" in {
     testRuleSuccess(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "metadata-correct-license-uri-with-trailing-slash",
+      inputBag = "ddm-correct-license-uri-with-trailing-slash",
       doubleCheckBagItValidity = true)
   }
 
   it should "fail if there is no rights holder" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "metadata-license-uri-but-no-rightsholder",
+      inputBag = "ddm-license-uri-but-no-rightsholder",
       includedInErrorMsg = "rightsHolder",
       doubleCheckBagItValidity = true)
   }
@@ -103,7 +103,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   it should "fail if the license is not on the list" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "metadata-license-uri-not-on-list",
+      inputBag = "ddm-license-uri-not-on-list",
       includedInErrorMsg = "unknown or unsupported license",
       doubleCheckBagItValidity = true)
   }
@@ -111,7 +111,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   it should "fail if there are two license elements with xsi:type URI" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "metadata-two-license-uris",
+      inputBag = "ddm-two-license-uris",
       includedInErrorMsg = "Only one license is allowed",
       doubleCheckBagItValidity = true)
 
