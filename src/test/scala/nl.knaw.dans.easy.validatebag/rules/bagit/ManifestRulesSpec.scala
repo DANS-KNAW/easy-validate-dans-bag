@@ -22,14 +22,14 @@ class ManifestRulesSpec extends TestSupportFixture {
     testRuleViolationRegex(
       bagShaPayloadManifestContainsAllPayloadFiles,
       inputBag = "bagit-two-payload-files-without-sha1",
-      includedInErrorMsg = """All payload files must have an SHA-1 checksum.*sine-sha1.txt""".r,
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = """All payload files must have an SHA-1 checksum.*sine-sha1.txt""".r
+    )
   }
 
   it should "succeed if not all payload files have an MD5 checksum" in {
     testRuleSuccess(
       bagShaPayloadManifestContainsAllPayloadFiles,
-      inputBag = "bagit-two-payload-files-without-md5",
-      doubleCheckBagItValidity = true)
+      inputBag = "bagit-two-payload-files-without-md5"
+    )
   }
 }

@@ -26,9 +26,6 @@ import org.scalatest._
 import scala.util.{ Failure, Success }
 import scala.util.matching.Regex
 
-// TODO: systematiseren namen van testbags (<target>-<feature(s)>, ddm-license-uri-unknown, bagit-missing-bagittxt, baginfo-non-iso8601-in-created-element etc)
-// todo: maak doubleCheckBagValidaty default 'true' en verbeter de foutmelding als bag niet valid blijkt.
-
 trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach with DebugEnhancedLogging {
   lazy val testDir: File = File(s"target/test/${ getClass.getSimpleName }")
 
@@ -38,10 +35,10 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
 
   private def shouldBeValidAccordingToBagIt(inputBag: String): Unit = {
-    bagIsValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]]// Profile version does not matter here
+    bagIsValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]] // Profile version does not matter here
   }
 
-  protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {
+  protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
@@ -51,7 +48,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     }
   }
 
-  protected def testRuleViolation(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {
+  protected def testRuleViolation(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
@@ -62,7 +59,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     }
   }
 
-  protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = false): Unit = {
+  protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     rule(new TargetBag(bagsDir / inputBag, profileVersion)) shouldBe a[Success[_]]
   }

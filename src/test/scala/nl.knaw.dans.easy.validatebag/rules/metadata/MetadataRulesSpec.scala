@@ -74,46 +74,40 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   "ddmMayContainDctermsLicenseFromList" should "succeed if license is on list" in {
     testRuleSuccess(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "metadata-correct",
-      doubleCheckBagItValidity = true)
+      inputBag = "metadata-correct")
   }
 
   it should "succeed even if license is specified with https rather than http" in {
     testRuleSuccess(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "ddm-correct-license-uri-with-https-scheme",
-      doubleCheckBagItValidity = true)
+      inputBag = "ddm-correct-license-uri-with-https-scheme")
   }
 
   it should "succeed even if license is specified with a trailing slash" in {
     testRuleSuccess(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
-      inputBag = "ddm-correct-license-uri-with-trailing-slash",
-      doubleCheckBagItValidity = true)
+      inputBag = "ddm-correct-license-uri-with-trailing-slash")
   }
 
   it should "fail if there is no rights holder" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-license-uri-but-no-rightsholder",
-      includedInErrorMsg = "rightsHolder",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "rightsHolder")
   }
 
   it should "fail if the license is not on the list" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-license-uri-not-on-list",
-      includedInErrorMsg = "unknown or unsupported license",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "unknown or unsupported license")
   }
 
   it should "fail if there are two license elements with xsi:type URI" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-two-license-uris",
-      includedInErrorMsg = "Only one license is allowed",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Only one license is allowed")
 
   }
 
@@ -122,8 +116,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     testRuleViolation(
       rule = ddmDaisAreValid,
       inputBag = "ddm-incorrect-dai",
-      includedInErrorMsg = "Invalid DAIs",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Invalid DAIs")
   }
 
   it should "accept a DAI with a valid check digit" in {
@@ -136,127 +129,115 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     testRuleViolation(
       rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-odd-number-of-values",
-      includedInErrorMsg = "with odd number of values",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "with odd number of values")
   }
 
   it should "report error if less than 8 values found" in {
     testRuleViolation(
       rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-too-few-values",
-      includedInErrorMsg = "too few values",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "too few values")
   }
 
   it should "report error if start and end pair are different" in {
     testRuleViolation(
       rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-start-and-end-different",
-      includedInErrorMsg = "unequal first and last pairs",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "unequal first and last pairs")
   }
 
   it should "succeed for correct polygon" in {
     testRuleSuccess(
       rule = ddmGmlPolygonPosListIsWellFormed,
-      inputBag = "ddm-poslist-correct",
-      doubleCheckBagItValidity = true)
+      inputBag = "ddm-poslist-correct")
   }
 
   "polygonsInSameMultiSurfaceHaveSameSrsName" should "fail if polygons in the same multi-surface have different srsNames" in {
     testRuleViolation(
       rule = polygonsInSameMultiSurfaceHaveSameSrsName,
       inputBag = "ddm-different-srs-names",
-      includedInErrorMsg = "Found MultiSurface element containing polygons with different srsNames",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Found MultiSurface element containing polygons with different srsNames")
   }
 
   "pointsHaveAtLeastTwoValues" should "fail if a Point with one coordinate is found" in {
     testRuleViolation(
       rule = pointsHaveAtLeastTwoValues,
       inputBag = "ddm-point-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Point with only one coordinate")
   }
 
   it should "fail if a lowerCorner with one coordinate is found" in {
     testRuleViolation(
       rule = pointsHaveAtLeastTwoValues,
       inputBag = "ddm-lowercorner-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Point with only one coordinate")
   }
 
   it should "fail if a upperCorner with one coordinate is found" in {
     testRuleViolation(
       rule = pointsHaveAtLeastTwoValues,
       inputBag = "ddm-uppercorner-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Point with only one coordinate")
   }
 
   "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "fail if a file element is described twice" in {
     testRuleViolation(
       rule = filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
-      includedInErrorMsg = "Duplicate unique value",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Duplicate unique value")
   }
 
   "filesXmlHasDocumentElementFiles" should "fail if files.xml has document element other than 'files'" in {
     testRuleViolation(
       rule = filesXmlHasDocumentElementFiles,
       inputBag = "filesxml-no-files-as-document-element",
-      includedInErrorMsg = "document element must be 'files'",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "document element must be 'files'")
   }
 
   "filesXmlHasOnlyFiles" should "fail if files.xml/files has non-file child" in {
     testRuleViolation(
       rule = filesXmlHasOnlyFiles,
       inputBag = "filesxml-non-file-element",
-      includedInErrorMsg = "non-file elements",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "non-file elements")
   }
 
   "filesXmlFileElementsAllHaveFilepathAttribute" should "fail if a file element has no filepath attribute" in {
     testRuleViolation(
       rule = filesXmlFileElementsAllHaveFilepathAttribute,
       inputBag = "filesxml-file-element-without-filepath",
-      includedInErrorMsg = "Not al 'file' elements have a 'filepath' attribute",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Not al 'file' elements have a 'filepath' attribute")
   }
 
   "filesXmlAllFilesDescribedOnce" should "fail if a file is described twice" in {
     testRuleViolation(
       rule = filesXmlAllFilesDescribedOnce,
       inputBag = "filesxml-file-described-twice",
-      includedInErrorMsg = "Duplicate filepaths found",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Duplicate filepaths found"
+    )
   }
 
   it should "fail if a file is not described" in {
     testRuleViolation(
       rule = filesXmlAllFilesDescribedOnce,
       inputBag = "filesxml-file-described-twice",
-      includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder"
+    )
   }
 
   "filesXmlAllFilesHaveFormat" should "fail if there is a file element without a dct:format child" in {
     testRuleViolation(
       rule = filesXmlAllFilesHaveFormat,
       inputBag = "filesxml-no-dct-format",
-      includedInErrorMsg = "not all <file> elements contain a <dcterms:format>",
-      doubleCheckBagItValidity = true)
-   }
+      includedInErrorMsg = "not all <file> elements contain a <dcterms:format>"
+    )
+  }
 
   "filesXmlFilesHaveOnlyDcTerms" should "fail if there is a file element with a non dct child" in {
     testRuleViolation(
       rule = filesXmlFilesHaveOnlyDcTerms,
       inputBag = "filesxml-non-dct-child",
-      includedInErrorMsg = "non-dcterms elements found in some file elements",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "non-dcterms elements found in some file elements"
+    )
   }
 
   "all files.xml rules" should "succeed if files.xml is correct" in {
@@ -269,7 +250,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       RC(filesXmlAllFilesDescribedOnce),
       RC(filesXmlAllFilesHaveFormat),
       RC(filesXmlFilesHaveOnlyDcTerms))
-      .foreach(rc => testRuleSuccess(rc.rule, inputBag = "metadata-correct", doubleCheckBagItValidity = true))
+      .foreach(rc => testRuleSuccess(rc.rule, inputBag = "metadata-correct"))
   }
 
   // Reusing some test data. This rules is actually not used for files.xml.
@@ -277,8 +258,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     testRuleViolation(
       rule = xmlFileIfExistsConformsToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
-      includedInErrorMsg = "Duplicate unique value",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Duplicate unique value"
+    )
   }
 
   "optionalFileIsUtf8Decodable" should "succeed if file exists and contains valid UTF-8" in {
@@ -297,7 +278,6 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     testRuleViolation(
       rule = optionalFileIsUtf8Decodable(Paths.get("data/ceci-n-est-pas-d-utf8.jpg")),
       inputBag = "generic-minimal-with-binary-data",
-      includedInErrorMsg = "Input not valid UTF-8",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "Input not valid UTF-8")
   }
 }

@@ -22,7 +22,7 @@ import nl.knaw.dans.easy.validatebag.TestSupportFixture
 class StructuralRulesSpec extends TestSupportFixture {
 
   "containsDir" should "fail metadata directory not found" in {
-    testRuleViolation(containsDir(Paths.get("metadata")), "missingMetadata", "not found in bag")
+    testRuleViolation(containsDir(Paths.get("metadata")), "generic-minimal", "not found in bag")
   }
 
   it should "fail if target is a file instead of a directory" in {
@@ -53,30 +53,30 @@ class StructuralRulesSpec extends TestSupportFixture {
     testRuleViolation(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
       inputBag = "metadata-extra-file",
-      includedInErrorMsg = "contains files or directories that are not allowed",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "contains files or directories that are not allowed"
+    )
   }
 
   it should "fail if other directory is present" in {
     testRuleViolation(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
       inputBag = "metadata-extra-subdir",
-      includedInErrorMsg = "contains files or directories that are not allowed",
-      doubleCheckBagItValidity = true)
+      includedInErrorMsg = "contains files or directories that are not allowed"
+    )
   }
 
   it should "succeed less than specified is present" in {
     testRuleSuccess(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
-      inputBag = "metadata-no-files-xml",
-      doubleCheckBagItValidity = true)
+      inputBag = "metadata-no-files-xml"
+    )
   }
 
   it should "succeed exactly the files/directories specified are present" in {
     testRuleSuccess(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
-      inputBag = "metadata-correct",
-      doubleCheckBagItValidity = true)
+      inputBag = "metadata-correct"
+    )
   }
 }
 
