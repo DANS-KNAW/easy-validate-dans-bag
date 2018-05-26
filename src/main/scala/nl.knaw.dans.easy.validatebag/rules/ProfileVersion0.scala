@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.{ URI, URL }
+import java.net.URI
 import java.nio.file.Paths
 
 import nl.knaw.dans.easy.validatebag.{ NumberedRule, XmlValidator }
@@ -61,10 +61,10 @@ object ProfileVersion0 {
     // METADATA
 
     // dataset.xml
-    NumberedRule("3.1.1", xmlFileMustConformToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = Some("2.2")),
+    NumberedRule("3.1.1", xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = Some("2.2")),
     NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = Some("3.1.1")),
-    NumberedRule("3.1.4", ddmDaisMustBeValid, dependsOn = Some("3.1.1")),
-    NumberedRule("3.1.5", ddmGmlPolygonPosListMustMeetExtraConstraints, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.4", ddmDaisAreValid, dependsOn = Some("3.1.1")),
+    NumberedRule("3.1.5", ddmGmlPolygonPosListIsWellFormed, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.6", polygonsInSameMultiSurfaceMustHaveSameSrsName, dependsOn = Some("3.1.1")),
     NumberedRule("3.1.7", pointsHaveAtLeastTwoValues, dependsOn = Some("3.1.1")),
 
@@ -80,7 +80,7 @@ object ProfileVersion0 {
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyDcTerms, dependsOn = Some("3.2.3")),
 
     // agreements.xml
-    NumberedRule("3.3.1", xmlFileIfExistsMustConformToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
+    NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
 
     // message-from-depositor.txt
     NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/message-from-depositor")))

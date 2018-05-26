@@ -15,17 +15,17 @@
  */
 package nl.knaw.dans.easy.validatebag
 
-import java.net.{ URI, URL }
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
 
 import better.files.File
+import nl.knaw.dans.easy.validatebag.rules.metadata.normalizeLicenseUri
+import nl.knaw.dans.lib.error._
 import org.apache.commons.configuration.PropertiesConfiguration
 import resource.managed
 
 import scala.io.Source
-import rules.metadata.normalizeLicenseUri
-import nl.knaw.dans.lib.error._
 
 case class Configuration(version: String, properties: PropertiesConfiguration, allowedLicenses: Seq[URI])
 

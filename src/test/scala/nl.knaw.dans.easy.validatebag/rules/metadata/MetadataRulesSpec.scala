@@ -59,7 +59,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "xmlFileMustConformToSchema" should "report validation errors if XML not valid" in {
     testRuleViolationRegex(
-      rule = xmlFileMustConformToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
+      rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "metadata-unknown-element",
       includedInErrorMsg = "UNKNOWN-ELEMENT".r
     )
@@ -67,7 +67,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "succeed if XML is valid" in {
     testRuleSuccess(
-      rule = xmlFileMustConformToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
+      rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "metadata-correct")
   }
 
@@ -120,7 +120,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   // General syntax will be checked by DDM XML Schema
   "daisAreValid" should "report a DAI that has an invalid check digit" in {
     testRuleViolation(
-      rule = ddmDaisMustBeValid,
+      rule = ddmDaisAreValid,
       inputBag = "ddm-incorrect-dai",
       includedInErrorMsg = "Invalid DAIs",
       doubleCheckBagItValidity = true)
@@ -128,13 +128,13 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "accept a DAI with a valid check digit" in {
     testRuleSuccess(
-      rule = ddmDaisMustBeValid,
+      rule = ddmDaisAreValid,
       inputBag = "ddm-correct-dai")
   }
 
   "ddmGmlPolygonPosListMustMeetExtraConstraints" should "report error if odd number of values in posList" in {
     testRuleViolation(
-      rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
+      rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-odd-number-of-values",
       includedInErrorMsg = "with odd number of values",
       doubleCheckBagItValidity = true)
@@ -142,7 +142,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "report error if less than 8 values found" in {
     testRuleViolation(
-      rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
+      rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-too-few-values",
       includedInErrorMsg = "too few values",
       doubleCheckBagItValidity = true)
@@ -150,7 +150,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "report error if start and end pair are different" in {
     testRuleViolation(
-      rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
+      rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-start-and-end-different",
       includedInErrorMsg = "unequal first and last pairs",
       doubleCheckBagItValidity = true)
@@ -158,7 +158,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "succeed for correct polygon" in {
     testRuleSuccess(
-      rule = ddmGmlPolygonPosListMustMeetExtraConstraints,
+      rule = ddmGmlPolygonPosListIsWellFormed,
       inputBag = "ddm-poslist-correct",
       doubleCheckBagItValidity = true)
   }
@@ -275,7 +275,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   // Reusing some test data. This rules is actually not used for files.xml.
   "xmlFileIfExistsMustConformToSchema" should "fail if file exists but does not conform" in {
     testRuleViolation(
-      rule = xmlFileIfExistsMustConformToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
+      rule = xmlFileIfExistsConformsToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
       includedInErrorMsg = "Duplicate unique value",
       doubleCheckBagItValidity = true)

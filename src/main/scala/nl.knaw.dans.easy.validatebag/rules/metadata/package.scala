@@ -20,7 +20,6 @@ import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset }
 import java.nio.file.{ Path, Paths }
 
-import nl.knaw.dans.easy.validatebag
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.easy.validatebag.validation._
 import nl.knaw.dans.lib.error._
@@ -36,14 +35,14 @@ package object metadata extends DebugEnhancedLogging {
   val dctermsNamespace = "http://purl.org/dc/terms/"
   val schemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance"
 
-  def xmlFileIfExistsMustConformToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
+  def xmlFileIfExistsConformsToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(xmlFile)
     require(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
-    if ((t.bagDir / xmlFile.toString).exists) xmlFileMustConformToSchema(xmlFile, schemaName, validator)(t)
+    if ((t.bagDir / xmlFile.toString).exists) xmlFileConformsToSchema(xmlFile, schemaName, validator)(t)
     else Success(())
   }
 
-  def xmlFileMustConformToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
+  def xmlFileConformsToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(xmlFile)
     require(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
     (t.bagDir / xmlFile.toString).inputStream.map(validator.validate).map {
@@ -57,7 +56,7 @@ package object metadata extends DebugEnhancedLogging {
       xml =>
         if (xml.namespace == filesXmlNamespace) {
           logger.debug("Validating files.xml against XML Schema")
-          xmlFileMustConformToSchema(Paths.get("metadata/files.xml"), "files.xml", validator)(t)
+          xmlFileConformsToSchema(Paths.get("metadata/files.xml"), "files.xml", validator)(t)
         }
         else {
           logger.info(s"files.xml does not declare namespace ${ filesXmlNamespace }, NOT validating with XML Schema")
@@ -107,7 +106,6 @@ package object metadata extends DebugEnhancedLogging {
     new URI(normalizeLicenseUriScheme(uri.getScheme), uri.getUserInfo, uri.getHost, uri.getPort, normalizeLicenseUriPath(uri.getPath), uri.getQuery, uri.getFragment)
   }
 
-
   private def hasXsiType(attrNamespace: String, attrValue: String)(e: Node): Boolean = {
     e.attribute(schemaInstanceNamespace.toString, "type")
       .exists {
@@ -120,7 +118,7 @@ package object metadata extends DebugEnhancedLogging {
       }
   }
 
-  def ddmDaisMustBeValid(t: TargetBag): Try[Unit] = {
+  def ddmDaisAreValid(t: TargetBag): Try[Unit] = {
     for {
       ddm <- t.tryDdm
       _ <- daisAreValid(ddm)
@@ -135,7 +133,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   // Calculated the check digit of a DAI. Implementation copied from easy-ddm.
-  def digest(message: String, modeMax: Int): Char = {
+  private def digest(message: String, modeMax: Int): Char = {
     val reverse = message.reverse
     var f = 2
     var w = 0
@@ -159,7 +157,7 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  def ddmGmlPolygonPosListMustMeetExtraConstraints(t: TargetBag): Try[Unit] = {
+  def ddmGmlPolygonPosListIsWellFormed(t: TargetBag): Try[Unit] = {
     trace(())
     for {
       ddm <- t.tryDdm
@@ -188,11 +186,6 @@ package object metadata extends DebugEnhancedLogging {
     if (numberOfValues % 2 != 0) fail(s"Found posList with odd number of values: $numberOfValues. ${ offendingPosListMsg(values) }")
     if (numberOfValues < 8) fail(s"Found posList with too few values (less than 4 pairs). ${ offendingPosListMsg(values) }")
     if (values.take(2) != values.takeRight(2)) fail(s"Found posList with unequal first and last pairs. ${ offendingPosListMsg(values) }")
-  }
-
-  def filesXmlHasDocumentElementFiles(t: TargetBag): Try[Unit] = {
-    trace(())
-    t.tryFilesXml.map(xml => if (xml.label != "files") fail("files.xml: document element must be 'files'"))
   }
 
   def polygonsInSameMultiSurfaceMustHaveSameSrsName(t: TargetBag): Try[Unit] = {
@@ -238,6 +231,11 @@ package object metadata extends DebugEnhancedLogging {
   private def validatePoint(point: Elem) = {
     if (point.text.trim.split("""\s+""").length > 1) Success(())
     else Try(fail(s"Point with only one coordinate: ${ point.text.trim }"))
+  }
+
+  def filesXmlHasDocumentElementFiles(t: TargetBag): Try[Unit] = {
+    trace(())
+    t.tryFilesXml.map(xml => if (xml.label != "files") fail("files.xml: document element must be 'files'"))
   }
 
   def filesXmlHasOnlyFiles(t: TargetBag): Try[Unit] = {
@@ -322,5 +320,4 @@ package object metadata extends DebugEnhancedLogging {
       cs.decode(ByteBuffer.wrap(input))
     }
   }
-
 }
