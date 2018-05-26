@@ -30,8 +30,11 @@ import scala.util.{ Success, Try }
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
-  val namespaceSchemaInstance = new URI("http://www.w3.org/2001/XMLSchema-instance")
-  val namespaceDcterms = new URI("http://purl.org/dc/terms/")
+  val filesXmlNamespace = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/"
+  val dcxDaiNamespace = "http://easy.dans.knaw.nl/schemas/dcx/dai/"
+  val gmlNamespace = "http://www.opengis.net/gml"
+  val dctermsNamespace = "http://purl.org/dc/terms/"
+  val schemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance"
 
   def xmlFileIfExistsMustConformToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(xmlFile)
@@ -52,12 +55,12 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     t.tryFilesXml.flatMap {
       xml =>
-        if (xml.namespace == validatebag.filesXmlNamespace) {
+        if (xml.namespace == filesXmlNamespace) {
           logger.debug("Validating files.xml against XML Schema")
           xmlFileMustConformToSchema(Paths.get("metadata/files.xml"), "files.xml", validator)(t)
         }
         else {
-          logger.info(s"files.xml does not declare namespace ${ validatebag.filesXmlNamespace }, NOT validating with XML Schema")
+          logger.info(s"files.xml does not declare namespace ${ filesXmlNamespace }, NOT validating with XML Schema")
           Success(())
         }
     }
@@ -72,7 +75,7 @@ package object metadata extends DebugEnhancedLogging {
         debug(s"Found licences: ${ licenses.mkString(", ") }")
         lazy val rightsHolders = (metadata \ "rightsHolder").toList
         licenses match {
-          case license :: Nil if hasXsiType(namespaceDcterms, "URI")(license) =>
+          case license :: Nil if hasXsiType(dctermsNamespace, "URI")(license) =>
             val licenseUri = normalizeLicenseUri(new URI(license.text)).get
             if (!allowedLicenses.contains(licenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
             if (rightsHolders.isEmpty) fail("Valid license found, but no rightsHolder specified")
@@ -105,12 +108,12 @@ package object metadata extends DebugEnhancedLogging {
   }
 
 
-  private def hasXsiType(attrNamespace: URI, attrValue: String)(e: Node): Boolean = {
-    e.attribute(namespaceSchemaInstance.toString, "type")
+  private def hasXsiType(attrNamespace: String, attrValue: String)(e: Node): Boolean = {
+    e.attribute(schemaInstanceNamespace.toString, "type")
       .exists {
         case Seq(n) =>
           n.text.split(":") match {
-            case Array(pref, label) => e.getNamespace(pref) == attrNamespace.toString && label == attrValue
+            case Array(pref, label) => e.getNamespace(pref) == attrNamespace && label == attrValue
             case _ => false
           }
         case _ => false
@@ -125,7 +128,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def daisAreValid(ddm: Elem): Try[Unit] = Try {
-    val dais = (ddm \\ "DAI").filter(_.namespace == validatebag.dcxDaiNamespace)
+    val dais = (ddm \\ "DAI").filter(_.namespace == dcxDaiNamespace)
     logger.debug(s"DAIs to check: ${ dais.mkString(", ") }")
     val invalidDais = dais.map(_.text).filterNot(s => digest(s.slice(0, s.length - 1), 9) == s.last)
     if (invalidDais.nonEmpty) fail(s"Invalid DAIs: ${ invalidDais.mkString(", ") }")
@@ -173,7 +176,7 @@ package object metadata extends DebugEnhancedLogging {
     polygons.flatMap(_ \\ "posList")
   }
 
-  private def getPolygons(parent: Elem) = (parent \\ "Polygon").filter(_.namespace == validatebag.gmlNamespace)
+  private def getPolygons(parent: Elem) = (parent \\ "Polygon").filter(_.namespace == gmlNamespace)
 
   private def validatePosList(node: Node): Try[Unit] = Try {
     trace(node)
@@ -206,7 +209,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def getMultiSurfaces(ddm: Elem) = Try {
-    (ddm \\ "MultiSurface").filter(_.namespace == validatebag.gmlNamespace).asInstanceOf[Seq[Elem]]
+    (ddm \\ "MultiSurface").filter(_.namespace == gmlNamespace).asInstanceOf[Seq[Elem]]
   }
 
   private def validateMultiSurface(ms: Elem) = {
@@ -229,7 +232,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def getGmlPoints(ddm: Elem) = Try {
-    ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == validatebag.gmlNamespace).asInstanceOf[Seq[Elem]]
+    ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == gmlNamespace).asInstanceOf[Seq[Elem]]
   }
 
   private def validatePoint(point: Elem) = {
@@ -297,7 +300,7 @@ package object metadata extends DebugEnhancedLogging {
       val fileChildren = xml \ "file" \ "_"
       val hasOnlyDcTermsInFileElements = fileChildren.forall {
         case n: Elem =>
-          xml.getNamespace(n.prefix) == validatebag.dctermsNamespace || (n.prefix == "" && xml.namespace == validatebag.dctermsNamespace)
+          xml.getNamespace(n.prefix) == dctermsNamespace || (n.prefix == "" && xml.namespace == dctermsNamespace)
         case _ => true // Don't check non-element nodes
       }
       if (!hasOnlyDcTermsInFileElements) fail("files.xml: non-dcterms elements found in some file elements")
