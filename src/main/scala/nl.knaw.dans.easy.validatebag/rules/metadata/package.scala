@@ -53,7 +53,7 @@ package object metadata extends DebugEnhancedLogging {
     }
   }.get()
 
-  def filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(validator: XmlValidator)(t: TargetBag): Try[Unit] = {
+  def filesXmlConformsToSchemaIfFilesNamespaceDeclared(validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryFilesXml.flatMap {
       xml =>

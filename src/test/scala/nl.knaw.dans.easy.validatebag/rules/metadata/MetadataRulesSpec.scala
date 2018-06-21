@@ -182,7 +182,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "fail if a file element is described twice" in {
     testRuleViolation(
-      rule = filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),
+      rule = filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
       includedInErrorMsg = "Duplicate unique value")
   }
@@ -264,7 +264,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "all files.xml rules" should "succeed if files.xml is correct" in {
     Seq[Rule](
-      filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),
+      filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
       filesXmlHasDocumentElementFiles,
       filesXmlHasOnlyFiles,
       filesXmlFileElementsAllHaveFilepathAttribute,
