@@ -296,6 +296,9 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
+  // Please note that this method does accept all elements within 'files \ file' that are in the
+  // allowed namespaces, not only those that are valid! This is, however, not a problem, since
+  // invalid elements will be caught by `filesXmlConformsToSchemaIfDeclaredInDefaultNamespace`
   def filesXmlFilesHaveOnlyDcTerms(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryFilesXml.map { filesXml =>

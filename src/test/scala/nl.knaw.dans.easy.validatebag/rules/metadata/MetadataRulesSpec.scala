@@ -246,6 +246,22 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "filesxml-default-namespace-child")
   }
 
+  // NOTE: this test is here to show that invalid elements are accepted here, as long as they're
+  // in the dct namespace
+  it should "succeed when an invalid element in the dct namespace is used" in {
+    testRuleSuccess(
+      rule = filesXmlFilesHaveOnlyDcTerms,
+      inputBag = "filesxml-invalid-dct-child")
+  }
+
+  // NOTE: this test is here to show that invalid elements are accepted here, as long as they're
+  // in the default namespace
+  it should "succeed when an invalid element in the default namespace is used" in {
+    testRuleSuccess(
+      rule = filesXmlFilesHaveOnlyDcTerms,
+      inputBag = "filesxml-invalid-default-namespace-child")
+  }
+
   "all files.xml rules" should "succeed if files.xml is correct" in {
     Seq[Rule](
       filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),
