@@ -32,8 +32,11 @@ package object metadata extends DebugEnhancedLogging {
   val filesXmlNamespace = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/"
   val dcxDaiNamespace = "http://easy.dans.knaw.nl/schemas/dcx/dai/"
   val gmlNamespace = "http://www.opengis.net/gml"
+  val dcNamespace = "http://purl.org/dc/elements/1.1/"
   val dctermsNamespace = "http://purl.org/dc/terms/"
   val schemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance"
+
+  val allowedFilesXmlNamespaces = List(filesXmlNamespace, dcNamespace, dctermsNamespace)
 
   def xmlFileIfExistsConformsToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)(t: TargetBag): Try[Unit] = {
     trace(xmlFile)
@@ -295,11 +298,10 @@ package object metadata extends DebugEnhancedLogging {
 
   def filesXmlFilesHaveOnlyDcTerms(t: TargetBag): Try[Unit] = {
     trace(())
-    t.tryFilesXml.map { xml =>
-      val fileChildren = xml \ "file" \ "_"
+    t.tryFilesXml.map { filesXml =>
+      val fileChildren = filesXml \ "file" \ "_"
       val hasOnlyDcTermsInFileElements = fileChildren.forall {
-        case n: Elem =>
-          xml.getNamespace(n.prefix) == dctermsNamespace || (n.prefix == "" && xml.namespace == dctermsNamespace)
+        case n: Elem => allowedFilesXmlNamespaces contains filesXml.getNamespace(n.prefix)
         case _ => true // Don't check non-element nodes
       }
       if (!hasOnlyDcTermsInFileElements) fail("files.xml: non-dcterms elements found in some file elements")

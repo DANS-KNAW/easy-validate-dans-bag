@@ -240,6 +240,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     )
   }
 
+  it should "succeed when the default namespace is used" in {
+    testRuleSuccess(
+      rule = filesXmlFilesHaveOnlyDcTerms,
+      inputBag = "filesxml-default-namespace-child")
+  }
+
   "all files.xml rules" should "succeed if files.xml is correct" in {
     Seq[Rule](
       filesXmlConformsToSchemaIfDeclaredInDefaultNamespace(filesXmlValidator),

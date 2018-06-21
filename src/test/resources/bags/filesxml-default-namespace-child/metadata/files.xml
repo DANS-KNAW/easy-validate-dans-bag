@@ -5,7 +5,8 @@
     </file>
     <file filepath="data/leeg2.txt">
         <dcterms:format>text/plain</dcterms:format>
-        <non-dcterms:element>Whatever</non-dcterms:element>
+        <accessibleToRights>NONE</accessibleToRights>
+        <visibleToRights>NONE</visibleToRights>
     </file>
 </files>
 
