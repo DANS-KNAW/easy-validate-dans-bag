@@ -234,7 +234,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "filesXmlFilesHaveOnlyDcTerms" should "fail if there is a file element with a non dct child" in {
     testRuleViolation(
-      rule = filesXmlFilesHaveOnlyDcTerms,
+      rule = filesXmlFilesHaveOnlyAllowedNamespaces,
       inputBag = "filesxml-non-dct-child",
       includedInErrorMsg = "non-dcterms elements found in some file elements"
     )
@@ -242,7 +242,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "succeed when the default namespace is used" in {
     testRuleSuccess(
-      rule = filesXmlFilesHaveOnlyDcTerms,
+      rule = filesXmlFilesHaveOnlyAllowedNamespaces,
       inputBag = "filesxml-default-namespace-child")
   }
 
@@ -250,7 +250,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   // in the dct namespace
   it should "succeed when an invalid element in the dct namespace is used" in {
     testRuleSuccess(
-      rule = filesXmlFilesHaveOnlyDcTerms,
+      rule = filesXmlFilesHaveOnlyAllowedNamespaces,
       inputBag = "filesxml-invalid-dct-child")
   }
 
@@ -258,7 +258,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   // in the default namespace
   it should "succeed when an invalid element in the default namespace is used" in {
     testRuleSuccess(
-      rule = filesXmlFilesHaveOnlyDcTerms,
+      rule = filesXmlFilesHaveOnlyAllowedNamespaces,
       inputBag = "filesxml-invalid-default-namespace-child")
   }
 
@@ -270,7 +270,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       filesXmlFileElementsAllHaveFilepathAttribute,
       filesXmlAllFilesDescribedOnce,
       filesXmlAllFilesHaveFormat,
-      filesXmlFilesHaveOnlyDcTerms)
+      filesXmlFilesHaveOnlyAllowedNamespaces)
       .foreach(testRuleSuccess(_, inputBag = "metadata-correct"))
   }
 

@@ -77,7 +77,7 @@ object ProfileVersion0 {
     // Second part of 3.2.4 (directories not described) is implicitly checked by 3.2.5
     NumberedRule("3.2.5", filesXmlAllFilesDescribedOnce, dependsOn = Some("3.2.4")),
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = Some("3.2.2")),
-    NumberedRule("3.2.7", filesXmlFilesHaveOnlyDcTerms, dependsOn = Some("3.2.2")),
+    NumberedRule("3.2.7", filesXmlFilesHaveOnlyAllowedNamespaces, dependsOn = Some("3.2.2")),
 
     // agreements.xml
     NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
