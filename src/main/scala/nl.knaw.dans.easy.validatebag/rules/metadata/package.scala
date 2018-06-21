@@ -301,10 +301,10 @@ package object metadata extends DebugEnhancedLogging {
   // invalid elements will be caught by `filesXmlConformsToSchemaIfDeclaredInDefaultNamespace`
   def filesXmlFilesHaveOnlyAllowedNamespaces(t: TargetBag): Try[Unit] = {
     trace(())
-    t.tryFilesXml.map { filesXml =>
-      val fileChildren = filesXml \ "file" \ "_"
+    t.tryFilesXml.map { xml =>
+      val fileChildren = xml \ "file" \ "_"
       val hasOnlyDcTermsInFileElements = fileChildren.forall {
-        case n: Elem => allowedFilesXmlNamespaces contains filesXml.getNamespace(n.prefix)
+        case n: Elem => allowedFilesXmlNamespaces contains xml.getNamespace(n.prefix)
         case _ => true // Don't check non-element nodes
       }
       if (!hasOnlyDcTermsInFileElements) fail("files.xml: non-dcterms elements found in some file elements")
