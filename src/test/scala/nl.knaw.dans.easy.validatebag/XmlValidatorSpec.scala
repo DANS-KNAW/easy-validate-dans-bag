@@ -17,6 +17,7 @@ package nl.knaw.dans.easy.validatebag
 
 import java.net.URL
 
+import better.files.File
 import better.files.File.currentWorkingDirectory
 import javax.xml.validation.{ Schema, SchemaFactory }
 import org.scalatest.exceptions.TestFailedException
@@ -33,9 +34,7 @@ class XmlValidatorSpec extends FlatSpec with Matchers {
 
   "Validate" should "return a success when handed a ddm correct xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/dataset.xml"
-    validateXmlFile(validatorDDM, xmlFileToTest, testSchemaDDM) should matchPattern {
-      case Success(_) =>
-    }
+    validateXmlFile(validatorDDM, xmlFileToTest, testSchemaDDM) shouldBe a[Success[_]]
   }
 
   it should "return a failure when handed an incorrect ddm xml file" in {
@@ -54,14 +53,12 @@ class XmlValidatorSpec extends FlatSpec with Matchers {
 
   it should "return a success when handed an correct files xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/files.xml"
-    validateXmlFile(validatorFiles, xmlFileToTest, testSchemaDDM) should matchPattern {
-      case Success(_) =>
-    }
+    validateXmlFile(validatorFiles, xmlFileToTest, testSchemaDDM) shouldBe a[Success[_]]
   }
 
-  private def validateXmlFile(validator: XmlValidator, xmlFileToTest: BagDir, schema: Schema): Try[Unit] = {
-    xmlFileToTest.inputStream.map(validator.validate).map {
-      _.recoverWith { case t: Throwable => Try(fail(s"$xmlFileToTest does not conform to $schema: ${ t.getMessage }")) }
-    }.get()
+  private def validateXmlFile(validator: XmlValidator, xmlFileToTest: File, schema: Schema): Try[Unit] = {
+    xmlFileToTest.inputStream
+      .map(validator.validate(_).recoverWith { case t: Throwable => Try(fail(s"$xmlFileToTest does not conform to $schema: ${ t.getMessage }")) })
+      .get()
   }
 }
