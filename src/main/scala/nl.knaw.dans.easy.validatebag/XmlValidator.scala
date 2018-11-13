@@ -17,7 +17,6 @@ package nl.knaw.dans.easy.validatebag
 
 import java.io.InputStream
 
-import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.Schema
 import nl.knaw.dans.lib.error._
@@ -31,21 +30,10 @@ class XmlValidator(schema: Schema) {
   def validate(is: InputStream): Try[Unit] = {
     val errorHandler = new AccumulatingErrorHandler
     Try {
-      val f = SAXParserFactory.newInstance()
-      f.setNamespaceAware(true)
-      f.setValidating(true)
-      f.setFeature("http://xml.org/sax/features/namespace-prefixes", true)
-      f.newSAXParser()
-    }.map {
-      parser =>
-        val xr = parser.getXMLReader
-        parser.setProperty("http://java.sun.com/xml/jaxp/properties/schemaLanguage", "http://www.w3.org/2001/XMLSchema")
         val validator = schema.newValidator()
         validator.setErrorHandler(errorHandler)
         validator.validate(new StreamSource(is))
-    }
-
-    errorHandler.errors.toList.map(x => Try[Unit] { throw x }).collectResults.map(_ => ())
+    }.flatMap(_ => errorHandler.errors.toList.map(x => Try[Unit] { throw x }).collectResults.map(_ => ()))
   }
 }
 
