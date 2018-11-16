@@ -59,8 +59,7 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
 
   def validate(uri: URI, infoPackageType: InfoPackageType): Try[ResultMessage] = {
     val bagName = File(uri).name
-    logger.info(s"start validating bag: $bagName")
-    logger.info(s"start validating bag: ${ File(uri) }")
+    logger.info(s"[$bagName]: start validating bag")
     val resultMessage = for {
       bag <- getBagPath(uri)
       version <- getProfileVersion(bag)
@@ -75,10 +74,11 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     val ruleViolations: Try[Option[Seq[(String, String)]]] = resultMessage.map(_.ruleViolations)
     ruleViolations match {
       case scala.util.Success(None) =>
-        logger.info(s"bag: $bagName did not violate any rules and is validated successfully")
+        logger.info(s"[$bagName] did not violate any rules and is validated successfully")
       case scala.util.Success(Some(value)) => value.foreach { case (number: String, message: String) =>
-        logger.warn(s"bag'$bagName' broke rule number $number: $message")
+        logger.warn(s"[$bagName] broke rule number $number: $message")
       }
+      case Failure(_) => // don't log this will be done on a higher level
     }
     resultMessage
   }
