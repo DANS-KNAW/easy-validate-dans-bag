@@ -8,18 +8,12 @@ import org.scalatest.BeforeAndAfter
 import org.scalatra.test.scalatest.ScalatraSuite
 
 class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixture with ScalatraSuite with MockFactory with BeforeAndAfter {
-
-
-  private class mo
   private val app = new EasyValidateDansBagApp(Configuration("0", createProperties(), Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0"))))
   private val validateBagServlet = new EasyValidateDansBagServlet(app)
-
   addServlet(validateBagServlet, "/*")
 
-
-
   "the validate handler" should "return a 200 and the json response when presented a valid bag uri" in {
-    post(uri = "/validate?infoPackageType=SIP&uri=file:///Users/stephanhogenboom/git/service/easy/easy-validate-dans-bag/src/test/resources/bags/valid-bag", headers = Seq(("Accept", "Application/Json"))) {
+    post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/valid-bag", headers = Seq(("Accept", "Application/Json"))) {
 
     }
   }
