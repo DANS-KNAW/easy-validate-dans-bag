@@ -33,7 +33,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixt
     }
   }
 
-  it should "return a 200 and a response when presented an invalid bag" in {
+  it should "return a 200 and a response including 'compliant: false' and reasons when presented an invalid bag" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/metadata-correct", headers = Seq(("Accept", "Application/Json"))) {
       status shouldBe OK_200
       body should include(" - [1.2.4(a)] bag-info.txt must contain exactly one 'Created' element; number found: 0")
