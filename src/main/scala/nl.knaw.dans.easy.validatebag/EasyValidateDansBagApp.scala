@@ -76,8 +76,8 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
       case Success(bagName: String) =>
         logger.info(s"[$bagName]: start validating bag")
         bagName
-      case Failure(exception) =>
-        logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir")
+      case Failure(e: Exception) =>
+        logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir: ${ e. getMessage }")
         uri.toString
     }
   }
