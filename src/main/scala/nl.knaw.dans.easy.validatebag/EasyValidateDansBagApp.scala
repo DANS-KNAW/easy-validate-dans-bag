@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.validatebag
 import java.net.{ URI, URL }
 import java.nio.file.{ Path, Paths }
 
+import better.files.File
 import javax.xml.validation.SchemaFactory
 import nl.knaw.dans.easy.validatebag.InfoPackageType.InfoPackageType
 import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
@@ -57,13 +58,32 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   }
 
   def validate(uri: URI, infoPackageType: InfoPackageType): Try[ResultMessage] = {
-    for {
+    val bagName = File(uri).name
+    logger.info(s"start validating bag: $bagName")
+    logger.info(s"start validating bag: ${ File(uri)}")
+    val resultMessage = for {
       bag <- getBagPath(uri)
       version <- getProfileVersion(bag)
       violations <- validation.checkRules(new TargetBag(bag, version), allRules(version), infoPackageType)(isReadable = _.isReadable)
         .map(_ => Seq.empty)
         .recoverWith(extractViolations)
     } yield ResultMessage(uri, bag.getFileName.toString, version, infoPackageType, violations)
+    logResult(bagName, resultMessage)
+  }
+
+  private def logResult(bagName: String, resultMessage: Try[ResultMessage]) = {
+    val ruleViolations: Try[Option[Seq[(String, String)]]] = resultMessage.map(_.ruleViolations)
+    ruleViolations match {
+      case scala.util.Success(value) => val violations = value.getOrElse(Seq())
+        if (violations.isEmpty) {
+          logger.info(s"bag: $bagName did not violate any rules and is validated successfully")
+        } else {
+          violations
+            .foreach { case (number: String, message: String) => logger.warn(s"bag'$bagName' broke rule number $number: $message")}
+        }
+      case Failure(_) => //do nothing this will be logged on a higher level
+    }
+    resultMessage
   }
 
   private def getProfileVersion(path: BagDir): Try[Int] = {
