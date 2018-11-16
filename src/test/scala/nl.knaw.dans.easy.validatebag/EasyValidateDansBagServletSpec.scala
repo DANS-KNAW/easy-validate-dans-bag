@@ -18,6 +18,8 @@ package nl.knaw.dans.easy.validatebag
 import java.net.URI
 
 import org.apache.commons.configuration.PropertiesConfiguration
+import org.eclipse.jetty.http.HttpStatus
+import org.eclipse.jetty.http.HttpStatus.{ BAD_REQUEST_400, OK_200 }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfter
 import org.scalatra.test.scalatest.ScalatraSuite
@@ -27,9 +29,23 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixt
   private val validateBagServlet = new EasyValidateDansBagServlet(app)
   addServlet(validateBagServlet, "/*")
 
-  "the validate handler" should "return a 200 and the json response when presented a valid bag uri" in {
+  "the validate handler" should "return a 200 and the response when presented a valid bag uri" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/valid-bag", headers = Seq(("Accept", "Application/Json"))) {
+      status shouldBe OK_200
+      body should include("Is compliant: true")
+    }
+  }
 
+  it should "return a 200 and a response when presented an invalid bag" in {
+    post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/metadata-correct", headers = Seq(("Accept", "Application/Json"))) {
+      status shouldBe OK_200
+      body should include("Is compliant: false")
+    }
+  }
+
+  it should "return a 400 if presented a non existing bag uri" in {     //TODO shouldn't this return a 404?
+    post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/_._metadata-correct", headers = Seq(("Accept", "Application/Json"))) {
+      status shouldBe BAD_REQUEST_400
     }
   }
 
