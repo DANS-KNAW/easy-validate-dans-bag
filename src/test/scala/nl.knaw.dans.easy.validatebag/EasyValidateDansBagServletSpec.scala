@@ -40,9 +40,11 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixt
     }
   }
 
-  it should "return a 400 if presented a non existing bag uri" in {     //TODO shouldn't this return a 404?
+  it should "return a" +
+    " 400 if presented a non existing bag uri" in {     //TODO shouldn't this return a 404?
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/_._metadata-correct", headers = Seq(("Accept", "Application/Json"))) {
       status shouldBe BAD_REQUEST_400
+      body should include("Bag does not exist")
     }
   }
 
