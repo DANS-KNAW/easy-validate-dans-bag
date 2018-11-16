@@ -18,13 +18,10 @@ package nl.knaw.dans.easy.validatebag
 import java.net.URI
 
 import org.apache.commons.configuration.PropertiesConfiguration
-import org.eclipse.jetty.http.HttpStatus
 import org.eclipse.jetty.http.HttpStatus.{ BAD_REQUEST_400, OK_200 }
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.BeforeAndAfter
 import org.scalatra.test.scalatest.ScalatraSuite
 
-class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixture with ScalatraSuite with MockFactory with BeforeAndAfter {
+class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixture with ScalatraSuite  {
   private val app = new EasyValidateDansBagApp(Configuration("0", createProperties(), Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0"))))
   private val validateBagServlet = new EasyValidateDansBagServlet(app)
   addServlet(validateBagServlet, "/*")
