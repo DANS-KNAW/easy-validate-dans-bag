@@ -26,7 +26,7 @@ import nl.knaw.dans.easy.validatebag.validation.RuleViolationException
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-import scala.util.{ Failure, Try }
+import scala.util.{ Failure, Success, Try }
 
 class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhancedLogging {
   logger.info("Creating XML Schema factory...")
@@ -58,8 +58,7 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   }
 
   def validate(uri: URI, infoPackageType: InfoPackageType): Try[ResultMessage] = {
-    val bagName = File(uri).name
-    logger.info(s"[$bagName]: start validating bag")
+    val bagName = resolveAndLogBagName(uri)
     val resultMessage = for {
       bag <- getBagPath(uri)
       version <- getProfileVersion(bag)
@@ -70,13 +69,26 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     logResult(bagName, resultMessage)
   }
 
-  private def logResult(bagName: String, resultMessage: Try[ResultMessage]) = {
+  private def resolveAndLogBagName(uri: URI): String = {
+    Try {
+      File(uri).name
+    } match {
+      case Success(bagName: String) =>
+        logger.info(s"[$bagName]: start validating bag")
+        bagName
+      case Failure(exception) =>
+        logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir")
+        uri.toString
+    }
+  }
+
+  private def logResult(bagName: String, resultMessage: Try[ResultMessage]): Try[ResultMessage] = {
     val ruleViolations: Try[Option[Seq[(String, String)]]] = resultMessage.map(_.ruleViolations)
     ruleViolations match {
       case scala.util.Success(None) =>
         logger.info(s"[$bagName] did not violate any rules and is validated successfully")
-      case scala.util.Success(Some(value)) => value.foreach { case (number: String, message: String) =>
-        logger.warn(s"[$bagName] broke rule number $number: $message")
+      case scala.util.Success(Some(violatedRules)) => violatedRules.foreach { case (number: String, message: String) =>
+        logger.warn(s"[$bagName] broke rule $number: $message")
       }
       case Failure(_) => // don't log this will be done on a higher level
     }

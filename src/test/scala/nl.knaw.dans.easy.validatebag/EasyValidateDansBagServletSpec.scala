@@ -35,10 +35,10 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixt
 
   private def createProperties(): PropertiesConfiguration = {
     val properties = new PropertiesConfiguration()
-    properties.setProperty("schemas.ddm", "https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd")
-    properties.setProperty("schemas.files", "https://easy.dans.knaw.nl/schemas/bag/metadata/files/2018/04/files.xsd")
-    properties.setProperty("schemas.agreements", "https://easy.dans.knaw.nl/schemas/bag/metadata/agreements/2018/05/agreements.xsd")
-    properties.setProperty("bagstore-service.base-url", "src/test/resources/bags")
+    properties.setProperty("schemas.ddm", ddmSchemaUrl)
+    properties.setProperty("schemas.files", filesSchemaUrl)
+    properties.setProperty("schemas.agreements", metadataSchemaUrl)
+    properties.setProperty("bagstore-service.base-url", bagsDir.path.toAbsolutePath.toString)
     properties
   }
 }

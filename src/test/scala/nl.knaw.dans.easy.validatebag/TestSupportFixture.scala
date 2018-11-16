@@ -28,6 +28,9 @@ import scala.util.matching.Regex
 
 trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach with DebugEnhancedLogging {
   lazy val testDir: File = File(s"target/test/${ getClass.getSimpleName }")
+  val ddmSchemaUrl = "https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"
+  val filesSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/files/2018/04/files.xsd"
+  val metadataSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/agreements/2018/05/agreements.xsd"
 
   protected val bagsDir: File = Paths.get("src/test/resources/bags")
 
