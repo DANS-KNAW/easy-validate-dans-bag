@@ -21,11 +21,10 @@ import better.files.File
 import better.files.File.currentWorkingDirectory
 import javax.xml.validation.{ Schema, SchemaFactory }
 import org.scalatest.exceptions.TestFailedException
-import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.util._
 
-class XmlValidatorSpec extends TestSupportFixture with Matchers {
+class XmlValidatorSpec extends TestSupportFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   private val testSchemaDDM: Schema = schemaFactory.newSchema(new URL(ddmSchemaUrl))
   private val testSchemaFiles: Schema = schemaFactory.newSchema(new URL(filesSchemaUrl))

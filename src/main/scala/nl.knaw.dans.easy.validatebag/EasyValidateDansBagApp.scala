@@ -59,40 +59,32 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
 
   def validate(uri: URI, infoPackageType: InfoPackageType): Try[ResultMessage] = {
     val bagName = resolveAndLogBagName(uri)
-    val resultMessage = for {
+    for {
       bag <- getBagPath(uri)
       version <- getProfileVersion(bag)
       violations <- validation.checkRules(new TargetBag(bag, version), allRules(version), infoPackageType)(isReadable = _.isReadable)
         .map(_ => Seq.empty)
         .recoverWith(extractViolations)
+      _ = logResult(bagName, violations)
     } yield ResultMessage(uri, bag.getFileName.toString, version, infoPackageType, violations)
-    logResult(bagName, resultMessage)
   }
 
   private def resolveAndLogBagName(uri: URI): String = {
-    Try {
-      File(uri).name
-    } match {
-      case Success(bagName: String) =>
-        logger.info(s"[$bagName]: start validating bag")
-        bagName
-      case Failure(e: Exception) =>
-        logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir: ${ e. getMessage }")
-        uri.toString
-    }
+    Try { File(uri).name }
+      .doIfSuccess(bagName => logger.info(s"[$bagName]: start validating bag"))
+      .doIfFailure { case e => logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir: ${ e.getMessage }") }
+      .getOrElse(uri.toString).toString
   }
 
-  private def logResult(bagName: String, resultMessage: Try[ResultMessage]): Try[ResultMessage] = {
-    val ruleViolations: Try[Option[Seq[(String, String)]]] = resultMessage.map(_.ruleViolations)
-    ruleViolations match {
-      case scala.util.Success(None) =>
-        logger.info(s"[$bagName] did not violate any rules and is validated successfully")
-      case scala.util.Success(Some(violatedRules)) => violatedRules.foreach { case (number: String, message: String) =>
+  private def logResult(bagName: String, violations: Seq[(String, String)]) = {
+    if (violations.isEmpty) {
+      logger.info(s"[$bagName] did not violate any rules and is validated successfully")
+    }
+    else {
+      violations.foreach { case (number: String, message: String) =>
         logger.warn(s"[$bagName] broke rule $number: $message")
       }
-      case Failure(_) => // don't log this will be done on a higher level
     }
-    resultMessage
   }
 
   private def getProfileVersion(path: BagDir): Try[Int] = {
