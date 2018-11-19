@@ -45,7 +45,7 @@ class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraSe
 
     result.getOrRecover {
       case t: IllegalArgumentException =>
-        logger.warn(s"validation of bag was unsuccessful with message: ${ t.getMessage } ")
+        logger.warn(s"validation of bag failed with message: ${ t.getMessage } ")
         BadRequest(s"Input error: ${ t.getMessage }")
       case t =>
         logger.error(s"Server error: ${ t.getMessage }", t)
