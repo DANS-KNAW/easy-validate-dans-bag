@@ -26,7 +26,7 @@ import nl.knaw.dans.easy.validatebag.validation.RuleViolationException
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Failure, Try }
 
 class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhancedLogging {
   logger.info("Creating XML Schema factory...")

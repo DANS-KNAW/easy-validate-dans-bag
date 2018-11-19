@@ -18,9 +18,9 @@ package nl.knaw.dans.easy.validatebag
 import java.net.URI
 
 import nl.knaw.dans.easy.validatebag.InfoPackageType.InfoPackageType
-import org.json4s.{ CustomSerializer, DefaultFormats, Formats, JNull, JString }
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization._
+import org.json4s.{ CustomSerializer, DefaultFormats, Formats, JNull, JString }
 
 case class ResultMessage(bagUri: URI,
                          bag: String,
