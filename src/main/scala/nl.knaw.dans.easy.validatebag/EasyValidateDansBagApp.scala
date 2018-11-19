@@ -77,14 +77,8 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   }
 
   private def logResult(bagName: String, violations: Seq[(String, String)]) = {
-      if (violations.isEmpty) {
-        logger.info(s"[$bagName] did not violate any rules and is validated successfully")
-      }
-      else {
-        violations.foreach { case (number: String, message: String) =>
-          logger.warn(s"[$bagName] broke rule $number: $message")
-        }
-      }
+    if (violations.isEmpty) logger.info(s"[$bagName] did not violate any rules and is validated successfully")
+    else violations.foreach { case (number: String, message: String) => logger.warn(s"[$bagName] broke rule $number: $message") }
   }
 
   private def getProfileVersion(path: BagDir): Try[Int] = {
