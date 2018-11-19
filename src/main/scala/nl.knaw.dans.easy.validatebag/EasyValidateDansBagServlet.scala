@@ -58,5 +58,4 @@ class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraSe
     if (fileUri.getScheme != "file") throw new IllegalArgumentException("Currently only file:/// URLs are supported")
     fileUri
   }
-
 }
