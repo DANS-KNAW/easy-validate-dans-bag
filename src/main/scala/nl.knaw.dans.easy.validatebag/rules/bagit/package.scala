@@ -24,6 +24,7 @@ import gov.loc.repository.bagit.verify.BagVerifier
 import nl.knaw.dans.easy.validatebag.TargetBag
 import nl.knaw.dans.easy.validatebag.validation._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.lib.error._
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 
@@ -44,14 +45,16 @@ package object bagit extends DebugEnhancedLogging {
   def bagIsValid(t: TargetBag): Try[Unit] = {
     trace(())
 
-    def failBecauseInvalid(t: Throwable): Try[Unit] = {
+    def failBecauseInvalid(t: Throwable, targetBag: TargetBag): Try[Unit] = {
       val details = s"Bag is not valid: Exception = ${ t.getClass.getSimpleName }, cause = ${ t.getCause }, message = ${ t.getMessage }"
-      debug(details)
+      logger.warn(s"[${ targetBag.bagDir.name }] $details")
       Try(fail(details))
     }
 
     if (!t.bagDir.exists) {
-      Try(fail(s"Bag directory does not exist: ${ t.bagDir }"))
+      val details = s"[${ t.bagDir.name }] Bag directory does not exist"
+      logger.warn(details)
+      Try(fail(details))
     }
     else {
       t.tryBag
@@ -72,17 +75,17 @@ package object bagit extends DebugEnhancedLogging {
            * Note that VerificationException is not included below, as it indicates a error during validation rather
            * than that the bag is non-valid.
            */
-          case cause: MissingPayloadManifestException => failBecauseInvalid(cause)
-          case cause: MissingBagitFileException => failBecauseInvalid(cause)
-          case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause)
-          case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause)
-          case cause: FileNotInManifestException => failBecauseInvalid(cause)
-          case cause: MaliciousPathException => failBecauseInvalid(cause)
-          case cause: CorruptChecksumException => failBecauseInvalid(cause)
-          case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause)
-          case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause)
+          case cause: MissingPayloadManifestException => failBecauseInvalid(cause, t)
+          case cause: MissingBagitFileException => failBecauseInvalid(cause, t)
+          case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause, t)
+          case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause, t)
+          case cause: FileNotInManifestException => failBecauseInvalid(cause, t)
+          case cause: MaliciousPathException => failBecauseInvalid(cause, t)
+          case cause: CorruptChecksumException => failBecauseInvalid(cause, t)
+          case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause, t)
+          case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause, t)
         }
-    }
+    }.doIfSuccess(_ => logger.info(s"[${ t.bagDir.name }] successfully verified bag"))
   }
 
   def bagInfoExistsAndIsWellFormed(t: TargetBag): Try[Unit] = {
