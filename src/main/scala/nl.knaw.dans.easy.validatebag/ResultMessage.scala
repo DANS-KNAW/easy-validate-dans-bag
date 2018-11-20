@@ -18,7 +18,9 @@ package nl.knaw.dans.easy.validatebag
 import java.net.URI
 
 import nl.knaw.dans.easy.validatebag.InfoPackageType.InfoPackageType
+import nl.knaw.dans.easy.validatebag.ResultMessage.formats
 import org.json4s.ext.EnumNameSerializer
+import org.json4s.native.Serialization
 import org.json4s.native.Serialization._
 import org.json4s.{ CustomSerializer, DefaultFormats, Formats, JNull, JString }
 
@@ -32,11 +34,6 @@ case class ResultMessage(bagUri: URI,
   require((isCompliant && ruleViolations.isEmpty) || (!isCompliant && ruleViolations.exists(_.nonEmpty)),
     "when a bag is compliant, no rule violations should be given, " +
       "or when a bag is not compliant, at least on rule violation should be given")
-
-  private implicit val formats: Formats =
-    new DefaultFormats {} +
-      new EnumNameSerializer(InfoPackageType) +
-      EncodingURISerializer
 
   def toJson(implicit pretty: Boolean = true): String = {
     if (pretty)
@@ -59,6 +56,11 @@ case class ResultMessage(bagUri: URI,
 }
 
 object ResultMessage {
+  implicit val formats: Formats =
+    new DefaultFormats {} +
+      new EnumNameSerializer(InfoPackageType) +
+      EncodingURISerializer
+
   def apply(bagUri: URI,
             bag: String,
             profileVersion: ProfileVersion,
@@ -67,6 +69,10 @@ object ResultMessage {
     new ResultMessage(bagUri, bag, profileVersion, infoPackageType, ruleViolations.isEmpty,
       if (ruleViolations.isEmpty) None
       else Some(ruleViolations))
+  }
+
+  def read(json: String): ResultMessage = {
+    Serialization.read[ResultMessage](json)
   }
 }
 

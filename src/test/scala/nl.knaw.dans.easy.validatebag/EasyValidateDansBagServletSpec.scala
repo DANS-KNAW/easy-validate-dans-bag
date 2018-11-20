@@ -17,37 +17,43 @@ package nl.knaw.dans.easy.validatebag
 
 import java.net.URI
 
-import com.jayway.jsonpath.internal.JsonReader
+import nl.knaw.dans.easy.validatebag.InfoPackageType.SIP
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.eclipse.jetty.http.HttpStatus.{ BAD_REQUEST_400, OK_200 }
+import org.json4s.ext.EnumNameSerializer
+import org.json4s.{ DefaultFormats, Formats }
 import org.scalatra.test.scalatest.ScalatraSuite
 
 class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixture with ScalatraSuite  {
   private val app = new EasyValidateDansBagApp(Configuration("0", createProperties(), Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0"))))
   private val validateBagServlet = new EasyValidateDansBagServlet(app)
-  private val jsonReader = new JsonReader()
+  private implicit val formats: Formats =
+    new DefaultFormats {} +
+      new EnumNameSerializer(InfoPackageType) +
+      EncodingURISerializer
+
   addServlet(validateBagServlet, "/*")
 
   "the validate handler" should "return a 200 and the response when presented a valid bag uri" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/valid-bag", headers = Seq(("Accept", "application/json"))) {
       status shouldBe OK_200
-      info(body)
-      jsonReader.parse(body)
-      jsonReader.read("$.isCompliant").toString.toBoolean shouldBe true
-      jsonReader.read("$.infoPackageType").toString shouldBe "SIP"
+      val resultMessage = ResultMessage.read(body)
+      resultMessage.infoPackageType shouldBe SIP
+      resultMessage.isCompliant shouldBe true
     }
   }
 
   it should "return a 200 and a response including 'compliant: false' and reasons when presented an invalid bag" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/metadata-correct", headers = Seq(("Accept", "application/json"))) {
       status shouldBe OK_200
-      jsonReader.parse(body)
-      jsonReader.read("$.bagUri").toString shouldBe s"file://${ bagsDir.path.toAbsolutePath }/metadata-correct"
-      jsonReader.read("$.bag").toString shouldBe "metadata-correct"
-      jsonReader.read("$.profileVersion").toString shouldBe "0"
-      jsonReader.read("$.infoPackageType").toString shouldBe "SIP"
-      jsonReader.read("$.ruleViolations.[0]").toString shouldBe "{1.2.4(a)=bag-info.txt must contain exactly one 'Created' element; number found: 0}"
-      jsonReader.read("$.ruleViolations.[1]").toString shouldBe "{1.3.1(a)=Mandatory file 'manifest-sha1.txt' not found in bag.}"
+     val resultMessage = ResultMessage.read(body)
+      resultMessage.bagUri shouldBe new URI(s"file://${ bagsDir.path.toAbsolutePath }/metadata-correct")
+      resultMessage.bag shouldBe "metadata-correct"
+      resultMessage.profileVersion shouldBe 0
+      resultMessage.infoPackageType shouldBe SIP
+      resultMessage.isCompliant shouldBe false
+      resultMessage.ruleViolations.map(seq => seq.head) shouldBe Some(("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"))
+      resultMessage.ruleViolations.map(seq => seq.last) shouldBe Some(("1.3.1(a)", "Mandatory file 'manifest-sha1.txt' not found in bag."))
     }
   }
 
