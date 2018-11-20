@@ -21,7 +21,6 @@ import nl.knaw.dans.easy.validatebag.InfoPackageType.InfoPackageType
 import nl.knaw.dans.easy.validatebag.ResultMessage.formats
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization._
 import org.json4s.{ CustomSerializer, DefaultFormats, Formats, JNull, JString }
 
 case class ResultMessage(bagUri: URI,
@@ -37,9 +36,9 @@ case class ResultMessage(bagUri: URI,
 
   def toJson(implicit pretty: Boolean = true): String = {
     if (pretty)
-      writePretty(this)
+      Serialization.writePretty(this)
     else
-      write(this)
+      Serialization.write(this)
   }
 
   def toPlainText: String = {

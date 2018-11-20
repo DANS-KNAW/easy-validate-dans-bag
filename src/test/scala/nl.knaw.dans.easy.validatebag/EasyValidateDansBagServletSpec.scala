@@ -20,18 +20,12 @@ import java.net.URI
 import nl.knaw.dans.easy.validatebag.InfoPackageType.SIP
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.eclipse.jetty.http.HttpStatus.{ BAD_REQUEST_400, OK_200 }
-import org.json4s.ext.EnumNameSerializer
-import org.json4s.{ DefaultFormats, Formats }
 import org.scalatra.test.scalatest.ScalatraSuite
+import org.scalatest.OptionValues._
 
-class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixture with ScalatraSuite  {
+class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixture with ScalatraSuite {
   private val app = new EasyValidateDansBagApp(Configuration("0", createProperties(), Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0"))))
   private val validateBagServlet = new EasyValidateDansBagServlet(app)
-  private implicit val formats: Formats =
-    new DefaultFormats {} +
-      new EnumNameSerializer(InfoPackageType) +
-      EncodingURISerializer
-
   addServlet(validateBagServlet, "/*")
 
   "the validate handler" should "return a 200 and the response when presented a valid bag uri" in {
@@ -46,18 +40,20 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture with ServletFixt
   it should "return a 200 and a response including 'compliant: false' and reasons when presented an invalid bag" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/metadata-correct", headers = Seq(("Accept", "application/json"))) {
       status shouldBe OK_200
-     val resultMessage = ResultMessage.read(body)
+      val resultMessage = ResultMessage.read(body)
       resultMessage.bagUri shouldBe new URI(s"file://${ bagsDir.path.toAbsolutePath }/metadata-correct")
       resultMessage.bag shouldBe "metadata-correct"
       resultMessage.profileVersion shouldBe 0
       resultMessage.infoPackageType shouldBe SIP
       resultMessage.isCompliant shouldBe false
-      resultMessage.ruleViolations.map(seq => seq.head) shouldBe Some(("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"))
-      resultMessage.ruleViolations.map(seq => seq.last) shouldBe Some(("1.3.1(a)", "Mandatory file 'manifest-sha1.txt' not found in bag."))
+      resultMessage.ruleViolations.value.toList should contain inOrderOnly(
+        ("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"),
+        ("1.3.1(a)", "Mandatory file 'manifest-sha1.txt' not found in bag."),
+      )
     }
   }
 
-  it should "return a 400 if presented a non existing bag uri" in {     //TODO shouldn't this return a 404?
+  it should "return a 400 if presented a non existing bag uri" in { //TODO shouldn't this return a 404?
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/_._metadata-correct", headers = Seq(("Accept", "application/json"))) {
       status shouldBe BAD_REQUEST_400
       body should include("Bag does not exist")
