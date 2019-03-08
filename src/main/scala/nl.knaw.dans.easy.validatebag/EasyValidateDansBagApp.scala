@@ -51,6 +51,7 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     configuration.properties.getInt("bagstore-service.connection-timeout-milliseconds", 1000),
     configuration.properties.getInt("bagstore-service.read-timeout-milliseconds", 5000))
 
+  val version: String = configuration.version
   val allRules: Map[ProfileVersion, RuleBase] = {
     Map(
       0 -> ProfileVersion0(xmlValidators, configuration.allowedLicenses, bagStore),

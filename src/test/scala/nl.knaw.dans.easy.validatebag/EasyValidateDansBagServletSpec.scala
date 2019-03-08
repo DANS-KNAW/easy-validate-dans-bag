@@ -24,8 +24,11 @@ import org.scalatra.test.scalatest.ScalatraSuite
 import org.scalatest.OptionValues._
 import org.scalatra.test.EmbeddedJettyContainer
 
-class EasyValidateDansBagServletSpec extends TestSupportFixture with EmbeddedJettyContainer with ScalatraSuite {
-  private val app = new EasyValidateDansBagApp(Configuration("0", createProperties(), Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0"))))
+class EasyValidateDansBagServletSpec extends TestSupportFixture
+  with EmbeddedJettyContainer
+  with ScalatraSuite {
+  private val testVersion = "1.0.0"
+  private val app = new EasyValidateDansBagApp(Configuration(testVersion, createProperties(), Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0"))))
   private val validateBagServlet = new EasyValidateDansBagServlet(app)
   addServlet(validateBagServlet, "/*")
 
@@ -54,10 +57,17 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture with EmbeddedJet
     }
   }
 
-  it should "return a 400 if presented a non existing bag uri" in { //TODO shouldn't this return a 404?
+  it should "return a 400 if presented a non existing bag uri" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=file://${ bagsDir.path.toAbsolutePath }/_._metadata-correct", headers = Seq(("Accept", "application/json"))) {
       status shouldBe BAD_REQUEST_400
       body should include("Bag does not exist")
+    }
+  }
+
+  "get /" should "return the service is running and the current version" in {
+    get("/") {
+      status shouldBe OK_200
+      body shouldBe s"EASY Validate DANS Bag Service running v$testVersion."
     }
   }
 
