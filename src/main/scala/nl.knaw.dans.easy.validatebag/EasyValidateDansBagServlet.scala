@@ -28,12 +28,12 @@ import scala.util.{ Failure, Try }
 class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraServlet
   with ServletLogger
   with PlainLogFormatter
+  with LogResponseBodyOnError
   with DebugEnhancedLogging {
 
   get("/") {
     contentType = "text/plain"
     Ok(s"EASY Validate DANS Bag Service running v${ app.version }.")
-      .logResponse
   }
 
   post("/validate") {
@@ -55,7 +55,7 @@ class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraSe
       case t =>
         logger.error(s"Server error: ${ t.getMessage }", t)
         InternalServerError(s"[${ new DateTime() }] The server encountered an error. Consult the logs.")
-    }.logResponse
+    }
   }
 
   private def getFileUrl(uriStr: String): Try[URI] = Try {
