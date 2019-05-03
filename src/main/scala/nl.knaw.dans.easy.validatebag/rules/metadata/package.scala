@@ -162,7 +162,7 @@ package object metadata extends DebugEnhancedLogging {
   private def daisAreValid(ddm: Elem): Try[Unit] = Try {
     val dais = (ddm \\ "DAI").filter(_.namespace == dcxDaiNamespace)
     logger.debug(s"DAIs to check: ${ dais.mkString(", ") }")
-    val invalidDais = dais.map(_.text).filterNot(s => digest(s.slice(0, s.length - 1), 9) == s.last)
+    val invalidDais = dais.map(_.text.stripPrefix("info:eu-repo/dai/nl/")).filterNot(s => digest(s.slice(0, s.length - 1), 9) == s.last)
     if (invalidDais.nonEmpty) fail(s"Invalid DAIs: ${ invalidDais.mkString(", ") }")
   }
 

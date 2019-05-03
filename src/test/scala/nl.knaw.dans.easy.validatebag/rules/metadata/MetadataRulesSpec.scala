@@ -118,6 +118,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "ddm-incorrect-dai",
       includedInErrorMsg = "Invalid DAIs")
   }
+  
+  it should "accept a DOI with a valid check digit and prefix" in {
+    testRuleSuccess(
+      rule = ddmDaisAreValid,
+      inputBag = "ddm-correct-dai-with-prefix")
+  }
 
   it should "accept a DAI with a valid check digit" in {
     testRuleSuccess(
