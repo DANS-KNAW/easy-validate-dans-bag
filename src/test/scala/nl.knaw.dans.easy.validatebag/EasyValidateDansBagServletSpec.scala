@@ -63,6 +63,15 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
     }
   }
 
+  it should "return a 200 and a response including 'compliant: false' and reasons when files are in the wrong dir" in {
+    post(uri = s"/validate?infoPackageType=SIP&uri=${ encodedURI(bagsDir / "files-in-wrong-metadata-dir") }", headers = Seq(("Accept", "application/json"))) {
+      status shouldBe OK_200
+      val resultMessage = ResultMessage.read(body)
+      resultMessage.bagUri shouldBe new URI(s"file://${ bagsDir.path.toAbsolutePath }/files-in-wrong-metadata-dir/")
+      resultMessage.ruleViolations.value should contain ("2.5", "Directory metadata contains files or directories that are not allowed: metadata/agreements.xml, metadata/message-from-depositor.txt")
+    }
+  }
+
   it should "return a 400 if presented a non existing bag uri" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=${ encodedURI(bagsDir / "_._metadata-correct") }", headers = Seq(("Accept", "application/json"))) {
       status shouldBe BAD_REQUEST_400
