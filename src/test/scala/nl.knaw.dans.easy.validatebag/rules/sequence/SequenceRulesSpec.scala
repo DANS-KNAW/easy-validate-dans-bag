@@ -58,5 +58,13 @@ class SequenceRulesSpec extends TestSupportFixture with MockFactory  {
     testRuleSuccess(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-without-is-version-of", doubleCheckBagItValidity = false)
   }
 
+  it should "fail if a Is-Version-Of field is present without urn" in {
+    expectUuidDoesNotExist()
+    testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-without-urn", includedInErrorMsg = "Is-Version-Of value must be a URN",  doubleCheckBagItValidity = false)
+  }
 
+  it should "fail if the scheme part does not start with uuid" in {
+    expectUuidDoesNotExist()
+    testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-invalid-scheme", includedInErrorMsg = "Is-Version-Of URN must be of subtype UUID",  doubleCheckBagItValidity = false)
+  }
 }
