@@ -46,14 +46,14 @@ package object sequence extends DebugEnhancedLogging {
 
   private def getUuidFromIsVersionOfValue(s: String): Try[UUID] = Try {
     val uri = new URI(s)
-    failIfNotTrue(uri.getScheme == "urn", "Is-Version-Of value must be a URN")
-    failIfNotTrue(uri.getSchemeSpecificPart.startsWith("uuid:"), "Is-Version-Of URN must be of subtype UUID")
+    failIfNotTrueWithMessage(uri.getScheme == "urn", "Is-Version-Of value must be a URN")
+    failIfNotTrueWithMessage(uri.getSchemeSpecificPart.startsWith("uuid:"), "Is-Version-Of URN must be of subtype UUID")
     val Array(_, uuidStr) = uri.getSchemeSpecificPart.split(':')
-    failIfNotTrue(uuidStr.length == uuidHexLength + uuidCanonicalNumberOfDashes, "UUID must be in canonical textual representation")
+    failIfNotTrueWithMessage(uuidStr.length == uuidHexLength + uuidCanonicalNumberOfDashes, "UUID must be in canonical textual representation")
     UUID.fromString(uuidStr)
   }
 
-  private def failIfNotTrue(bool: Boolean, msg: String): Unit = {
+  private def failIfNotTrueWithMessage(bool: Boolean, msg: String): Unit = {
     if (!bool) fail(msg)
   }
 }
