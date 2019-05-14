@@ -67,4 +67,9 @@ class SequenceRulesSpec extends TestSupportFixture with MockFactory  {
     expectUuidDoesNotExist()
     testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-invalid-scheme", includedInErrorMsg = "Is-Version-Of URN must be of subtype UUID",  doubleCheckBagItValidity = false)
   }
+
+  it should "fail if the UUID is NOT in canonical textual representation" in {
+    expectUuidDoesNotExist()
+    testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-invalid-uuid", includedInErrorMsg = "UUID must be in canonical textual representation",  doubleCheckBagItValidity = false)
+  }
 }
