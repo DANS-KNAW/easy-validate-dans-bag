@@ -37,7 +37,7 @@ package object rules extends DebugEnhancedLogging {
 
   def containsFile(f: Path)(t: TargetBag) = Try {
     trace(f)
-    require(!f.isAbsolute, s"File $f must be a relative path")
+    assume(!f.isAbsolute, s"File $f must be a relative path")
     val fileToCheck = t.bagDir / f.toString
     if (!fileToCheck.isRegularFile)
       fail(s"Mandatory file '$f' not found in bag.")

@@ -17,7 +17,9 @@ package nl.knaw.dans.easy.validatebag.rules.structural
 
 import java.nio.file.Paths
 
-import nl.knaw.dans.easy.validatebag.TestSupportFixture
+import nl.knaw.dans.easy.validatebag.{ TargetBag, TestSupportFixture }
+
+import scala.util.Failure
 
 class StructuralRulesSpec extends TestSupportFixture {
 
@@ -33,12 +35,26 @@ class StructuralRulesSpec extends TestSupportFixture {
     testRuleSuccess(containsDir(Paths.get("metadata")), "metadata-correct")
   }
 
+  it should "fail if given an absolute path" in {
+    val absolutePath = "/an/absolute/path.jpeg"
+    containsDir(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+      case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: Directory $absolutePath must be a relative path" =>
+    }
+  }
+
   "containsNothingElseThan" should "fail if other file is present" in {
     testRuleViolation(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
       inputBag = "metadata-extra-file",
       includedInErrorMsg = "contains files or directories that are not allowed"
     )
+  }
+
+  it should "fail if given an absolute path" in {
+    val absolutePath = "/an/absolute/path.jpeg"
+    containsNothingElseThan(Paths.get(absolutePath), Seq("dataset.xml", "files.xml"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+      case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: Directory $absolutePath must be a relative path" =>
+    }
   }
 
   it should "fail if other directory is present" in {

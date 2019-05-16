@@ -47,7 +47,7 @@ package object metadata extends DebugEnhancedLogging {
   def xmlFileIfExistsConformsToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)
                                      (t: TargetBag): Try[Unit] = {
     trace(xmlFile)
-    require(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
+    assume(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
     if ((t.bagDir / xmlFile.toString).exists) xmlFileConformsToSchema(xmlFile, schemaName, validator)(t)
     else Success(())
   }
@@ -55,7 +55,7 @@ package object metadata extends DebugEnhancedLogging {
   def xmlFileConformsToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)
                              (t: TargetBag): Try[Unit] = {
     trace(xmlFile)
-    require(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
+    assume(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
     (t.bagDir / xmlFile.toString).inputStream.map(validator.validate).map {
       _.recoverWith { case t: Throwable => Try(fail(s"$xmlFile does not conform to $schemaName: ${ t.getMessage }")) }
     }
@@ -390,7 +390,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   def optionalFileIsUtf8Decodable(f: Path)(t: TargetBag): Try[Unit] = {
-    require(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
+    assume(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
     val file = t.bagDir / f.toString
     if (file.exists) isValidUtf8(file.byteArray).recoverWith {
       case e: CharacterCodingException => Try(fail(s"Input not valid UTF-8: ${ e.getMessage }"))

@@ -26,21 +26,21 @@ import scala.util.Try
 package object structural extends DebugEnhancedLogging {
   def containsDir(d: Path)(t: TargetBag) = Try {
     trace(d)
-    require(!d.isAbsolute, s"Directory $d must be a relative path")
+    assume(!d.isAbsolute, s"Directory $d must be a relative path")
     if (!(t.bagDir / d.toString).isDirectory)
       fail(s"Mandatory directory '$d' not found in bag.")
   }
 
   def doesNotContainFile(f: Path)(t: TargetBag) = Try {
     trace(f)
-    require(!f.isAbsolute, s"File $f must be a relative path")
+    assume(!f.isAbsolute, s"File $f must be a relative path")
     if ((t.bagDir / f.toString).exists)
       fail(s"File '$f' MUST NOT exist in bag (of this information package type).")
   }
 
   def containsNothingElseThan(d: Path, ps: Seq[String])(t: TargetBag) = Try {
     trace(d, ps)
-    require(!d.isAbsolute, s"Directory $d must be a relative path")
+    assume(!d.isAbsolute, s"Directory $d must be a relative path")
     val extraFiles = (t.bagDir / d.toString).list.filterNot(ps contains _.name).map(t.bagDir relativize _.path)
     if (extraFiles.nonEmpty) fail(s"Directory $d contains files or directories that are not allowed: ${ extraFiles.mkString(", ") }")
   }
