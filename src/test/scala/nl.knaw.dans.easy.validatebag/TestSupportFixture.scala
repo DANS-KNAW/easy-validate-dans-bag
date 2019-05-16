@@ -23,8 +23,8 @@ import nl.knaw.dans.easy.validatebag.validation.RuleViolationDetailsException
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.scalatest._
 
-import scala.util.{ Failure, Success }
 import scala.util.matching.Regex
+import scala.util.{ Failure, Success }
 
 trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach with DebugEnhancedLogging {
   lazy val testDir: File = File(s"target/test/${ getClass.getSimpleName }")
@@ -35,7 +35,6 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
   protected val bagsDir: File = Paths.get("src/test/resources/bags")
 
   implicit val isReadable: File => Boolean = _.isReadable
-
 
   private def shouldBeValidAccordingToBagIt(inputBag: String): Unit = {
     bagIsValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]] // Profile version does not matter here

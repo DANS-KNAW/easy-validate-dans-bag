@@ -46,5 +46,4 @@ package object rules extends DebugEnhancedLogging {
     if (relativeRealPath != relativeRequiredPath)
       fail(s"Path name differs in case; found: $relativeRealPath, required: $relativeRequiredPath")
   }
-
 }
