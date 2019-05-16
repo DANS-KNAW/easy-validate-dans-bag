@@ -17,7 +17,9 @@ package nl.knaw.dans.easy.validatebag.rules
 
 import java.nio.file.Paths
 
-import nl.knaw.dans.easy.validatebag.TestSupportFixture
+import nl.knaw.dans.easy.validatebag.{ TargetBag, TestSupportFixture }
+
+import scala.util.Failure
 
 class RulesSpec extends TestSupportFixture {
 
@@ -37,4 +39,10 @@ class RulesSpec extends TestSupportFixture {
     testRuleSuccess(containsFile(Paths.get("bagit.txt")), "metadata-correct")
   }
 
+  it should "fail if an absolute path in passed" in {
+    val absolutePath = "/an/absolute/path.jpeg"
+    containsFile(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+      case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: File $absolutePath must be a relative path" =>
+    }
+  }
 }

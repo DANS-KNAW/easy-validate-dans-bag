@@ -21,7 +21,6 @@ import java.nio.file.Paths
 
 import better.files.File
 import javax.xml.validation.SchemaFactory
-import nl.knaw.dans.easy.validatebag.validation.RuleViolationDetailsException
 import nl.knaw.dans.easy.validatebag._
 import nl.knaw.dans.lib.error._
 
@@ -109,7 +108,6 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-two-license-uris",
       includedInErrorMsg = "Only one license is allowed")
-
   }
 
   // General syntax will be checked by DDM XML Schema
@@ -119,7 +117,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "ddm-incorrect-dai",
       includedInErrorMsg = "Invalid DAIs")
   }
-  
+
   it should "accept a DOI with a valid check digit and prefix" in {
     testRuleSuccess(
       rule = ddmDaisAreValid,
@@ -366,9 +364,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "fail if an absolute path is inserted" in {
-    Try {
-        optionalFileIsUtf8Decodable(Paths.get("/an/absolute/path.jpeg"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0))
-      } should matchPattern {
+    optionalFileIsUtf8Decodable(Paths.get("/an/absolute/path.jpeg"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == "assumption failed: Path to UTF-8 text file must be relative." =>
     }
   }

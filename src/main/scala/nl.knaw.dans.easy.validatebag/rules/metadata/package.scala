@@ -390,12 +390,12 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   def optionalFileIsUtf8Decodable(f: Path)(t: TargetBag): Try[Unit] = {
-    assume(!f.isAbsolute, "Path to UTF-8 text file must be relative.")
-    val file = t.bagDir / f.toString
-    if (file.exists) isValidUtf8(file.byteArray).recoverWith {
-      case e: CharacterCodingException => Try(fail(s"Input not valid UTF-8: ${ e.getMessage }"))
-    }
-    else Success(())
+    for {
+      _ <- Try(assume(!f.isAbsolute, "Path to UTF-8 text file must be relative."))
+      file = t.bagDir / f.toString
+      _ <- if (file.exists) isValidUtf8(file.byteArray).recoverWith { case e: CharacterCodingException => fail(s"Input not valid UTF-8: ${ e.getMessage }") }
+           else Success(())
+    } yield ()
   }
 
   private def isValidUtf8(input: Array[Byte]): Try[Unit] = {
