@@ -129,12 +129,12 @@ package object metadata extends DebugEnhancedLogging {
    * @return normalized URI
    */
   def normalizeLicenseUri(uri: URI): Try[URI] = Try {
-    def normalizeLicenseUriPath(p: String) = {
+    def normalizeLicenseUriPath(p: String): String = {
       val nTrailingSlashes = p.toCharArray.reverse.takeWhile(_ == '/').length
       p.substring(0, p.length - nTrailingSlashes)
     }
 
-    def normalizeLicenseUriScheme(s: String) = {
+    def normalizeLicenseUriScheme(s: String): String = {
       if (s == "http" || s == "https") "http"
       else throw new IllegalArgumentException(s"Only http or https license URIs allowed. URI scheme found: $s")
     }
@@ -210,12 +210,16 @@ package object metadata extends DebugEnhancedLogging {
     polygons.flatMap(_ \\ "posList")
   }
 
-  private def getPolygons(parent: Node) = (parent \\ "Polygon").filter(_.namespace == gmlNamespace)
+  private def getPolygons(parent: Node): NodeSeq = {
+    (parent \\ "Polygon").filter(_.namespace == gmlNamespace)
+  }
 
   private def validatePosList(node: Node): Try[Unit] = Try {
     trace(node)
 
-    def offendingPosListMsg(values: Seq[String]) = s"(Offending posList starts with: ${ values.take(10).mkString(", ") }...)"
+    def offendingPosListMsg(values: Seq[String]): String = {
+      s"(Offending posList starts with: ${ values.take(10).mkString(", ") }...)"
+    }
 
     val values = node.text.split("""\s+""").toList
     val numberOfValues = values.size
@@ -237,7 +241,7 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  private def getMultiSurfaces(ddm: Node) = Try {
+  private def getMultiSurfaces(ddm: Node): Try[NodeSeq] = Try {
     (ddm \\ "MultiSurface").filter(_.namespace == gmlNamespace)
   }
 
@@ -260,11 +264,11 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  private def getGmlPoints(ddm: Node) = Try {
+  private def getGmlPoints(ddm: Node): Try[NodeSeq] = Try {
     ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == gmlNamespace)
   }
 
-  private def validatePoint(point: Node) = {
+  private def validatePoint(point: Node): Try[Unit] = {
     val coordinates = point.text.trim.split("""\s+""")
     if (coordinates.length > 1) Success(())
     else Try(fail(s"Point with only one coordinate: ${ point.text.trim }"))
