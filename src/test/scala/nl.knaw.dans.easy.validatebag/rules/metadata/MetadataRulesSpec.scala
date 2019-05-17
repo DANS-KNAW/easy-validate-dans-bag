@@ -77,6 +77,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "metadata-correct")
   }
 
+  it should "succeed if the license is on a separate line" in {
+    testRuleSuccess(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "ddm-correct-license-uri-on-new-line")
+  }
+
   it should "succeed even if license is specified with https rather than http" in {
     testRuleSuccess(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
