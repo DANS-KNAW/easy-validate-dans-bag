@@ -238,7 +238,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def getMultiSurfaces(ddm: Node) = Try {
-    (ddm \\ "MultiSurface").filter(_.namespace == gmlNamespace).asInstanceOf[Seq[Node]]
+    (ddm \\ "MultiSurface").filter(_.namespace == gmlNamespace)
   }
 
   private def validateMultiSurface(ms: Node): Try[Unit] = {
@@ -261,7 +261,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def getGmlPoints(ddm: Node) = Try {
-    ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == gmlNamespace).asInstanceOf[Seq[Node]]
+    ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == gmlNamespace)
   }
 
   private def validatePoint(point: Node) = {
