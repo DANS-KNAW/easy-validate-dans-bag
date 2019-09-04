@@ -3,6 +3,7 @@ Description=EASY Validate Dans Bag Service
 
 [Service]
 ExecStart=/bin/java \
+   $INITIAL_HEAP_SIZE \
    -Dlogback.configurationFile=/etc/opt/dans.knaw.nl/easy-validate-dans-bag/logback-service.xml \
    -Dapp.home=/opt/dans.knaw.nl/easy-validate-dans-bag \
    -Dorg.scalatra.environment="production" \
