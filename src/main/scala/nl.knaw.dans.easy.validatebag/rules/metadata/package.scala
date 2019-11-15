@@ -15,12 +15,12 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.URI
+import java.net.{ URI, URISyntaxException }
 import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset }
 import java.nio.file.{ Path, Paths }
 
-import nl.knaw.dans.easy.validatebag.validation.{ fail, _ }
+import nl.knaw.dans.easy.validatebag.validation._ 
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -89,7 +89,7 @@ package object metadata extends DebugEnhancedLogging {
         licenses match {
           case license :: Nil if hasXsiType(dctermsNamespace, "URI")(license) =>
             (for {
-              licenseUri <- getUri(license.text)
+              licenseUri <- getUri(license.text).recover { case _: URISyntaxException => fail("License must be a valid URI") }
               _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") fail("License URI must have scheme http or https")
               normalizedLicenseUri <- normalizeLicenseUri(licenseUri)
               _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail (s"Found unknown or unsupported license: $licenseUri")
