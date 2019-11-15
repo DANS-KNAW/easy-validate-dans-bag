@@ -108,6 +108,13 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       includedInErrorMsg = "unknown or unsupported license")
   }
 
+  it should "fail if the license is no an HTTP or HTTPS URI" in {
+    testRuleViolation(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "ddm-license-not-a-uri",
+      includedInErrorMsg = "unknown or unsupported license")
+  }
+
   it should "fail if there are two license elements with xsi:type URI" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),

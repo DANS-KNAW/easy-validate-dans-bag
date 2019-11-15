@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset }
 import java.nio.file.{ Path, Paths }
 
-import nl.knaw.dans.easy.validatebag.validation._
+import nl.knaw.dans.easy.validatebag.validation.{ fail, _ }
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -60,7 +60,7 @@ package object metadata extends DebugEnhancedLogging {
     (t.bagDir / xmlFile.toString).inputStream.map(validator.validate).map {
       _.recoverWith { case t: Throwable => Try(fail(s"$xmlFile does not conform to $schemaName: ${ t.getMessage }")) }
     }
-  }.get()
+    }.get()
 
   def filesXmlConformsToSchemaIfFilesNamespaceDeclared(validator: XmlValidator)
                                                       (t: TargetBag): Try[Unit] = {
@@ -88,14 +88,22 @@ package object metadata extends DebugEnhancedLogging {
         lazy val rightsHolders = (metadata \ "rightsHolder").toList
         licenses match {
           case license :: Nil if hasXsiType(dctermsNamespace, "URI")(license) =>
-            val licenseUri = normalizeLicenseUri(new URI(license.text)).get
-            if (!allowedLicenses.contains(licenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
+            (for {
+              licenseUri <- getUri(license.text)
+              _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") fail("License URI must have scheme http or https")
+              normalizedLicenseUri <- normalizeLicenseUri(licenseUri)
+              _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail (s"Found unknown or unsupported license: $licenseUri")
+            } yield ()).get
             if (rightsHolders.isEmpty) fail("Valid license found, but no rightsHolder specified")
           case Nil | _ :: Nil =>
             debug("No licences with xsi:type=\"dcterms:URI\"")
           case _ => fail(s"Found ${ licenses.size } dcterms:license elements. Only one license is allowed.")
         }
     }
+  }
+
+  private def getUri(s: String): Try[URI] = Try {
+    new URI(s)
   }
 
   def ddmContainsValidDoiIdentifier(t: TargetBag): Try[Unit] = {
