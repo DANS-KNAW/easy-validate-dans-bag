@@ -10,5 +10,5 @@ Naming conventions
 **Developers, please mind these conventions**:
 
 * Use only lowercase characters in the bag directory names, separated by dashes.
-* Start with the general area in which the rule to be tested is located, such as `ddm`, `bagit`, etc. For truely generic
+* Start with the general area in which the rule to be tested is located, such as `ddm`, `bagit`, etc. For truly generic
   data use the prefix `generic`.

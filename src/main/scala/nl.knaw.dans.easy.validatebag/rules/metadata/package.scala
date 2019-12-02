@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset }
 import java.nio.file.{ Path, Paths }
 
-import nl.knaw.dans.easy.validatebag.validation._ 
+import nl.knaw.dans.easy.validatebag.validation._
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -128,6 +128,32 @@ package object metadata extends DebugEnhancedLogging {
 
   private def syntacticallyValidDoi(doi: String): Boolean = {
     doiPattern.findFirstIn(doi).nonEmpty
+  }
+
+  def ddmLinksHaveValidProtocol(t: TargetBag): Try[Unit] = {
+    t.tryDdm.map{ ddm =>
+      val invalidLinks = (ddm \\ "_")
+        .filter(isLink)
+        .filterNot(validLinkProtocol)
+      if (invalidLinks.nonEmpty)
+        fail(s"Invalid link protocols: ${ invalidLinks.mkString(", ") }")
+    }
+  }
+
+  private def isLink(node: Node) = {
+    node.attributes.exists(
+      attribute => attribute.key == "scheme" || attribute.key == "href"
+    )
+  }
+
+  @throws[URISyntaxException]("when the uri is not valid")
+  private def validLinkProtocol(node: Node) = {
+    {
+      if ( node.attributes.exists(attribute => attribute.key == "scheme"))
+        new URI(node.text).getScheme
+      else
+        (node \ "@href").text
+    }.toLowerCase.startsWith("http")
   }
 
   /**
@@ -245,9 +271,7 @@ package object metadata extends DebugEnhancedLogging {
       _ <- multiSurfaces.map(validateMultiSurface).collectResults
     } yield ()
 
-    result.recoverWith {
-      case ce: CompositeException => Try(fail(ce.getMessage))
-    }
+    recoverFromCollected(result)
   }
 
   private def getMultiSurfaces(ddm: Node): Try[NodeSeq] = Try {
@@ -268,6 +292,10 @@ package object metadata extends DebugEnhancedLogging {
       _ <- points.map(validatePoint).collectResults
     } yield ()
 
+    recoverFromCollected(result)
+  }
+
+  private def recoverFromCollected(result: Try[Unit]) = {
     result.recoverWith {
       case ce: CompositeException => Try(fail(ce.getMessage))
     }

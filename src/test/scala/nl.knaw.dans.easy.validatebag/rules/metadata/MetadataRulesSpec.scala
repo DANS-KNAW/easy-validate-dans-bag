@@ -20,11 +20,12 @@ import java.nio.file.Paths
 
 import javax.xml.validation.SchemaFactory
 import nl.knaw.dans.easy.validatebag._
+import nl.knaw.dans.easy.validatebag.validation.RuleViolationDetailsException
 import nl.knaw.dans.lib.error._
 import org.apache.commons.configuration.PropertiesConfiguration
 
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Try }
+import scala.util.{ Failure, Success, Try }
 
 class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
@@ -160,6 +161,24 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       rule = ddmContainsValidDoiIdentifier,
       inputBag = "ddm-incorrect-doi",
       includedInErrorMsg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654")
+  }
+
+  "ddmLinksHaveValidProtocol" should "succeed" in {
+    ddmLinksHaveValidProtocol(bagWithExtraDcmi(
+      <ddm:conformsTo scheme="URL">https://dans.knaw.nl</ddm:conformsTo>
+      <ddm:replaces href="http://dans.knaw.nl">http://dans.knaw.nl</ddm:replaces>
+      <ddm:isRequiredBy scheme="URI">https://easy.dans.knaw.nl</ddm:isRequiredBy>
+   )) shouldBe a[Success[_]]
+  }
+
+  it should "report invalid link protocols" in {
+    ddmLinksHaveValidProtocol(bagWithExtraDcmi(
+      <ddm:conformsTo scheme="URL">javascript:alert('XSS')</ddm:conformsTo>
+      <ddm:conformsTo scheme="URN">ldap://localhost</ddm:conformsTo>
+      <ddm:conformsTo href="ftp://dans.knaw.nl/no/download/exists">ftp://dans.knaw.nl/no/download/exists</ddm:conformsTo>
+    )) shouldBe Failure(RuleViolationDetailsException(
+      """Invalid link protocols: <ddm:conformsTo scheme="URL">javascript:alert('XSS')</ddm:conformsTo>, <ddm:conformsTo scheme="URN">ldap://localhost</ddm:conformsTo>, <ddm:conformsTo href="ftp://dans.knaw.nl/no/download/exists">ftp://dans.knaw.nl/no/download/exists</ddm:conformsTo>"""
+    ))
   }
 
   "ddmGmlPolygonPosListIsWellFormed" should "report error if odd number of values in posList" in {
