@@ -163,7 +163,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       includedInErrorMsg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654")
   }
 
-  "ddmLinksHaveValidProtocol" should "succeed" in {
+  "ddmLinksHaveValidProtocol" should "succeed if all URIs have a 'http' or 'https' protocol" in {
     ddmLinksHaveValidProtocol(bagWithExtraDcmi(
       <ddm:conformsTo scheme="URL">https://dans.knaw.nl</ddm:conformsTo>
       <ddm:replaces href="http://dans.knaw.nl">http://dans.knaw.nl</ddm:replaces>

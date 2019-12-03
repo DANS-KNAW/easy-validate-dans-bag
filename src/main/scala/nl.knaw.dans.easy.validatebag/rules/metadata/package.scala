@@ -92,7 +92,7 @@ package object metadata extends DebugEnhancedLogging {
               licenseUri <- getUri(license.text).recover { case _: URISyntaxException => fail("License must be a valid URI") }
               _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") fail("License URI must have scheme http or https")
               normalizedLicenseUri <- normalizeLicenseUri(licenseUri)
-              _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail (s"Found unknown or unsupported license: $licenseUri")
+              _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
             } yield ()).get
             if (rightsHolders.isEmpty) fail("Valid license found, but no rightsHolder specified")
           case Nil | _ :: Nil =>
@@ -131,7 +131,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   def ddmLinksHaveValidProtocol(t: TargetBag): Try[Unit] = {
-    t.tryDdm.map{ ddm =>
+    t.tryDdm.map { ddm =>
       val invalidLinks = (ddm \\ "_")
         .filter(isLink)
         .filterNot(validLinkProtocol)
@@ -148,12 +148,10 @@ package object metadata extends DebugEnhancedLogging {
 
   @throws[URISyntaxException]("when the uri is not valid")
   private def validLinkProtocol(node: Node) = {
-    {
-      if ( node.attributes.exists(attribute => attribute.key == "scheme"))
-        new URI(node.text).getScheme
-      else
-        (node \ "@href").text
-    }.toLowerCase.startsWith("http")
+    val uri = if (node.attribute("scheme").isDefined)
+                node.text
+              else node \@ "href"
+    new URI(uri).getScheme.toLowerCase.startsWith("http")
   }
 
   /**
