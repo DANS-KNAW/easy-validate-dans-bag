@@ -163,7 +163,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   "ddmLinksHaveValidProtocol" should "succeed if all URIs have a 'http' or 'https' protocol" in {
-    ddmLinksHaveValidProtocol(bagWithExtraDcmi(
+    ddmLinksHaveValidProtocol(bag(extraDcmi =
       <ddm:conformsTo scheme="URL">https://dans.knaw.nl</ddm:conformsTo>
       <ddm:replaces href="http://dans.knaw.nl">http://dans.knaw.nl</ddm:replaces>
       <ddm:isRequiredBy scheme="URI">https://easy.dans.knaw.nl</ddm:isRequiredBy>
@@ -175,7 +175,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       <ddm:conformsTo scheme="URL">javascript:alert('XSS')</ddm:conformsTo>
       <ddm:conformsTo scheme="URN">ldap://localhost</ddm:conformsTo>
       <ddm:conformsTo href="ftp://dans.knaw.nl/no/download/exists">ftp://dans.knaw.nl/no/download/exists</ddm:conformsTo>
-    ddmLinksHaveValidProtocol(bagWithExtraDcmi(nodes)) shouldBe
+    ddmLinksHaveValidProtocol(bag(extraDcmi = nodes)) shouldBe
       ruleFailure(s"Invalid link protocols: ${ nodes.iterator.mkString(", ") }")
   }
 

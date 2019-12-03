@@ -25,7 +25,8 @@ import org.scalatest._
 
 import scala.util.matching.Regex
 import scala.util.{ Failure, Success, Try }
-import scala.xml.{ Node, NodeSeq }
+import scala.xml.transform.{ RewriteRule, RuleTransformer }
+import scala.xml.{ Elem, Node, NodeSeq, Text }
 
 trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach with DebugEnhancedLogging {
   lazy val testDir: File = File(s"target/test/${ getClass.getSimpleName }")
@@ -38,11 +39,11 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
   implicit val isReadable: File => Boolean = _.isReadable
 
   private def shouldBeValidAccordingToBagIt(inputBag: String): Unit = {
-    bagIsValid(new TargetBag(bagsDir / inputBag, 0)) shouldBe a[Success[_]] // Profile version does not matter here
+    bagIsValid(bag(inputBag = inputBag)) shouldBe a[Success[_]] // Profile version does not matter here
   }
 
   protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
-    val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
+    val result = rule(bag(inputBag = inputBag, profileVersion = profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
     inside(result) {
@@ -52,7 +53,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
   }
 
   protected def testRuleViolation(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
-    val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
+    val result = rule(bag(inputBag = inputBag, profileVersion = profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
     inside(result) {
@@ -64,45 +65,33 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
   protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
-    rule(new TargetBag(bagsDir / inputBag, profileVersion)) shouldBe a[Success[_]]
+    rule(bag(inputBag = inputBag, profileVersion = profileVersion)) shouldBe a[Success[_]]
   }
 
   protected def ruleFailure(message: String): Failure[RuleViolationDetailsException] = {
     Failure(RuleViolationDetailsException(message))
   }
 
-  protected def bagWithExtraDcmi(extras: NodeSeq): TargetBag = {
+  protected def bag(extraDcmi: NodeSeq = Text(""), inputBag: String = "metadata-correct", profileVersion: ProfileVersion = 0): TargetBag = {
     // TODO for a new pull request: apply to more tests,
     //  it reduces test resources and shows the essentials in one view
-    new TargetBag(bagsDir / "metadata-correct", profileVersion = 0) {
-      override lazy val tryDdm: Try[Node] = Success(
-        <ddm:DDM xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns:dc="http://purl.org/dc/elements/1.1/"
-                   xmlns:dct="http://purl.org/dc/terms/"
-                   xmlns:dcx-dai="http://easy.dans.knaw.nl/schemas/dcx/dai/"
-                   xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ http://easy.dans.knaw.nl/schemas/md/2017/09/ddm.xsd">
-              <ddm:profile>
-                  <dc:title xml:lang="en">Title of the dataset</dc:title>
-                  <dc:description xml:lang="la">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</dc:description>
-                  <dcx-dai:creatorDetails>
-                      <dcx-dai:author>
-                          <dcx-dai:organization>
-                              <dcx-dai:name xml:lang="en">Utrecht University</dcx-dai:name>
-                          </dcx-dai:organization>
-                      </dcx-dai:author>
-                  </dcx-dai:creatorDetails>
-                  <ddm:created>2012-12</ddm:created>
-                  <ddm:available>2013-05</ddm:available>
-                  <ddm:audience>D24000</ddm:audience>
-                  <ddm:accessRights>OPEN_ACCESS_FOR_REGISTERED_USERS</ddm:accessRights>
-              </ddm:profile>
-              <ddm:dcmiMetadata>
-                  <dct:license xsi:type="dct:URI">http://creativecommons.org/licenses/by-sa/4.0</dct:license>
-                  <dct:rightsHolder>Mr. Rights</dct:rightsHolder>
-                  { extras }
-              </ddm:dcmiMetadata>
-          </ddm:DDM>)
+    new TargetBag(bagsDir / inputBag, profileVersion) {
+      override lazy val tryDdm: Try[Node] = loadDdm.flatMap(addToDcmiMetadata(_, extraDcmi))
     }
+  }
+
+  // copy of FlowStepEnrichMetadataSpec.addToDcmiMetadata (just a rename of the object and Node -> NodeSeq)
+  private def addToDcmiMetadata(ddm: Node, additional: NodeSeq): Try[Node] = Try {
+    object DcmiRule extends RewriteRule {
+      override def transform(node: Node): Seq[Node] = node match {
+        case Elem(boundPrefix, "dcmiMetadata", _, boundScope, children @ _*) =>
+          <dcmiMetadata>
+            {additional}
+            {children}
+          </dcmiMetadata>.copy(prefix = boundPrefix, scope = boundScope)
+        case other => other
+      }
+    }
+    new RuleTransformer(DcmiRule).transform(ddm).head
   }
 }

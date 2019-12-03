@@ -46,13 +46,14 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
 
   lazy val tryBag: Try[Bag] = Try { bagReader.read(bagDir.path) }
 
-  lazy val tryDdm: Try[Node] = Try {
+  protected val loadDdm: Try[Node] = Try {
     Utility.trim {
       XML.loadFile((bagDir / ddmPath.toString).toJava)
     }
   }.recoverWith {
     case t: Throwable => Try { fail(s"Unparseable XML: ${ t.getMessage }") }
   }
+  lazy val tryDdm: Try[Node] = loadDdm
 
   lazy val tryFilesXml: Try[Node] = Try {
     Utility.trim {
