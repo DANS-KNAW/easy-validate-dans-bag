@@ -20,13 +20,11 @@ import java.nio.file.Paths
 
 import javax.xml.validation.SchemaFactory
 import nl.knaw.dans.easy.validatebag._
-import nl.knaw.dans.easy.validatebag.validation.RuleViolationDetailsException
 import nl.knaw.dans.lib.error._
 import org.apache.commons.configuration.PropertiesConfiguration
 
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
-import scala.xml.NodeSeq
 
 class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
@@ -173,13 +171,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "report invalid link protocols" in {
-    val nodes: NodeSeq =
+    val nodes =
       <ddm:conformsTo scheme="URL">javascript:alert('XSS')</ddm:conformsTo>
       <ddm:conformsTo scheme="URN">ldap://localhost</ddm:conformsTo>
       <ddm:conformsTo href="ftp://dans.knaw.nl/no/download/exists">ftp://dans.knaw.nl/no/download/exists</ddm:conformsTo>
-    ddmLinksHaveValidProtocol(bagWithExtraDcmi(nodes)) shouldBe Failure(RuleViolationDetailsException(
-      s"Invalid link protocols: ${nodes.iterator.mkString(", ")}"
-    ))
+    ddmLinksHaveValidProtocol(bagWithExtraDcmi(nodes)) shouldBe
+      ruleFailure(s"Invalid link protocols: ${ nodes.iterator.mkString(", ") }")
   }
 
   "ddmGmlPolygonPosListIsWellFormed" should "report error if odd number of values in posList" in {

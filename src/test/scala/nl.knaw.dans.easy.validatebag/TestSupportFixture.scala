@@ -67,6 +67,10 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     rule(new TargetBag(bagsDir / inputBag, profileVersion)) shouldBe a[Success[_]]
   }
 
+  protected def ruleFailure(message: String): Failure[RuleViolationDetailsException] = {
+    Failure(RuleViolationDetailsException(message))
+  }
+
   protected def bagWithExtraDcmi(extras: NodeSeq): TargetBag = {
     // TODO for a new pull request: apply to more tests,
     //  it reduces test resources and shows the essentials in one view
