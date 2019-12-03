@@ -39,11 +39,11 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
   implicit val isReadable: File => Boolean = _.isReadable
 
   private def shouldBeValidAccordingToBagIt(inputBag: String): Unit = {
-    bagIsValid(bag(inputBag = inputBag)) shouldBe a[Success[_]] // Profile version does not matter here
+    bagIsValid(bag(inputBag)) shouldBe a[Success[_]] // Profile version does not matter here
   }
 
   protected def testRuleViolationRegex(rule: Rule, inputBag: String, includedInErrorMsg: Regex, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
-    val result = rule(bag(inputBag = inputBag, profileVersion = profileVersion))
+    val result = rule(bag(inputBag, profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
     inside(result) {
@@ -53,7 +53,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
   }
 
   protected def testRuleViolation(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
-    val result = rule(bag(inputBag = inputBag, profileVersion = profileVersion))
+    val result = rule(bag(inputBag, profileVersion))
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     result shouldBe a[Failure[_]]
     inside(result) {
@@ -65,14 +65,14 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
   protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
-    rule(bag(inputBag = inputBag, profileVersion = profileVersion)) shouldBe a[Success[_]]
+    rule(bag(inputBag, profileVersion)) shouldBe a[Success[_]]
   }
 
   protected def ruleFailure(message: String): Failure[RuleViolationDetailsException] = {
     Failure(RuleViolationDetailsException(message))
   }
 
-  protected def bag(extraDcmi: NodeSeq = Text(""), inputBag: String = "metadata-correct", profileVersion: ProfileVersion = 0): TargetBag = {
+  protected def bag(inputBag: String = "metadata-correct", profileVersion: ProfileVersion = 0, extraDcmi: NodeSeq = Text("")): TargetBag = {
     // TODO for a new pull request: apply to more tests,
     //  it reduces test resources and shows the essentials in one view
     new TargetBag(bagsDir / inputBag, profileVersion) {

@@ -164,10 +164,9 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "ddmLinksHaveValidProtocol" should "succeed if all URIs have a 'http' or 'https' protocol" in {
     ddmLinksHaveValidProtocol(bag(extraDcmi =
-      <ddm:conformsTo scheme="URL">https://dans.knaw.nl</ddm:conformsTo>
-      <ddm:replaces href="http://dans.knaw.nl">http://dans.knaw.nl</ddm:replaces>
-      <ddm:isRequiredBy scheme="URI">https://easy.dans.knaw.nl</ddm:isRequiredBy>
-   )) shouldBe a[Success[_]]
+          <ddm:conformsTo scheme="URL">https://dans.knaw.nl</ddm:conformsTo>
+          <ddm:replaces href="http://dans.knaw.nl">http://dans.knaw.nl</ddm:replaces>
+          <ddm:isRequiredBy scheme="URI">https://easy.dans.knaw.nl</ddm:isRequiredBy>)) shouldBe a[Success[_]]
   }
 
   it should "report invalid link protocols" in {
