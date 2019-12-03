@@ -26,6 +26,7 @@ import org.apache.commons.configuration.PropertiesConfiguration
 
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
+import scala.xml.NodeSeq
 
 class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
@@ -172,12 +173,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "report invalid link protocols" in {
-    ddmLinksHaveValidProtocol(bagWithExtraDcmi(
+    val nodes: NodeSeq =
       <ddm:conformsTo scheme="URL">javascript:alert('XSS')</ddm:conformsTo>
       <ddm:conformsTo scheme="URN">ldap://localhost</ddm:conformsTo>
       <ddm:conformsTo href="ftp://dans.knaw.nl/no/download/exists">ftp://dans.knaw.nl/no/download/exists</ddm:conformsTo>
-    )) shouldBe Failure(RuleViolationDetailsException(
-      """Invalid link protocols: <ddm:conformsTo scheme="URL">javascript:alert('XSS')</ddm:conformsTo>, <ddm:conformsTo scheme="URN">ldap://localhost</ddm:conformsTo>, <ddm:conformsTo href="ftp://dans.knaw.nl/no/download/exists">ftp://dans.knaw.nl/no/download/exists</ddm:conformsTo>"""
+    ddmLinksHaveValidProtocol(bagWithExtraDcmi(nodes)) shouldBe Failure(RuleViolationDetailsException(
+      s"Invalid link protocols: ${nodes.iterator.mkString(", ")}"
     ))
   }
 
