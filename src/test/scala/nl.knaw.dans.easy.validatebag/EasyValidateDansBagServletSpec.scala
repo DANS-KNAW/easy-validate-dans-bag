@@ -79,6 +79,13 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
     }
   }
 
+  it should "return a 400 if the infoPackageType is not valid" in {
+    post(uri = s"/validate?infoPackageType=sip&uri=${ encodedURI(bagsDir / "valid-bag") }", headers = Seq(("Accept", "application/json"))) {
+      status shouldBe BAD_REQUEST_400
+      body shouldBe "Input error: invalid InfoPackageType 'sip'"
+    }
+  }
+
   it should "return a 200 for a bag with spaces in the name and mark it as 'compliant'" in {
     post(uri = s"/validate?infoPackageType=SIP&uri=${ encodedURI(bagsDir / "bag with spaces") }", headers = Seq(("Accept", "application/json"))) {
       status shouldBe OK_200
