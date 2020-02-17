@@ -17,7 +17,7 @@ package nl.knaw.dans.easy
 
 import better.files._
 
-import scala.util.Try
+import scala.util.{ Failure, Try }
 
 package object validatebag {
   type ProfileVersion = Int
@@ -35,6 +35,11 @@ package object validatebag {
   object InfoPackageType extends Enumeration {
     type InfoPackageType = Value
     val SIP, AIP, BOTH = Value
+    
+    def fromString(s: String): Try[InfoPackageType] = {
+      Try { InfoPackageType.withName(s) }
+        .recoverWith { case e => Failure(new IllegalArgumentException(s"invalid InfoPackageType '$s'", e)) }
+    }
   }
 
   import InfoPackageType._
