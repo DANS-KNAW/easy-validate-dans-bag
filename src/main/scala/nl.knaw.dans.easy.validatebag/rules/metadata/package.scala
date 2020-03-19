@@ -65,7 +65,7 @@ package object metadata extends DebugEnhancedLogging {
     (t.bagDir / xmlFile.toString).inputStream.map(validator.validate).map {
       _.recoverWith { case t: Throwable => Try(fail(s"$xmlFile does not conform to $schemaName: ${ t.getMessage }")) }
     }
-    }.get()
+  }.get()
 
   def filesXmlConformsToSchemaIfFilesNamespaceDeclared(validator: XmlValidator)
                                                       (t: TargetBag): Try[Unit] = {
@@ -111,7 +111,16 @@ package object metadata extends DebugEnhancedLogging {
     new URI(s)
   }
 
-  def ddmContainsValidDoiIdentifier(t: TargetBag): Try[Unit] = {
+  def ddmContainsDoiIdentifier(t: TargetBag): Try[Unit] = {
+    trace(())
+    for {
+      ddm <- t.tryDdm
+      dois <- getDoiIdentifiers(ddm)
+      _ = if (dois.isEmpty) fail("DOI identifier is missing")
+    } yield ()
+  }
+
+  def ddmDoiIdentifiersAreValid(t: TargetBag): Try[Unit] = {
     trace(())
     for {
       ddm <- t.tryDdm
@@ -122,7 +131,6 @@ package object metadata extends DebugEnhancedLogging {
 
   private def getDoiIdentifiers(ddm: Node): Try[Seq[String]] = Try {
     val dois = (ddm \\ "identifier").filter(hasXsiType(identifierTypeNamespace, "DOI"))
-    if (dois.isEmpty) fail("DOI identifier is missing")
     dois.map(_.text)
   }
 
@@ -376,9 +384,9 @@ package object metadata extends DebugEnhancedLogging {
    * Returns the bodies of all leaf nodes in ''node'', for which the given ''attribute'' has one of the given ''attributeValues'',
    * except if that leaf node also contains an attribute in ''excludeOnAttribute''.
    *
-   * @param node the `Node` for which to find all bodies in its leafs
-   * @param attribute only include bodies of leaf nodes containing this attribute
-   * @param attributeValues only include bodies of leaf nodes when an attribute contains one of these values
+   * @param node               the `Node` for which to find all bodies in its leafs
+   * @param attribute          only include bodies of leaf nodes containing this attribute
+   * @param attributeValues    only include bodies of leaf nodes when an attribute contains one of these values
    * @param excludeOnAttribute only include bodies of leaf nodes that do NOT contain one of these attributes
    * @return a list of bodies of leaf nodes, filtered by the given attribute filters.
    */
