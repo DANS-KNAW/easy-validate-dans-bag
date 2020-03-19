@@ -16,6 +16,7 @@
 package nl.knaw.dans.easy
 
 import better.files._
+import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 
 import scala.util.{ Failure, Try }
 
@@ -28,8 +29,8 @@ package object validatebag {
   type RuleBase = Seq[NumberedRule]
 
   val profileVersionDois = Map(
-    0 -> "doi:10.17026/dans-z52-ybfe",
-    1 -> "doi:10.17026/dans-zf3-q54n"
+    0 -> ProfileVersion0.versionUri,
+    1 -> ProfileVersion1.versionUri,
   )
 
   object InfoPackageType extends Enumeration {

@@ -15,16 +15,20 @@
  */
 package nl.knaw.dans.easy.validatebag.rules.metadata
 
+import java.io.InputStream
 import java.net.{ URI, URL }
 import java.nio.file.Paths
 
 import javax.xml.validation.SchemaFactory
+import nl.knaw.dans.easy.validatebag.InfoPackageType.InfoPackageType
 import nl.knaw.dans.easy.validatebag._
+import nl.knaw.dans.easy.validatebag.rules.ProfileVersion0
+import nl.knaw.dans.easy.validatebag.validation.{ RuleViolationDetailsException, RuleViolationException }
 import nl.knaw.dans.lib.error._
 import org.apache.commons.configuration.PropertiesConfiguration
 
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Try }
+import scala.util.{ Failure, Success, Try }
 
 class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
@@ -156,10 +160,26 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "report invalid DOI-identifiers" in {
-    testRuleViolation(
-      rule = ddmContainsValidDoiIdentifier,
-      inputBag = "ddm-incorrect-doi",
-      includedInErrorMsg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654")
+    val msg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654"
+    val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
+    ddmContainsValidDoiIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
+    validateAllRules(bag, InfoPackageType.AIP) shouldBe aRuleViolation("3.1.3", msg)
+    validateAllRules(bag, InfoPackageType.SIP) shouldBe Success(())
+  }
+
+  private val allRules: Seq[NumberedRule] = {
+    val xmlValidator = new XmlValidator(null) {override def validate(is: InputStream): Try[Unit] = Success(()) }
+    val validatorMap = { Map("dataset.xml" -> xmlValidator, "files.xml" -> xmlValidator, "agreements.xml" -> xmlValidator) }
+    ProfileVersion0.apply(validatorMap, allowedLicences = Seq.empty, BagStore(new URI(""), 1000, 1000))
+      .filterNot(rule => Seq("3.1.2", "1.2.6(a)").contains(rule.nr))
+  }
+
+  private def aRuleViolation(ruleNumber: RuleNumber, msg: String) = {
+    Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+  }
+
+  private def validateAllRules(bag: TargetBag, infoPackageType: InfoPackageType) = {
+    validation.checkRules(bag, allRules, infoPackageType)(isReadable = _.isReadable)
   }
 
   "allUrlsAreValid" should "succeed with valid urls" in {

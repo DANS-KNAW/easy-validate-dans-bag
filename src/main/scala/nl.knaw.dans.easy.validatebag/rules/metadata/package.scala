@@ -112,6 +112,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   def ddmContainsValidDoiIdentifier(t: TargetBag): Try[Unit] = {
+    trace(())
     for {
       ddm <- t.tryDdm
       dois <- getDoiIdentifiers(ddm)
@@ -177,6 +178,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   def ddmDaisAreValid(t: TargetBag): Try[Unit] = {
+    trace(())
     for {
       ddm <- t.tryDdm
       _ <- daisAreValid(ddm)
