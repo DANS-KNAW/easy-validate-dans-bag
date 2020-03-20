@@ -164,7 +164,9 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   "new test approach" should "succeed" in pendingUntilFixed { // seems to be ok in servletSpec
-    // TODO rewrite tests to copy the valid-bag into testDir with a variant of the ddm
+    // TODO Rewrite tests to copy the valid-bag into testDir with a variant of the ddm.
+    //  Returning a tuple with the three types of tests (rule, AIP, SIP) might make the new test approach less verbose
+    //  while still being flexible in predicting the expected results.
     validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRules) shouldBe Success(())
   }
 
