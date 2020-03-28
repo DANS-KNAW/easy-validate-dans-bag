@@ -19,7 +19,7 @@ import java.net.URI
 
 import better.files.File
 import nl.knaw.dans.lib.encode.StringEncoding
-import nl.knaw.dans.easy.validatebag.InfoPackageType.SIP
+import nl.knaw.dans.easy.validatebag.InfoPackageType.{SIP, AIP}
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.eclipse.jetty.http.HttpStatus.{ BAD_REQUEST_400, OK_200 }
 import org.scalatest.OptionValues._
@@ -48,7 +48,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
     }
   }
 
-  it should "return a 200 and a response including 'compliant: false' and reasons when presented an invalid bag" in {
+  it should "return a 200 and a response including 'compliant: false' and reasons when presented an invalid SIP bag" in {
     post(uri = createValidateURL("SIP", "metadata-correct"), headers = Seq(("Accept", "application/json"))) {
       status shouldBe OK_200
       val resultMessage = ResultMessage.read(body)
@@ -57,9 +57,26 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
       resultMessage.profileVersion shouldBe 0
       resultMessage.infoPackageType shouldBe SIP
       resultMessage.isCompliant shouldBe false
-      resultMessage.ruleViolations.value.toList should contain inOrderOnly(
+      resultMessage.ruleViolations.value.toList should contain (
         ("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"),
+      )
+    }
+  }
+
+  it should "return a 200 and a response including 'compliant: false' and reasons when presented an invalid AIP bag" in {
+    post(uri = createValidateURL("AIP", "metadata-correct"), headers = Seq(("Accept", "application/json"))) {
+      status shouldBe OK_200
+      val resultMessage = ResultMessage.read(body)
+      resultMessage.bagUri shouldBe new URI(s"file://${ bagsDir.path.toAbsolutePath }/metadata-correct/")
+      resultMessage.bag shouldBe "metadata-correct"
+      resultMessage.profileVersion shouldBe 0
+      resultMessage.infoPackageType shouldBe AIP
+      resultMessage.isCompliant shouldBe false
+      resultMessage.ruleViolations.value.toList should contain inOrderOnly (
+        ("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"),
+        ("1.2.6(a)", "bag-info.txt must contain exactly one 'EASY-User-Account' element; number found: 0"),
         ("1.3.1(a)", "Mandatory file 'manifest-sha1.txt' not found in bag."),
+        ("3.1.3(a)", "DOI identifier is missing"),
       )
     }
   }

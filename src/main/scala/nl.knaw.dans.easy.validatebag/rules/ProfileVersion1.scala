@@ -46,8 +46,8 @@ object ProfileVersion1 {
     // 1.2.6(b) does not state restrictions, so it does not need checking
 
     // Manifests
-    NumberedRule("1.3.1(a)", containsFile(Paths.get("manifest-sha1.txt"))),
-    NumberedRule("1.3.1(b)", bagShaPayloadManifestContainsAllPayloadFiles, dependsOn = List("1.3.1(a)")),
+    NumberedRule("1.3.1(a)", containsFile(Paths.get("manifest-sha1.txt")), AIP),
+    NumberedRule("1.3.1(b)", bagShaPayloadManifestContainsAllPayloadFiles, AIP, dependsOn = List("1.3.1(a)")),
     // 1.3.2 does not state restrictions, so it does not need checking
 
 
