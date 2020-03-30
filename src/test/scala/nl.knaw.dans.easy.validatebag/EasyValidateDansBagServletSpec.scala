@@ -57,8 +57,8 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
       resultMessage.profileVersion shouldBe 0
       resultMessage.infoPackageType shouldBe SIP
       resultMessage.isCompliant shouldBe false
-      resultMessage.ruleViolations.value.toList should contain (
-        ("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"),
+      resultMessage.ruleViolations.value.toList should contain only (
+        ("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0")
       )
     }
   }
