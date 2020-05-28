@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset }
 import java.nio.file.{ Path, Paths }
 
-import nl.knaw.dans.easy.validatebag.validation.{ fail, _ }
+import nl.knaw.dans.easy.validatebag.validation._
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
