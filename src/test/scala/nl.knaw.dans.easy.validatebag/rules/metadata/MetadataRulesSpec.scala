@@ -105,6 +105,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       includedInErrorMsg = "rightsHolder")
   }
 
+  it should "succeed if there is no rights holder but license is CC-0" in {
+    testRuleSuccess(
+      rule = ddmMayContainDctermsLicenseFromList(licenses),
+      inputBag = "ddm-CC-0-license-but-no-rightsholder")
+  }
+
   it should "fail if the license is not on the list" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),

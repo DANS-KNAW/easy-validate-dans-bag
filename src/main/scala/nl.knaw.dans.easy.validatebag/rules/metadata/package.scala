@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.{ CharacterCodingException, Charset }
 import java.nio.file.{ Path, Paths }
 
-import nl.knaw.dans.easy.validatebag.validation._
+import nl.knaw.dans.easy.validatebag.validation.{ fail, _ }
 import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -98,8 +98,8 @@ package object metadata extends DebugEnhancedLogging {
               _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") fail("License URI must have scheme http or https")
               normalizedLicenseUri <- normalizeLicenseUri(licenseUri)
               _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
+              _ = if (rightsHolders.isEmpty && ! normalizedLicenseUri.toString.equals("http://creativecommons.org/publicdomain/zero/1.0")) fail(s"Valid license found, but no rightsHolder specified")
             } yield ()).get
-            if (rightsHolders.isEmpty) fail("Valid license found, but no rightsHolder specified")
           case Nil | _ :: Nil =>
             debug("No licences with xsi:type=\"dcterms:URI\"")
           case _ => fail(s"Found ${ licenses.size } dcterms:license elements. Only one license is allowed.")
