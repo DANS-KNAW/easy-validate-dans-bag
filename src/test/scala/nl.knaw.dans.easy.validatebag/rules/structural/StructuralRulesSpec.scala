@@ -74,7 +74,19 @@ class StructuralRulesSpec extends TestSupportFixture {
 
   it should "succeed exactly the files/directories specified are present" in {
     testRuleSuccess(
-      rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
+      rule = containsNothingElseThan(Paths.get("metadata"),
+        Seq(
+        "dataset.xml",
+        "files.xml",
+        "amd.xml",
+        "emd.xml",
+        "license.txt",
+        "depositor-info",
+        "depositor-info/agreements.xml",
+        "depositor-info/message-from-depositor.txt",
+        "depositor-info/depositor-agreement.pdf",
+        "depositor-info/depositor-agreement.txt",
+      )),
       inputBag = "metadata-correct"
     )
   }
