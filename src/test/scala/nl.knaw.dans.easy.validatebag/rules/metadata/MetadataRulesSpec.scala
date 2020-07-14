@@ -178,7 +178,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "ddmContainsDoiIdentifier" should "succeed if one or more DOIs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
-    ddmContainsDoiIdentifier(bag) shouldBe Success(())
+    ddmContainsUrnIdentifier(bag) shouldBe Success(())
     validateRules(bag, AIP) shouldBe Success(())
     validateRules(bag, SIP) shouldBe Success(())
   }
@@ -186,7 +186,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   it should "fail if there is no DOI-identifier" in {
     val msg = "DOI identifier is missing"
     val bag = new TargetBag(bagsDir / "ddm-missing-doi", 0)
-    ddmContainsDoiIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
+    ddmContainsUrnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
     validateRules(bag, SIP) shouldBe Success(())
     validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(a)", msg)
   }
@@ -194,7 +194,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
     val msg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654"
     val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
-    ddmContainsDoiIdentifier(bag) shouldBe Success(())
+    ddmContainsUrnIdentifier(bag) shouldBe Success(())
     ddmDoiIdentifiersAreValid(bag) shouldBe Failure(RuleViolationDetailsException(msg))
     validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(b)", msg)
     validateRules(bag, SIP) shouldBe aRuleViolation("3.1.3(b)", msg)

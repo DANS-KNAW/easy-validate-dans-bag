@@ -31,24 +31,24 @@ import scala.util.{ Failure, Success, Try }
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
-  val filesXmlNamespace = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/"
-  val dcxDaiNamespace = "http://easy.dans.knaw.nl/schemas/dcx/dai/"
-  val identifierTypeNamespace = "http://easy.dans.knaw.nl/schemas/vocab/identifier-type/"
-  val gmlNamespace = "http://www.opengis.net/gml"
-  val dcNamespace = "http://purl.org/dc/elements/1.1/"
-  val dctermsNamespace = "http://purl.org/dc/terms/"
-  val schemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance"
+  private val filesXmlNamespace = "http://easy.dans.knaw.nl/schemas/bag/metadata/files/"
+  private val dcxDaiNamespace = "http://easy.dans.knaw.nl/schemas/dcx/dai/"
+  private val identifierTypeNamespace = "http://easy.dans.knaw.nl/schemas/vocab/identifier-type/"
+  private val gmlNamespace = "http://www.opengis.net/gml"
+  private val dcNamespace = "http://purl.org/dc/elements/1.1/"
+  private val dctermsNamespace = "http://purl.org/dc/terms/"
+  private val schemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance"
 
-  val allowedFilesXmlNamespaces = List(dcNamespace, dctermsNamespace)
-  val allowedAccessRights = List("ANONYMOUS", "RESTRICTED_REQUEST", "NONE")
+  private val allowedFilesXmlNamespaces = List(dcNamespace, dctermsNamespace)
+  private val allowedAccessRights = List("ANONYMOUS", "RESTRICTED_REQUEST", "NONE")
 
-  val doiPattern: Regex = """^10(\.\d+)+/.+""".r
-  val doiUrlPattern: Regex = """^((https?://(dx\.)?)?doi\.org/(urn:)?(doi:)?)?10(\.\d+)+/.+""".r
-  val urnPattern: Regex = """^urn:[A-Za-z0-9][A-Za-z0-9-]{0,31}:[a-z0-9()+,\-\\.:=@;$_!*'%/?#]+$""".r
+  private val doiPattern: Regex = """^10(\.\d+)+/.+""".r
+  private val doiUrlPattern: Regex = """^((https?://(dx\.)?)?doi\.org/(urn:)?(doi:)?)?10(\.\d+)+/.+""".r
+  private val urnPattern: Regex = """^urn:[A-Za-z0-9][A-Za-z0-9-]{0,31}:[a-z0-9()+,\-\\.:=@;$_!*'%/?#]+$""".r
 
-  val daiPrefix = "info:eu-repo/dai/nl/"
+  private val daiPrefix = "info:eu-repo/dai/nl/"
 
-  val urlProtocols = List("http", "https")
+  private val urlProtocols = List("http", "https")
 
   def xmlFileIfExistsConformsToSchema(xmlFile: Path, schemaName: String, validator: XmlValidator)
                                      (t: TargetBag): Try[Unit] = {
@@ -77,7 +77,7 @@ package object metadata extends DebugEnhancedLogging {
           xmlFileConformsToSchema(Paths.get("metadata/files.xml"), "files.xml", validator)(t)
         }
         else {
-          logger.info(s"files.xml does not declare namespace ${ filesXmlNamespace }, NOT validating with XML Schema")
+          logger.info(s"files.xml does not declare namespace $filesXmlNamespace, NOT validating with XML Schema")
           Success(())
         }
     }
@@ -98,7 +98,7 @@ package object metadata extends DebugEnhancedLogging {
               _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") fail("License URI must have scheme http or https")
               normalizedLicenseUri <- normalizeLicenseUri(licenseUri)
               _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
-              _ = if (rightsHolders.isEmpty && ! normalizedLicenseUri.toString.equals("http://creativecommons.org/publicdomain/zero/1.0")) fail(s"Valid license found, but no rightsHolder specified")
+              _ = if (rightsHolders.isEmpty && !normalizedLicenseUri.toString.equals("http://creativecommons.org/publicdomain/zero/1.0")) fail(s"Valid license found, but no rightsHolder specified")
             } yield ()).get
           case Nil | _ :: Nil =>
             debug("No licences with xsi:type=\"dcterms:URI\"")
@@ -111,12 +111,12 @@ package object metadata extends DebugEnhancedLogging {
     new URI(s)
   }
 
-  def ddmContainsDoiIdentifier(t: TargetBag): Try[Unit] = {
+  def ddmContainsUrnIdentifier(t: TargetBag): Try[Unit] = {
     trace(())
     for {
       ddm <- t.tryDdm
-      dois <- getDoiIdentifiers(ddm)
-      _ = if (dois.isEmpty) fail("DOI identifier is missing")
+      urn <- getIdentifiers(ddm, "URN")
+      _ = if (urn.isEmpty) fail("URN identifier is missing")
     } yield ()
   }
 
@@ -124,13 +124,13 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     for {
       ddm <- t.tryDdm
-      dois <- getDoiIdentifiers(ddm)
+      dois <- getIdentifiers(ddm, "DOI")
       _ <- doisAreSyntacticallyValid(dois)
     } yield ()
   }
 
-  private def getDoiIdentifiers(ddm: Node): Try[Seq[String]] = Try {
-    val dois = (ddm \\ "identifier").filter(hasXsiType(identifierTypeNamespace, "DOI"))
+  private def getIdentifiers(ddm: Node, idType: String): Try[Seq[String]] = Try {
+    val dois = (ddm \\ "identifier").filter(hasXsiType(identifierTypeNamespace, idType))
     dois.map(_.text)
   }
 
@@ -174,7 +174,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def hasXsiType(attrNamespace: String, attrValue: String)(e: Node): Boolean = {
-    e.attribute(schemaInstanceNamespace.toString, "type")
+    e.attribute(schemaInstanceNamespace, "type")
       .exists {
         case Seq(n) =>
           n.text.split(":") match {
@@ -207,14 +207,18 @@ package object metadata extends DebugEnhancedLogging {
     var w = 0
     var mod = 0
     mod = 0
-    while ( { mod < reverse.length }) {
+    while ( {
+      mod < reverse.length
+    }) {
       val cx = reverse.charAt(mod)
       val x = cx - 48
       w += f * x
       f += 1
       if (f > modeMax) f = 2
 
-      { mod += 1; mod }
+      {
+        mod += 1; mod
+      }
     }
     mod = w % 11
     if (mod == 0) '0'
@@ -340,8 +344,8 @@ package object metadata extends DebugEnhancedLogging {
       ddm <- t.tryDdm
       urlAttributeValues <- getUrlTypeAttributeValues(ddm)
       urlElementValues <- getUrlTypeElementValues(ddm)
-      doiElementValue <- getDoiTypeElementValues(ddm)
-      urnElementValue <- getUrnTypeElementValues(ddm)
+      doiElementValue <- Try(DoiKey -> getTypeElementValues(ddm, "DOI"))
+      urnElementValue <- Try(UrnKey -> getTypeElementValues(ddm, "URN"))
       _ <- validateUrls(Seq(doiElementValue, urnElementValue) ++ urlAttributeValues ++ urlElementValues)
     } yield ()
 
@@ -351,9 +355,13 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private sealed abstract class UrlValidationKey
+
   private case class UrlAttributeKey(name: String) extends UrlValidationKey
+
   private case object UrlKey extends UrlValidationKey
+
   private case object DoiKey extends UrlValidationKey
+
   private case object UrnKey extends UrlValidationKey
 
   private def getUrlTypeAttributeValues(ddm: Node): Try[Seq[(UrlValidationKey, Seq[String])]] = Try {
@@ -372,12 +380,8 @@ package object metadata extends DebugEnhancedLogging {
       .map(attribute => UrlKey -> getElementValues(ddm, attribute, List("dcterms:URI", "dcterms:URL", "URI", "URL")))
   }
 
-  private def getDoiTypeElementValues(ddm: Node): Try[(UrlValidationKey, Seq[String])] = Try {
-    DoiKey -> getElementValues(ddm, "scheme", List("DOI", "id-type:DOI"), List("href"))
-  }
-
-  private def getUrnTypeElementValues(ddm: Node): Try[(UrlValidationKey, Seq[String])] = Try {
-    UrnKey -> getElementValues(ddm, "scheme", List("URN", "id-type:URN"), List("href"))
+  private def getTypeElementValues(ddm: Node, idType: String) = {
+    getElementValues(ddm, "scheme", List(idType, s"id-type:$idType"), List("href"))
   }
 
   /**
@@ -425,23 +429,18 @@ package object metadata extends DebugEnhancedLogging {
       scheme = uri.getScheme
       _ = if (!(urlProtocols contains scheme))
             fail(s"protocol '$scheme' in URI '$url' is not one of the accepted protocols [${ urlProtocols.mkString(",") }]$msg")
-          else
-            ()
+          else ()
     } yield ()
   }
 
   private def validateDoiType(doi: String): Try[Unit] = Try {
-    if (syntacticallyValidDoiUrl(doi))
-      ()
-    else
-      fail(s"DOI '$doi' is not valid")
+    if (syntacticallyValidDoiUrl(doi)) ()
+    else fail(s"DOI '$doi' is not valid")
   }
 
   private def validateUrnType(urn: String): Try[Unit] = Try {
-    if (syntacticallyValidUrn(urn))
-      ()
-    else
-      fail(s"URN '$urn' is not valid")
+    if (syntacticallyValidUrn(urn)) ()
+    else fail(s"URN '$urn' is not valid")
   }
 
   def filesXmlHasDocumentElementFiles(t: TargetBag): Try[Unit] = {
@@ -553,7 +552,9 @@ package object metadata extends DebugEnhancedLogging {
     val accessRights = file \ "accessRights"
     accessRights.map(rights =>
       if (!allowedAccessRights.contains(rights.text))
-        Try { fail(s"files.xml: invalid access rights '${ rights.text }' in accessRights element for file: '${ file \@ "filepath" }' (allowed values ${ allowedAccessRights.mkString(", ") })") }
+        Try {
+          fail(s"files.xml: invalid access rights '${ rights.text }' in accessRights element for file: '${ file \@ "filepath" }' (allowed values ${ allowedAccessRights.mkString(", ") })")
+        }
       else Success(())
     )
       .collectResults

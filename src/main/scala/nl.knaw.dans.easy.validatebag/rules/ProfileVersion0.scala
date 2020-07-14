@@ -79,7 +79,7 @@ object ProfileVersion0 {
     // dataset.xml
     NumberedRule("3.1.1", xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = List("2.2(a)")),
     NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = List("3.1.1")),
-    NumberedRule("3.1.3(a)", ddmContainsDoiIdentifier, AIP, dependsOn = List("3.1.1")),
+    NumberedRule("3.1.3(a)", ddmContainsUrnIdentifier, AIP, dependsOn = List("3.1.1")),
     NumberedRule("3.1.3(b)", ddmDoiIdentifiersAreValid, dependsOn = List("3.1.1")),
     NumberedRule("3.1.4", ddmDaisAreValid, dependsOn = List("3.1.1")),
     NumberedRule("3.1.5", ddmGmlPolygonPosListIsWellFormed, dependsOn = List("3.1.1")),
