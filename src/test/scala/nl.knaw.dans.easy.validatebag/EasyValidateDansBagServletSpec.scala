@@ -76,7 +76,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
         ("1.2.4(a)", "bag-info.txt must contain exactly one 'Created' element; number found: 0"),
         ("1.2.6(a)", "bag-info.txt must contain exactly one 'EASY-User-Account' element; number found: 0"),
         ("1.3.1(a)", "Mandatory file 'manifest-sha1.txt' not found in bag."),
-        ("3.1.3(a)", "DOI identifier is missing"),
+        ("3.1.3(a)", "URN:NBN identifier is missing"),
       )
     }
   }

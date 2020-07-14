@@ -111,12 +111,13 @@ package object metadata extends DebugEnhancedLogging {
     new URI(s)
   }
 
-  def ddmContainsUrnIdentifier(t: TargetBag): Try[Unit] = {
+  def ddmContainsUrnNbnIdentifier(t: TargetBag): Try[Unit] = {
     trace(())
     for {
       ddm <- t.tryDdm
-      urn <- getIdentifiers(ddm, "URN")
-      _ = if (urn.isEmpty) fail("URN identifier is missing")
+      urns <- getIdentifiers(ddm, "URN")
+      nbns = urns.filter(_.contains("urn:nbn"))
+      _ = if (nbns.isEmpty) fail("URN:NBN identifier is missing")
     } yield ()
   }
 
@@ -130,8 +131,9 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def getIdentifiers(ddm: Node, idType: String): Try[Seq[String]] = Try {
-    val dois = (ddm \\ "identifier").filter(hasXsiType(identifierTypeNamespace, idType))
-    dois.map(_.text)
+    (ddm \\ "identifier")
+      .filter(hasXsiType(identifierTypeNamespace, idType))
+      .map(_.text)
   }
 
   private def doisAreSyntacticallyValid(dois: Seq[String]): Try[Unit] = Try {

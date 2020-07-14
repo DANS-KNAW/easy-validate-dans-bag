@@ -176,17 +176,17 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRules) shouldBe Success(())
   }
 
-  "ddmContainsDoiIdentifier" should "succeed if one or more DOIs are present" in {
+  "ddmContainsUrnIdentifier" should "succeed if one or more DOIs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
-    ddmContainsUrnIdentifier(bag) shouldBe Success(())
+    ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     validateRules(bag, AIP) shouldBe Success(())
     validateRules(bag, SIP) shouldBe Success(())
   }
 
-  it should "fail if there is no DOI-identifier" in {
-    val msg = "DOI identifier is missing"
-    val bag = new TargetBag(bagsDir / "ddm-missing-doi", 0)
-    ddmContainsUrnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
+  it should "fail if there is no URN:NBN-identifier" in {
+    val msg = "URN:NBN identifier is missing"
+    val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
+    ddmContainsUrnNbnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
     validateRules(bag, SIP) shouldBe Success(())
     validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(a)", msg)
   }
@@ -194,7 +194,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
     val msg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654"
     val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
-    ddmContainsUrnIdentifier(bag) shouldBe Success(())
+    ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     ddmDoiIdentifiersAreValid(bag) shouldBe Failure(RuleViolationDetailsException(msg))
     validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(b)", msg)
     validateRules(bag, SIP) shouldBe aRuleViolation("3.1.3(b)", msg)

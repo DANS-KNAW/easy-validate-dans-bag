@@ -33,6 +33,7 @@
         <dc:format xsi:type="dcterms:IMT">application/xml</dc:format>
         <dcterms:license xsi:type="dcterms:URI">http://creativecommons.org/licenses/by-nc-sa/4.0/</dcterms:license>
         <dcterms:rightsHolder>Vrije Universiteit Amsterdam</dcterms:rightsHolder>
+        <dcterms:identifier xsi:type="id-type:URN">urn:nbn:nl:ui:blabla</dcterms:identifier>
         <dcterms:identifier xsi:type="id-type:DOI">10.1234/fantasy-doi-id</dcterms:identifier>
         <dcterms:identifier xsi:type="id-type:DOI">10.1234.567/issn-987-654</dcterms:identifier>
     </ddm:dcmiMetadata>
