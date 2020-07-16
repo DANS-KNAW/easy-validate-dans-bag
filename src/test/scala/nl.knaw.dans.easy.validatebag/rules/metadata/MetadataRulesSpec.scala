@@ -176,7 +176,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRules) shouldBe Success(())
   }
 
-  "ddmContainsUrnIdentifier" should "succeed if one or more DOIs are present" in {
+  "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     validateRules(bag, AIP) shouldBe Success(())
