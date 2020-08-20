@@ -164,18 +164,26 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
   }
 
+  private def aRuleViolation(ruleNumber: RuleNumber, msgs: Seq[String]) = {
+    val msg = CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
+    Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+  }
+
   private def validateRules(bag: TargetBag,
                             infoPackageType: InfoPackageType,
-                            rules: Seq[NumberedRule] = allRules.filterNot(rule => Seq("3.1.2", "1.2.6(a)", "1.2.6(b)").contains(rule.nr))
+                            rules: Seq[NumberedRule] = allRules.filterNot(rule => Seq("3.1.2", "1.2.6(a)", "3.1.3(a)").contains(rule.nr))
                            ): Try[Unit] = {
+    // TODO select all the rules that the rule-under-test depends on
+    //  or fail if the dependencies are not selected
+    //  because a rule is not executed if its dependencies are not selected
     validation.checkRules(bag, rules, infoPackageType)(isReadable = _.isReadable)
   }
 
-  "new test approach" should "succeed" in pendingUntilFixed { // seems to be ok in servletSpec
+  "new test approach" should "succeed" in { // seems to be ok in servletSpec
     // TODO Rewrite tests to copy the valid-bag into testDir with a variant of the ddm.
     //  Returning a tuple with the three types of tests (rule, AIP, SIP) might make the new test approach less verbose
     //  while still being flexible in predicting the expected results.
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRules) shouldBe Success(())
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP) shouldBe Success(())
   }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
@@ -190,7 +198,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
     validateRules(bag, SIP) shouldBe Success(())
-    validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(a)", msg)
+    validateRules(bag, AIP, allRules.filterNot(rule => Seq("3.1.2", "1.2.6(a)").contains(rule.nr))) shouldBe aRuleViolation("3.1.3(a)", msg)
   }
 
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
@@ -271,25 +279,23 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "ddm-no-srs-names")
   }
 
-  "pointsHaveAtLeastTwoValues" should "fail if a Point with one coordinate is found" in {
-    testRuleViolation(
-      rule = pointsHaveAtLeastTwoValues,
-      inputBag = "ddm-point-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate")
-  }
-
-  it should "fail if a lowerCorner with one coordinate is found" in {
-    testRuleViolation(
-      rule = pointsHaveAtLeastTwoValues,
-      inputBag = "ddm-lowercorner-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate")
-  }
-
-  it should "fail if a upperCorner with one coordinate is found" in {
-    testRuleViolation(
-      rule = pointsHaveAtLeastTwoValues,
-      inputBag = "ddm-uppercorner-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate")
+  it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in {
+    validateRules(
+      new TargetBag(bagsDir / "ddm-invalid-points", 0),
+      SIP,
+      allRules.filter(_.nr.matches("(2.1)|(2.2.a.)|(3.1.1)|(3.1.7)"))
+    ) shouldBe aRuleViolation("3.1.7", Seq(
+      "Point with less than two coordinates: 1.0",
+      "Point with less than two coordinates: 1",
+      "Point with less than two coordinates: 2",
+      "Point with invalid RD bounds: -7000 288999",
+      "Point with invalid RD bounds: 300000 629001",
+      "Point with invalid RD bounds: -7001 289000",
+      "Point with invalid RD bounds: 300001 629000",
+      "Point with non numeric coordinates: XXX 629000",
+      "Point with non numeric coordinates: 300000 YYY",
+      "Point with less than two coordinates: 300000",
+    ))
   }
 
   "archisIdentifiersHaveAtMost10Characters" should "fail if archis identifiers have values that are too long" in {

@@ -1,0 +1,76 @@
+<ddm:DDM xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:dct="http://purl.org/dc/terms/"
+         xmlns:dcx-gml="http://www.opengis.net/gml"
+         xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ http://easy.dans.knaw.nl/schemas/md/2017/09/ddm.xsd">
+    <ddm:profile>
+        <ddm:dcmiMetadata>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>-7000 289000</pos><!-- valid RD range -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>300000 629000</pos><!-- valid RD range -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>-7000 288999</pos><!-- too low Y -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>300000 629001</pos><!-- too hight Y -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>-7001 289000</pos><!-- too low X -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>300001 629000</pos><!-- to high X -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>XXX 629000</pos><!-- not numeric X -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>300000 YYY</pos><!-- not numeric Y -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType" srsName="http://www.opengis.net/def/crs/EPSG/0/28992">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>300000</pos><!-- only one value -->
+                </Point>
+            </dct:spatial>
+            <dct:spatial xsi:type="dcx-gml:SimpleGMLType">
+                <Point xmlns="http://www.opengis.net/gml">
+                    <pos>1.0</pos><!-- only one value -->
+                </Point>
+            </dct:spatial>
+            <dcx-gml:spatial>
+                <boundedBy xmlns="http://www.opengis.net/gml">
+                    <Envelope srsName="urn:ogc:def:crs:EPSG::28992">
+                        <lowerCorner>1 2</lowerCorner>
+                        <upperCorner>1</upperCorner><!-- Only one value -->
+                    </Envelope>
+                </boundedBy>
+            </dcx-gml:spatial>
+            <dcx-gml:spatial>
+                <boundedBy xmlns="http://www.opengis.net/gml">
+                    <Envelope srsName="urn:ogc:def:crs:EPSG::28992">
+                        <lowerCorner>2</lowerCorner><!-- Only one value -->
+                        <upperCorner>121811.885272 486890.494251</upperCorner>
+                    </Envelope>
+                </boundedBy>
+            </dcx-gml:spatial>
+        </ddm:dcmiMetadata>
+    </ddm:profile>
+</ddm:DDM>

@@ -219,7 +219,8 @@ package object metadata extends DebugEnhancedLogging {
       if (f > modeMax) f = 2
 
       {
-        mod += 1; mod
+        mod += 1;
+        mod
       }
     }
     mod = w % 11
@@ -293,8 +294,11 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     val result = for {
       ddm <- t.tryDdm
-      points <- getGmlPoints(ddm)
-      _ <- points.map(validatePoint).collectResults
+      rdToSpatials <- Try((ddm \\ "spatial").groupBy(isRdPoint))
+      rdToPoints <- Try(rdToSpatials.map { case (isRD, spatial) => isRD -> spatial.theSeq.flatMap(getGmlPoints) })
+      _ <- rdToPoints.toSeq.flatMap { case (isRD, points) =>
+        points.map(validatePoint(_, isRD))
+      }.collectResults
     } yield ()
 
     result.recoverWith {
@@ -302,14 +306,28 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  private def getGmlPoints(ddm: Node): Try[NodeSeq] = Try {
+  private def getGmlPoints(ddm: Node): Seq[Node] = {
     ((ddm \\ "Point") ++ (ddm \\ "lowerCorner") ++ (ddm \\ "upperCorner")).filter(_.namespace == gmlNamespace)
+  }.theSeq
+
+  private def validatePoint(point: Node, isRD: Boolean): Try[Unit] = Try {
+    val value = point.text.trim
+    val coordinates = Try { value.split("""\s+""").map(_.trim.toFloat) }
+      .getOrRecover(_ => fail(s"Point with non numeric coordinates: $value"))
+    if (coordinates.length < 2) fail(s"Point with less than two coordinates: $value")
+    else if (isRD && !isValidaRdRange(coordinates))
+           fail(s"Point with invalid RD bounds: $value")
   }
 
-  private def validatePoint(point: Node): Try[Unit] = {
-    val coordinates = point.text.trim.split("""\s+""")
-    if (coordinates.length > 1) Success(())
-    else Try(fail(s"Point with only one coordinate: ${ point.text.trim }"))
+  def isRdPoint(spatial: Node): Boolean = {
+    spatial.attribute("srsName").toSeq.flatten
+      .exists(_.text == "http://www.opengis.net/def/crs/EPSG/0/28992")
+  }
+
+  def isValidaRdRange(coordinates: Seq[Float]): Boolean = {
+    val x = coordinates.head
+    val y = coordinates.tail.head
+    x >= -7000 && x <= 300000 && y >= 289000 && y <= 629000
   }
 
   def archisIdentifiersHaveAtMost10Characters(t: TargetBag): Try[Unit] = {
