@@ -160,6 +160,10 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     ProfileVersion0.apply(validatorMap, allowedLicences = Seq.empty, BagStore(new URI(""), 1000, 1000))
   }
 
+  private def allRulesBut(nrs: String*) = allRules.filterNot(rule => nrs.contains(rule.nr))
+
+  private def onlyRules(nrs: String*) = allRules.filter(rule => nrs.contains(rule.nr))
+
   private def aRuleViolation(ruleNumber: RuleNumber, msg: String) = {
     Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
   }
@@ -169,36 +173,33 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
   }
 
-  private def validateRules(bag: TargetBag,
-                            infoPackageType: InfoPackageType,
-                            rules: Seq[NumberedRule] = allRules.filterNot(rule => Seq("3.1.2", "1.2.6(a)", "3.1.3(a)").contains(rule.nr))
-                           ): Try[Unit] = {
-    // TODO select all the rules that the rule-under-test depends on
-    //  or fail if the dependencies are not selected
-    //  because a rule is not executed if its dependencies are not selected
+  private def validateRules(bag: TargetBag, infoPackageType: InfoPackageType, rules: Seq[NumberedRule]): Try[Unit] = {
+    val ruleNrs = rules.map(r => r.nr).toSet
+    val dependencies = rules.flatMap(_.dependsOn).toSet
+    if (!dependencies.subsetOf(ruleNrs))
+      fail(s"A rule without it dependencies is not executed. rules:$ruleNrs dependencies:$dependencies")
     validation.checkRules(bag, rules, infoPackageType)(isReadable = _.isReadable)
   }
 
-  "new test approach" should "succeed" in { // seems to be ok in servletSpec
-    // TODO Rewrite tests to copy the valid-bag into testDir with a variant of the ddm.
-    //  Returning a tuple with the three types of tests (rule, AIP, SIP) might make the new test approach less verbose
-    //  while still being flexible in predicting the expected results.
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP) shouldBe Success(())
+  "new test approach" should "succeed" in {
+    // TODO seems to be ok in servletSpec
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("3.1.2", "1.2.6(a)", "3.1.3(a)")) shouldBe Success(())
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRulesBut("3.1.2")) shouldBe Success(())
   }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
-    validateRules(bag, AIP) shouldBe Success(())
-    validateRules(bag, SIP) shouldBe Success(())
+    validateRules(bag, AIP, allRulesBut("3.1.2", "1.2.6(a)", "3.1.3(a)")) shouldBe Success(())
+    validateRules(bag, SIP, allRulesBut("3.1.2")) shouldBe Success(())
   }
 
   it should "fail if there is no URN:NBN-identifier" in {
     val msg = "URN:NBN identifier is missing"
     val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
-    validateRules(bag, SIP) shouldBe Success(())
-    validateRules(bag, AIP, allRules.filterNot(rule => Seq("3.1.2", "1.2.6(a)").contains(rule.nr))) shouldBe aRuleViolation("3.1.3(a)", msg)
+    validateRules(bag, SIP, allRulesBut("3.1.2")) shouldBe Success(())
+    validateRules(bag, AIP, allRulesBut("3.1.2", "1.2.6(a)")) shouldBe aRuleViolation("3.1.3(a)", msg)
   }
 
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
@@ -206,8 +207,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     ddmDoiIdentifiersAreValid(bag) shouldBe Failure(RuleViolationDetailsException(msg))
-    validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(b)", msg)
-    validateRules(bag, SIP) shouldBe aRuleViolation("3.1.3(b)", msg)
+    validateRules(bag, AIP, allRulesBut("3.1.2", "1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.3(b)", msg)
+    validateRules(bag, SIP, allRulesBut("3.1.2", "3.1.3(a)")) shouldBe aRuleViolation("3.1.3(b)", msg)
   }
 
   "allUrlsAreValid" should "succeed with valid urls" in {
@@ -280,11 +281,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in {
-    validateRules(
-      new TargetBag(bagsDir / "ddm-invalid-points", 0),
-      SIP,
-      allRules.filter(_.nr.matches("(2.1)|(2.2.a.)|(3.1.1)|(3.1.7)"))
-    ) shouldBe aRuleViolation("3.1.7", Seq(
+    val expected = aRuleViolation("3.1.7", Seq(
       "Point with less than two coordinates: 1.0",
       "Point with less than two coordinates: 1",
       "Point with less than two coordinates: 2",
@@ -296,6 +293,10 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       "Point with non numeric coordinates: 300000 YYY",
       "Point with less than two coordinates: 300000",
     ))
+    val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
+    val bag = new TargetBag(bagsDir / "ddm-invalid-points", 0)
+    validateRules(bag, AIP, rules) shouldBe expected
+    validateRules(bag, SIP, rules) shouldBe expected
   }
 
   "archisIdentifiersHaveAtMost10Characters" should "fail if archis identifiers have values that are too long" in {
