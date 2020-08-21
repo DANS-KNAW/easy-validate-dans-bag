@@ -313,8 +313,8 @@ package object metadata extends DebugEnhancedLogging {
   private def validatePoint(point: Node, isRD: Boolean): Try[Unit] = Try {
     val value = point.text.trim
     val coordinates = Try { value.split("""\s+""").map(_.trim.toFloat) }
-      .getOrRecover(_ => fail(s"Point with non numeric coordinates: $value"))
-    if (coordinates.length < 2) fail(s"Point with less than two coordinates: $value")
+      .getOrRecover(_ => fail(s"Point has non numeric coordinates: $value"))
+    if (coordinates.length < 2) fail(s"Point has less than two coordinates: $value")
     else if (isRD && !isValidaRdRange(coordinates))
            fail(s"Point is outside RD bounds: $value")
   }

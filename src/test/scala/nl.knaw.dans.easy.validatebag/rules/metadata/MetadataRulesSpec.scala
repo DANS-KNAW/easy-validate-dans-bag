@@ -291,16 +291,16 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in {
     val expected = aRuleViolation("3.1.7",
-      "Point with less than two coordinates: 1.0",
-      "Point with less than two coordinates: 1",
-      "Point with less than two coordinates: 2",
+      "Point has less than two coordinates: 1.0",
+      "Point has less than two coordinates: 1",
+      "Point has less than two coordinates: 2",
       "Point is outside RD bounds: -7000 288999",
       "Point is outside RD bounds: 300000 629001",
       "Point is outside RD bounds: -7001 289000",
       "Point is outside RD bounds: 300001 629000",
-      "Point with non numeric coordinates: XXX 629000",
-      "Point with non numeric coordinates: 300000 YYY",
-      "Point with less than two coordinates: 300000",
+      "Point has non numeric coordinates: XXX 629000",
+      "Point has non numeric coordinates: 300000 YYY",
+      "Point has less than two coordinates: 300000",
     )
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
     val bag = new TargetBag(bagsDir / "ddm-invalid-points", 0)
