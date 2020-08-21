@@ -164,13 +164,13 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   private def onlyRules(nrs: String*) = allRules.filter(rule => nrs.contains(rule.nr))
 
-  private def aRuleViolation(ruleNumber: RuleNumber, msg: String) = {
-    Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
-  }
-
-  private def aRuleViolation(ruleNumber: RuleNumber, msgs: Seq[String]) = {
-    val msg = CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
-    Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+  private def aRuleViolation(ruleNumber: RuleNumber, msgs: String*) = {
+    if (msgs.length == 1)
+      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msgs.head))))
+    else {
+      val msg = CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
+      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+    }
   }
 
   private def validateRules(bag: TargetBag, infoPackageType: InfoPackageType, rules: Seq[NumberedRule]): Try[Unit] = {
@@ -181,11 +181,16 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     validation.checkRules(bag, rules, infoPackageType)(isReadable = _.isReadable)
   }
 
-  "new test approach" should "succeed BUT DOESN'T" in {
-    // TODO seems to be ok in servletSpec (it injects the reported license in the configuration)
+  "new test approach" should "report the not configured license" in {
     val expectedMsg = "Found unknown or unsupported license: http://creativecommons.org/licenses/by-sa/4.0"
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2",expectedMsg)
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2",expectedMsg)
+
+    // the next test succeeds with
+    // https://github.com/DANS-KNAW/easy-validate-dans-bag/blob/d67357fe306843adbc4b66e960d36f4364ae9228/src/test/scala/nl.knaw.dans.easy.validatebag/EasyValidateDansBagServletSpec.scala#L42
+    // that test injects the reported license in the configuration
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2", expectedMsg)
+
+    // excluded rules that would cause more errors than the not configured license
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2", expectedMsg)
   }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
@@ -285,7 +290,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in {
-    val expected = aRuleViolation("3.1.7", Seq(
+    val expected = aRuleViolation("3.1.7",
       "Point with less than two coordinates: 1.0",
       "Point with less than two coordinates: 1",
       "Point with less than two coordinates: 2",
@@ -296,7 +301,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       "Point with non numeric coordinates: XXX 629000",
       "Point with non numeric coordinates: 300000 YYY",
       "Point with less than two coordinates: 300000",
-    ))
+    )
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
     val bag = new TargetBag(bagsDir / "ddm-invalid-points", 0)
     validateRules(bag, AIP, rules) shouldBe expected
