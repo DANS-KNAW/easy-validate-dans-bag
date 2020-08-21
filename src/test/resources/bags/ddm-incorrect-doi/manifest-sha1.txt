@@ -1,2 +1,0 @@
-11f3753c1ce7454931f667e7ccd44c2ae4798fe1  data/ruimtereis01_verklaring.txt
-fbd429500abb7a8ed309f3ccbec920369d2c77cb  data/secret.txt

@@ -181,34 +181,38 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     validation.checkRules(bag, rules, infoPackageType)(isReadable = _.isReadable)
   }
 
-  "new test approach" should "succeed" in {
-    // TODO seems to be ok in servletSpec
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("3.1.2", "1.2.6(a)", "3.1.3(a)")) shouldBe Success(())
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRulesBut("3.1.2")) shouldBe Success(())
+  "new test approach" should "succeed BUT DOESN'T" in {
+    // TODO seems to be ok in servletSpec (it injects the reported license in the configuration)
+    val expectedMsg = "Found unknown or unsupported license: http://creativecommons.org/licenses/by-sa/4.0"
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2",expectedMsg)
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2",expectedMsg)
   }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
-    validateRules(bag, AIP, allRulesBut("3.1.2", "1.2.6(a)", "3.1.3(a)")) shouldBe Success(())
-    validateRules(bag, SIP, allRulesBut("3.1.2")) shouldBe Success(())
+    val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
+    validateRules(bag, AIP, rules) shouldBe Success(())
+    validateRules(bag, SIP, rules) shouldBe Success(())
   }
 
   it should "fail if there is no URN:NBN-identifier" in {
     val msg = "URN:NBN identifier is missing"
     val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
+    val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
-    validateRules(bag, SIP, allRulesBut("3.1.2")) shouldBe Success(())
-    validateRules(bag, AIP, allRulesBut("3.1.2", "1.2.6(a)")) shouldBe aRuleViolation("3.1.3(a)", msg)
+    validateRules(bag, SIP, rules) shouldBe Success(())
+    validateRules(bag, AIP, rules) shouldBe aRuleViolation("3.1.3(a)", msg)
   }
 
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
     val msg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654"
     val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
+    val rules = onlyRules("3.1.3(a)", "3.1.3(b)", "3.1.1", "2.2(a)", "2.1")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     ddmDoiIdentifiersAreValid(bag) shouldBe Failure(RuleViolationDetailsException(msg))
-    validateRules(bag, AIP, allRulesBut("3.1.2", "1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.3(b)", msg)
-    validateRules(bag, SIP, allRulesBut("3.1.2", "3.1.3(a)")) shouldBe aRuleViolation("3.1.3(b)", msg)
+    validateRules(bag, AIP, rules) shouldBe aRuleViolation("3.1.3(b)", msg)
+    validateRules(bag, SIP, rules) shouldBe aRuleViolation("3.1.3(b)", msg)
   }
 
   "allUrlsAreValid" should "succeed with valid urls" in {
