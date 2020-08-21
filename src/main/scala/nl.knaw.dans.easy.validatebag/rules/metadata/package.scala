@@ -316,7 +316,7 @@ package object metadata extends DebugEnhancedLogging {
       .getOrRecover(_ => fail(s"Point with non numeric coordinates: $value"))
     if (coordinates.length < 2) fail(s"Point with less than two coordinates: $value")
     else if (isRD && !isValidaRdRange(coordinates))
-           fail(s"Point with invalid RD bounds: $value")
+           fail(s"Point is outside RD bounds: $value")
   }
 
   def isRdPoint(spatial: Node): Boolean = {
