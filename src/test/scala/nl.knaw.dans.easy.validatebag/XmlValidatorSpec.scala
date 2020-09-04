@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.validatebag
 
-import java.net.URL
+import java.net.{ URL, UnknownHostException }
 
 import better.files.File
 import better.files.File.currentWorkingDirectory
@@ -23,13 +23,33 @@ import javax.xml.validation.{ Schema, SchemaFactory }
 import org.scalatest.exceptions.TestFailedException
 
 import scala.util._
+import scala.xml.SAXParseException
 
 class XmlValidatorSpec extends TestSupportFixture {
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
-  private val testSchemaDDM: Schema = schemaFactory.newSchema(new URL(ddmSchemaUrl))
-  private val testSchemaFiles: Schema = schemaFactory.newSchema(new URL(filesSchemaUrl))
-  private val validatorDDM = new XmlValidator(schema = testSchemaDDM)
-  private val validatorFiles = new XmlValidator(schema = testSchemaFiles)
+  private val triedDdmSchema = Try(schemaFactory.newSchema(new URL(ddmSchemaUrl)))
+  private val triedFileSchema = Try(schemaFactory.newSchema(new URL(filesSchemaUrl)))
+  private def testSchemaDDM: Schema = {
+    assume(isAvailable(triedDdmSchema))
+    triedDdmSchema.get
+  }
+  private def validatorDDM = {
+    Try(new XmlValidator(schema = testSchemaDDM)).get
+  }
+  private def validatorFiles = {
+    assume(isAvailable(triedFileSchema))
+    Try(new XmlValidator(schema = triedFileSchema.get)).get
+  }
+
+  def isAvailable(triedSchema: Try[Schema]): Boolean = triedSchema match {
+    case Failure(e: SAXParseException) if e.getCause.isInstanceOf[UnknownHostException] =>
+      println("UnknownHostException: " + e.getMessage)
+      false
+    case Failure(e: SAXParseException) if e.getMessage.contains("Cannot resolve") =>
+      println("Probably an offline third party schema: " + e.getMessage)
+      false
+    case _ => true
+  }
 
   "Validate" should "return a success when handed a ddm correct xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/dataset.xml"
