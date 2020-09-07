@@ -33,12 +33,15 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   logger.info("XML Schema factory created.")
 
-  private def createValidator(schemaUrl: URL): XmlValidator = Try {
+  private def createValidator(schemaUrl: URL): XmlValidator = {
     logger.info(s"Creating validator for $schemaUrl ...")
-    val ddmSchema = schemaFactory.newSchema(schemaUrl)
-    val v = new XmlValidator(ddmSchema)
-    logger.info("Validator created.")
-    v
+    for {
+      ddmSchema <- Try(schemaFactory.newSchema(schemaUrl))
+      xmlValidator = new XmlValidator(ddmSchema)
+      _ = logger.info(s"Validator created with $schemaUrl")
+    } yield xmlValidator
+  }.doIfFailure { case e if e.getMessage.contains("Cannot resolve") =>
+    logger.error(s"Probably an offline third party schema for $schemaUrl : ${ e.getMessage }", e)
   }.unsafeGetOrThrow
 
   private val xmlValidators: Map[String, XmlValidator] = Map(
@@ -75,10 +78,10 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     Try { File(uri).name }
       .doIfSuccess(bagName => logger.info(s"[$bagName]: start validating bag"))
       .doIfFailure { case e => logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir: ${ e.getMessage }") }
-      .getOrElse(uri.toString).toString
+      .getOrElse(uri.toString)
   }
 
-  private def logResult(bagName: String, violations: Seq[(String, String)]) = {
+  private def logResult(bagName: String, violations: Seq[(String, String)]): Unit = {
     if (violations.isEmpty) logger.info(s"[$bagName] did not violate any rules and is validated successfully")
     else violations.foreach { case (number: String, message: String) => logger.warn(s"[$bagName] broke rule $number: $message") }
   }

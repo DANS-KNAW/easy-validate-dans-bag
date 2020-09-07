@@ -30,6 +30,7 @@ trait SchemaFixture {
   private lazy val schemaFactory: SchemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   lazy val triedDdmSchema: Try[Schema] = loadSchema(ddmSchemaUrl)
   lazy val triedFileSchema: Try[Schema] = loadSchema(filesSchemaUrl)
+  lazy val triedMetadataSchema: Try[Schema] = loadSchema(metadataSchemaUrl)
 
   def ddmValidator: XmlValidator = validator(triedDdmSchema)
 
@@ -44,7 +45,7 @@ trait SchemaFixture {
     Try(schemaFactory.newSchema(new URL(url)))
   }
 
-  def isAvailable(triedSchema: Try[Schema]): Boolean = triedSchema match {
+  def isAvailable(triedSchemas: Try[Schema]*): Boolean = triedSchemas.forall {
     case Failure(e: SAXParseException) if e.getCause.isInstanceOf[UnknownHostException] =>
       println("UnknownHostException: " + e.getMessage)
       false
