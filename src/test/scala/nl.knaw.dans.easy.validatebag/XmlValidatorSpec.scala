@@ -15,64 +15,41 @@
  */
 package nl.knaw.dans.easy.validatebag
 
-import java.net.{ URL, UnknownHostException }
-
 import better.files.File
 import better.files.File.currentWorkingDirectory
-import javax.xml.validation.{ Schema, SchemaFactory }
+import javax.xml.validation.Schema
 import org.scalatest.exceptions.TestFailedException
 
 import scala.util._
-import scala.xml.SAXParseException
 
-class XmlValidatorSpec extends TestSupportFixture {
-  private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
-  private val triedDdmSchema = Try(schemaFactory.newSchema(new URL(ddmSchemaUrl)))
-  private val triedFileSchema = Try(schemaFactory.newSchema(new URL(filesSchemaUrl)))
-  private def testSchemaDDM: Schema = {
-    assume(isAvailable(triedDdmSchema))
-    triedDdmSchema.get
-  }
-  private def validatorDDM = {
-    Try(new XmlValidator(schema = testSchemaDDM)).get
-  }
-  private def validatorFiles = {
-    assume(isAvailable(triedFileSchema))
-    Try(new XmlValidator(schema = triedFileSchema.get)).get
-  }
-
-  def isAvailable(triedSchema: Try[Schema]): Boolean = triedSchema match {
-    case Failure(e: SAXParseException) if e.getCause.isInstanceOf[UnknownHostException] =>
-      println("UnknownHostException: " + e.getMessage)
-      false
-    case Failure(e: SAXParseException) if e.getMessage.contains("Cannot resolve") =>
-      println("Probably an offline third party schema: " + e.getMessage)
-      false
-    case _ => true
-  }
+class XmlValidatorSpec extends TestSupportFixture with SchemaFixture {
 
   "Validate" should "return a success when handed a ddm correct xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/dataset.xml"
-    validateXmlFile(validatorDDM, xmlFileToTest, testSchemaDDM) shouldBe a[Success[_]]
+    assume(isAvailable(triedDdmSchema))
+    validateXmlFile(ddmValidator, xmlFileToTest, triedDdmSchema.get) shouldBe a[Success[_]]
   }
 
   it should "return a failure when handed an incorrect ddm xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/ddm-incorrect-dai/metadata/dataset.xml"
-    validateXmlFile(validatorDDM, xmlFileToTest, testSchemaDDM) should matchPattern {
+    assume(isAvailable(triedDdmSchema))
+    validateXmlFile(ddmValidator, xmlFileToTest, triedDdmSchema.get) should matchPattern {
       case Failure(tfe: TestFailedException) if tfe.getMessage().contains("does not conform to") =>
     }
   }
 
   it should "return a failure when handed an incorrect files xml file" in {
+    assume(isAvailable(triedDdmSchema))
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/filesxml-non-file-element/metadata/files.xml"
-    validateXmlFile(validatorFiles, xmlFileToTest, testSchemaDDM) should matchPattern {
+    validateXmlFile(filesXmlValidator, xmlFileToTest, triedDdmSchema.get) should matchPattern {
       case Failure(tfe: TestFailedException) if tfe.getMessage().contains("does not conform to") =>
     }
   }
 
   it should "return a success when handed an correct files xml file" in {
+    assume(isAvailable(triedDdmSchema))
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/files.xml"
-    validateXmlFile(validatorFiles, xmlFileToTest, testSchemaDDM) shouldBe a[Success[_]]
+    validateXmlFile(filesXmlValidator, xmlFileToTest, triedDdmSchema.get) shouldBe a[Success[_]]
   }
 
   private def validateXmlFile(validator: XmlValidator, xmlFileToTest: File, schema: Schema): Try[Unit] = {

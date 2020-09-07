@@ -16,10 +16,9 @@
 package nl.knaw.dans.easy.validatebag.rules.metadata
 
 import java.io.InputStream
-import java.net.{ URI, URL }
+import java.net.URI
 import java.nio.file.Paths
 
-import javax.xml.validation.SchemaFactory
 import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, InfoPackageType, SIP }
 import nl.knaw.dans.easy.validatebag._
 import nl.knaw.dans.easy.validatebag.rules.ProfileVersion0
@@ -30,8 +29,7 @@ import org.apache.commons.configuration.PropertiesConfiguration
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
 
-class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
-  private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
+class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanConnectFixture {
   private lazy val licensesDir = Paths.get("target/easy-licenses/licenses")
   private lazy val licenses = new PropertiesConfiguration(licensesDir.resolve("licenses.properties").toFile)
     .getKeys.asScala.filterNot(_.isEmpty)
@@ -44,23 +42,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       "http://schema.datacite.org/meta/kernel-4/metadata.xsd")
   }
 
-  private lazy val ddmValidator = Try {
-    logger.info("Creating ddm.xml validator...")
-    val ddmSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"))
-    val v = new XmlValidator(ddmSchema)
-    logger.info("ddm.xml validator created.")
-    v
-  }.unsafeGetOrThrow
-
-  private lazy val filesXmlValidator = Try {
-    logger.info("Creating files.xml validator...")
-    val filesXmlSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/bag/metadata/files/files.xsd"))
-    val v = new XmlValidator(filesXmlSchema)
-    logger.info("files.xml validator created.")
-    v
-  }.unsafeGetOrThrow
-
   "xmlFileConformsToSchema" should "report validation errors if XML not valid" in {
+    assume(isAvailable(triedDdmSchema))
     testRuleViolationRegex(
       rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "ddm-unknown-element",
@@ -69,6 +52,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "succeed if XML is valid" in {
+    assume(isAvailable(triedDdmSchema))
     testRuleSuccess(
       rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "metadata-correct")
@@ -317,6 +301,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "fail if a file element is described twice" in {
+    assume(isAvailable(triedFileSchema))
     testRuleViolation(
       rule = filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
@@ -423,7 +408,6 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "all files.xml rules" should "succeed if files.xml is correct" in {
     Seq[Rule](
-      filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
       filesXmlHasDocumentElementFiles,
       filesXmlHasOnlyFiles,
       filesXmlFileElementsAllHaveFilepathAttribute,
@@ -432,10 +416,16 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       filesXmlFilesHaveOnlyAllowedNamespaces,
       filesXmlFilesHaveOnlyAllowedAccessRights)
       .foreach(testRuleSuccess(_, inputBag = "metadata-correct"))
+    assume(isAvailable(triedFileSchema))
+    testRuleSuccess(
+      filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
+      inputBag = "metadata-correct"
+    )
   }
 
   // Reusing some test data. This rules is actually not used for files.xml.
   "xmlFileIfExistsConformsToSchema" should "fail if file exists but does not conform" in {
+    assume(isAvailable(triedFileSchema))
     testRuleViolation(
       rule = xmlFileIfExistsConformsToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
       inputBag = "filesxml-file-described-twice",

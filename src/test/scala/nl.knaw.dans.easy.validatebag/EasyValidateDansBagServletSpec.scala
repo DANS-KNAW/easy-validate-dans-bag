@@ -26,7 +26,7 @@ import org.scalatest.OptionValues._
 import org.scalatra.test.EmbeddedJettyContainer
 import org.scalatra.test.scalatest.ScalatraSuite
 
-class EasyValidateDansBagServletSpec extends TestSupportFixture
+class EasyValidateDansBagServletSpec extends TestSupportFixture with SchemaFixture
   with EmbeddedJettyContainer
   with ScalatraSuite {
   private val testVersion = "1.0.0"
