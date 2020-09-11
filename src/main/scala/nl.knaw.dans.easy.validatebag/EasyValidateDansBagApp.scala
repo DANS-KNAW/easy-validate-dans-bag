@@ -44,7 +44,7 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     case e if e.getMessage.contains("Cannot resolve") =>
       logger.error(s"Probably an offline third party schema for $schemaUrl : ${ e.getMessage }", e)
     case e =>
-      logger.error(s"Could create validator for $schemaUrl : ${ e.getMessage }", e)
+      logger.error(s"Could not create validator for $schemaUrl : ${ e.getMessage }", e)
   }.unsafeGetOrThrow
 
   private val xmlValidators: Map[String, XmlValidator] = Map(
