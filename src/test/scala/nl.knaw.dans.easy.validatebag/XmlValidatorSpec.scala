@@ -25,7 +25,6 @@ import org.scalatest.exceptions.TestFailedException
 import scala.util._
 
 class XmlValidatorSpec extends TestSupportFixture {
-  System.setProperty("http.agent", "Test")
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   private val testSchemaDDM: Schema = schemaFactory.newSchema(new URL(ddmSchemaUrl))
   private val testSchemaFiles: Schema = schemaFactory.newSchema(new URL(filesSchemaUrl))
