@@ -31,6 +31,7 @@ import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
 
 class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
+  System.setProperty("http.agent", "Test")
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   private lazy val licensesDir = Paths.get("target/easy-licenses/licenses")
   private lazy val licenses = new PropertiesConfiguration(licensesDir.resolve("licenses.properties").toFile)

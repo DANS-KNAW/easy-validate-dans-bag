@@ -31,6 +31,10 @@ object Command extends App with DebugEnhancedLogging {
   type IsOk = Boolean
 
   val configuration = Configuration(Paths.get(System.getProperty("app.home")))
+  val agent = configuration.properties.getString("http.agent","EasyValidateDansBag")
+  logger.info(s"setting http.agent to $agent")
+  System.setProperty("http.agent", agent)
+
   debug("Parsing command line...")
   val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration) {
     verify()
