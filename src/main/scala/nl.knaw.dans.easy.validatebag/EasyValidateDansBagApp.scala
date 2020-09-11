@@ -34,7 +34,7 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   logger.info("XML Schema factory created.")
 
   private def createValidator(schemaUrl: URL): XmlValidator = {
-    logger.info(s"Creating validator for $schemaUrl  with agent ${ System.getProperty("http.agent") } ...")
+    logger.info(s"Creating validator for $schemaUrl with agent ${ System.getProperty("http.agent") } ...")
     for {
       ddmSchema <- Try(schemaFactory.newSchema(schemaUrl))
       xmlValidator <- Try(new XmlValidator(ddmSchema))

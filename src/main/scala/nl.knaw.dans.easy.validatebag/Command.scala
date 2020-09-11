@@ -31,7 +31,7 @@ object Command extends App with DebugEnhancedLogging {
   type IsOk = Boolean
 
   val configuration = Configuration(Paths.get(System.getProperty("app.home")))
-  val agent = configuration.properties.getString("http.agent","EasyValidateDansBag")
+  val agent = configuration.properties.getString("http.agent",s"easy-validate-dans-bag/${configuration.version}")
   logger.info(s"setting http.agent to $agent")
   System.setProperty("http.agent", agent)
 
