@@ -25,6 +25,7 @@ import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 import nl.knaw.dans.easy.validatebag.validation.RuleViolationException
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.xml.sax.SAXParseException
 
 import scala.util.{ Failure, Try }
 
@@ -33,12 +34,18 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   logger.info("XML Schema factory created.")
 
-  private def createValidator(schemaUrl: URL): XmlValidator = Try {
-    logger.info(s"Creating validator for $schemaUrl ...")
-    val ddmSchema = schemaFactory.newSchema(schemaUrl)
-    val v = new XmlValidator(ddmSchema)
-    logger.info("Validator created.")
-    v
+  private def createValidator(schemaUrl: URL): XmlValidator = {
+    logger.info(s"Creating validator for $schemaUrl with agent ${ System.getProperty("http.agent") } ...")
+    for {
+      ddmSchema <- Try(schemaFactory.newSchema(schemaUrl))
+      xmlValidator <- Try(new XmlValidator(ddmSchema))
+      _ = logger.info(s"Validator created with $schemaUrl")
+    } yield xmlValidator
+  }.doIfFailure {
+    case e: SAXParseException if e.getMessage.contains("Cannot resolve") =>
+      logger.error(s"Could not create schema validator (possibly a 3rd party schema is offline or denies access to the user agent) for $schemaUrl : ${ e.getMessage }", e)
+    case e =>
+      logger.error(s"Could not create validator for $schemaUrl : ${ e.getMessage }", e)
   }.unsafeGetOrThrow
 
   private val xmlValidators: Map[String, XmlValidator] = Map(
@@ -75,10 +82,10 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     Try { File(uri).name }
       .doIfSuccess(bagName => logger.info(s"[$bagName]: start validating bag"))
       .doIfFailure { case e => logger.warn(s"${ uri.toString } is a malformed uri, could not resolve the name of the bag dir: ${ e.getMessage }") }
-      .getOrElse(uri.toString).toString
+      .getOrElse(uri.toString)
   }
 
-  private def logResult(bagName: String, violations: Seq[(String, String)]) = {
+  private def logResult(bagName: String, violations: Seq[(String, String)]): Unit = {
     if (violations.isEmpty) logger.info(s"[$bagName] did not violate any rules and is validated successfully")
     else violations.foreach { case (number: String, message: String) => logger.warn(s"[$bagName] broke rule $number: $message") }
   }
