@@ -140,7 +140,11 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     val xmlValidator = new XmlValidator(null) {
       override def validate(is: InputStream): Try[Unit] = Success(())
     }
-    val validatorMap = Map("dataset.xml" -> xmlValidator, "files.xml" -> xmlValidator, "agreements.xml" -> xmlValidator)
+    val validatorMap = Map(
+      "dataset.xml" -> (if(isAvailable(triedDdmSchema)) ddmValidator else xmlValidator),
+      "files.xml" -> (if(isAvailable(triedFileSchema)) filesXmlValidator else xmlValidator),
+      "agreements.xml" -> (if(isAvailable(triedAgreementSchema, triedDdmSchema)) agreementsXmlValidator else xmlValidator),
+    ) // agreement validation fails at run time when DC schema is not available
     ProfileVersion0.apply(validatorMap, allowedLicences = Seq.empty, BagStore(new URI(""), 1000, 1000))
   }
 

@@ -32,7 +32,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
   private val testVersion = "1.0.0"
 
   private val schemasAreAvailable =
-    if (isAvailable(triedMetadataSchema, triedFileSchema, triedDdmSchema)) {
+    if (isAvailable(triedAgreementSchema, triedFileSchema, triedDdmSchema)) {
       // offline schema's -> no app -> no servlet
       // (otherwise test suite aborts, now tests are ignored)
       try {
@@ -148,7 +148,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
     val properties = new PropertiesConfiguration()
     properties.setProperty("schemas.ddm", ddmSchemaUrl)
     properties.setProperty("schemas.files", filesSchemaUrl)
-    properties.setProperty("schemas.agreements", metadataSchemaUrl)
+    properties.setProperty("schemas.agreements", agreementsSchemaUrl)
     properties.setProperty("bagstore-service.base-url", bagsDir.path.toAbsolutePath.toString)
     properties
   }
