@@ -277,7 +277,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "ddm-no-srs-names")
   }
 
-  it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in pendingUntilFixed {
+  it should "report all invalid points (single coordinate(plain, lower, upper), RD-range)" in {
     val expected = aRuleViolation("3.1.7",
       "Point has less than two coordinates: 1.0",
       "Point has less than two coordinates: 1",
@@ -286,12 +286,25 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       "Point is outside RD bounds: 300000 629001",
       "Point is outside RD bounds: -7001 289000",
       "Point is outside RD bounds: 300001 629000",
-      "Point has non numeric coordinates: XXX 629000",
-      "Point has non numeric coordinates: 300000 YYY",
       "Point has less than two coordinates: 300000",
     )
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
-    val bag = new TargetBag(bagsDir / "ddm-invalid-points", 0)
+    val bag = new TargetBag(bagsDir / "ddm-invalid-point-values", 0)
+    validateRules(bag, AIP, rules) shouldBe expected
+    validateRules(bag, SIP, rules) shouldBe expected
+  }
+
+  it should "report all invalid points (non-numeric)" in pendingUntilFixed {
+    val expected = aRuleViolation("3.1.1",
+      "cvc-datatype-valid.1.2.1: 'blabla' is not a valid value for 'double'.",
+      "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+      "cvc-datatype-valid.1.2.1: 'XXX' is not a valid value for 'double'.",
+      "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+      "cvc-datatype-valid.1.2.1: 'YYY' is not a valid value for 'double'.",
+      "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+    )
+    val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
+    val bag = new TargetBag(bagsDir / "ddm-invalid-point-syntax", 0)
     validateRules(bag, AIP, rules) shouldBe expected
     validateRules(bag, SIP, rules) shouldBe expected
   }
