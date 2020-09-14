@@ -54,7 +54,7 @@ package object validation extends DebugEnhancedLogging {
    *
    * @param details the details about the rule violation
    */
-  def fail[T](details: String): T = throw RuleViolationDetailsException(details)
+  def  fail[T](details: String): T = throw RuleViolationDetailsException(details)
 
   /**
    * Validates if the bag pointed to is compliant with the DANS BagIt Profile version it claims to
@@ -89,7 +89,8 @@ package object validation extends DebugEnhancedLogging {
         (results, numberedRule) =>
           numberedRule match {
             case NumberedRule(nr, rule, _, dependsOn) if dependsOn.forall(results.collect { case Success(succeededRuleNr) => succeededRuleNr }.contains) =>
-              val nextResult = rule(bag).map(_ => nr) match {
+              val nextResult = rule(bag)
+                .map(_ => nr) match {
                 case Success(value) => Success(value)
                 case Failure(RuleViolationDetailsException(details)) => Failure(RuleViolationException(nr, details))
                 case Failure(e) => throw e // failing fast on unexpected type of exception

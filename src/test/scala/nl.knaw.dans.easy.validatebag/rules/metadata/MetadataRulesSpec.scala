@@ -148,46 +148,64 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     ProfileVersion0.apply(validatorMap, allowedLicences = Seq.empty, BagStore(new URI(""), 1000, 1000))
   }
 
-  private def aRuleViolation(ruleNumber: RuleNumber, msg: String) = {
-    Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+  private def allRulesBut(nrs: String*) = allRules.filterNot(rule => nrs.contains(rule.nr))
+
+  private def onlyRules(nrs: String*) = allRules.filter(rule => nrs.contains(rule.nr))
+
+  private def aRuleViolation(ruleNumber: RuleNumber, msgs: String*) = {
+    if (msgs.length == 1)
+      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msgs.head))))
+    else {
+      val msg = CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
+      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+    }
   }
 
-  private def validateRules(bag: TargetBag,
-                            infoPackageType: InfoPackageType,
-                            rules: Seq[NumberedRule] = allRules.filterNot(rule => Seq("3.1.2", "1.2.6(a)", "1.2.6(b)").contains(rule.nr))
-                           ): Try[Unit] = {
+  private def validateRules(bag: TargetBag, infoPackageType: InfoPackageType, rules: Seq[NumberedRule]): Try[Unit] = {
+    val ruleNrs = rules.map(r => r.nr).toSet
+    val dependencies = rules.flatMap(_.dependsOn).toSet
+    if (!dependencies.subsetOf(ruleNrs))
+      fail(s"A rule without it dependencies is not executed. rules:$ruleNrs dependencies:$dependencies")
     validation.checkRules(bag, rules, infoPackageType)(isReadable = _.isReadable)
   }
 
-  "new test approach" should "succeed" in pendingUntilFixed { // seems to be ok in servletSpec
-    // TODO Rewrite tests to copy the valid-bag into testDir with a variant of the ddm.
-    //  Returning a tuple with the three types of tests (rule, AIP, SIP) might make the new test approach less verbose
-    //  while still being flexible in predicting the expected results.
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRules) shouldBe Success(())
+  "new test approach" should "report the not configured license" in {
+    val expectedMsg = "Found unknown or unsupported license: http://creativecommons.org/licenses/by-sa/4.0"
+
+    // the next test succeeds with
+    // https://github.com/DANS-KNAW/easy-validate-dans-bag/blob/d67357fe306843adbc4b66e960d36f4364ae9228/src/test/scala/nl.knaw.dans.easy.validatebag/EasyValidateDansBagServletSpec.scala#L42
+    // that test injects the reported license in the configuration
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2", expectedMsg)
+
+    // excluded rules that would cause more errors than the not configured license
+    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2", expectedMsg)
   }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
-    validateRules(bag, AIP) shouldBe Success(())
-    validateRules(bag, SIP) shouldBe Success(())
+    val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
+    validateRules(bag, AIP, rules) shouldBe Success(())
+    validateRules(bag, SIP, rules) shouldBe Success(())
   }
 
   it should "fail if there is no URN:NBN-identifier" in {
     val msg = "URN:NBN identifier is missing"
     val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
+    val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
-    validateRules(bag, SIP) shouldBe Success(())
-    validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(a)", msg)
+    validateRules(bag, SIP, rules) shouldBe Success(())
+    validateRules(bag, AIP, rules) shouldBe aRuleViolation("3.1.3(a)", msg)
   }
 
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
     val msg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654"
     val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
+    val rules = onlyRules("3.1.3(a)", "3.1.3(b)", "3.1.1", "2.2(a)", "2.1")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     ddmDoiIdentifiersAreValid(bag) shouldBe Failure(RuleViolationDetailsException(msg))
-    validateRules(bag, AIP) shouldBe aRuleViolation("3.1.3(b)", msg)
-    validateRules(bag, SIP) shouldBe aRuleViolation("3.1.3(b)", msg)
+    validateRules(bag, AIP, rules) shouldBe aRuleViolation("3.1.3(b)", msg)
+    validateRules(bag, SIP, rules) shouldBe aRuleViolation("3.1.3(b)", msg)
   }
 
   "allUrlsAreValid" should "succeed with valid urls" in {
@@ -259,25 +277,23 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "ddm-no-srs-names")
   }
 
-  "pointsHaveAtLeastTwoValues" should "fail if a Point with one coordinate is found" in {
-    testRuleViolation(
-      rule = pointsHaveAtLeastTwoValues,
-      inputBag = "ddm-point-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate")
-  }
-
-  it should "fail if a lowerCorner with one coordinate is found" in {
-    testRuleViolation(
-      rule = pointsHaveAtLeastTwoValues,
-      inputBag = "ddm-lowercorner-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate")
-  }
-
-  it should "fail if a upperCorner with one coordinate is found" in {
-    testRuleViolation(
-      rule = pointsHaveAtLeastTwoValues,
-      inputBag = "ddm-uppercorner-with-one-value",
-      includedInErrorMsg = "Point with only one coordinate")
+  it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in {
+    val expected = aRuleViolation("3.1.7",
+      "Point has less than two coordinates: 1.0",
+      "Point has less than two coordinates: 1",
+      "Point has less than two coordinates: 2",
+      "Point is outside RD bounds: -7000 288999",
+      "Point is outside RD bounds: 300000 629001",
+      "Point is outside RD bounds: -7001 289000",
+      "Point is outside RD bounds: 300001 629000",
+      "Point has non numeric coordinates: XXX 629000",
+      "Point has non numeric coordinates: 300000 YYY",
+      "Point has less than two coordinates: 300000",
+    )
+    val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
+    val bag = new TargetBag(bagsDir / "ddm-invalid-points", 0)
+    validateRules(bag, AIP, rules) shouldBe expected
+    validateRules(bag, SIP, rules) shouldBe expected
   }
 
   "archisIdentifiersHaveAtMost10Characters" should "fail if archis identifiers have values that are too long" in {

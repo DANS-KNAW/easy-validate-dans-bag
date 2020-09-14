@@ -29,6 +29,10 @@ import scala.util.matching.Regex
 import scala.util.{ Failure, Success }
 
 trait TestSupportFixture extends AnyFlatSpec with Matchers with Inside with BeforeAndAfterEach with DebugEnhancedLogging {
+
+  // Some (XSD) servers will deny requests if the User-Agent is set to the default value for Java
+  System.setProperty("http.agent", "Test")
+
   lazy val testDir: File = File(s"target/test/${ getClass.getSimpleName }")
 
   protected val bagsDir: File = Paths.get("src/test/resources/bags")

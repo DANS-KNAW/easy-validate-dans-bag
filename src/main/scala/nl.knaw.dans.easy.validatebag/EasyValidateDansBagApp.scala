@@ -25,6 +25,7 @@ import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 import nl.knaw.dans.easy.validatebag.validation.RuleViolationException
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.xml.sax.SAXParseException
 
 import scala.util.{ Failure, Try }
 
@@ -34,14 +35,17 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   logger.info("XML Schema factory created.")
 
   private def createValidator(schemaUrl: URL): XmlValidator = {
-    logger.info(s"Creating validator for $schemaUrl ...")
+    logger.info(s"Creating validator for $schemaUrl with agent ${ System.getProperty("http.agent") } ...")
     for {
       ddmSchema <- Try(schemaFactory.newSchema(schemaUrl))
-      xmlValidator = new XmlValidator(ddmSchema)
+      xmlValidator <- Try(new XmlValidator(ddmSchema))
       _ = logger.info(s"Validator created with $schemaUrl")
     } yield xmlValidator
-  }.doIfFailure { case e if e.getMessage.contains("Cannot resolve") =>
-    logger.error(s"Probably an offline third party schema for $schemaUrl : ${ e.getMessage }", e)
+  }.doIfFailure {
+    case e: SAXParseException if e.getMessage.contains("Cannot resolve") =>
+      logger.error(s"Could not create schema validator (possibly a 3rd party schema is offline or denies access to the user agent) for $schemaUrl : ${ e.getMessage }", e)
+    case e =>
+      logger.error(s"Could not create validator for $schemaUrl : ${ e.getMessage }", e)
   }.unsafeGetOrThrow
 
   private val xmlValidators: Map[String, XmlValidator] = Map(
