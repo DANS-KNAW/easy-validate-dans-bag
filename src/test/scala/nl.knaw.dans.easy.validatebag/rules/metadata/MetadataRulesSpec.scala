@@ -156,9 +156,12 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     if (msgs.length == 1)
       Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msgs.head))))
     else {
-      val msg = CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
-      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, compositeMessage(msgs)))))
     }
+  }
+
+  private def compositeMessage(msgs: Seq[String]) = {
+    CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
   }
 
   private def validateRules(bag: TargetBag, infoPackageType: InfoPackageType, rules: Seq[NumberedRule]): Try[Unit] = {
@@ -278,6 +281,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
   }
 
   it should "report all invalid points (single coordinate(plain, lower, upper), RD-range)" in {
+    // schema validation (3.1.1) is OK, rule 3.1.7 check the ranges
     val expected = aRuleViolation("3.1.7",
       "Point has less than two coordinates: 1.0",
       "Point has less than two coordinates: 1",
@@ -294,15 +298,18 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     validateRules(bag, SIP, rules) shouldBe expected
   }
 
-  it should "report all invalid points (non-numeric)" in pendingUntilFixed {
-    val expected = aRuleViolation("3.1.1",
-      "cvc-datatype-valid.1.2.1: 'blabla' is not a valid value for 'double'.",
-      "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
-      "cvc-datatype-valid.1.2.1: 'XXX' is not a valid value for 'double'.",
-      "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
-      "cvc-datatype-valid.1.2.1: 'YYY' is not a valid value for 'double'.",
-      "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
-    )
+  it should "report all invalid points (non-numeric)" in {
+    // schema validation (3.1.1) fails, rule 3.1.7 is not executed
+    val expected = aRuleViolation("3.1.1", "metadata/dataset.xml does not conform to DANS dataset metadata schema: " +
+      compositeMessage(Seq(
+        "cvc-datatype-valid.1.2.1: 'blabla' is not a valid value for 'double'.",
+        "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+        "cvc-datatype-valid.1.2.1: 'XXX' is not a valid value for 'double'.",
+        "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+        "cvc-datatype-valid.1.2.1: 'YYY' is not a valid value for 'double'.",
+        "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+      )))
+
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
     val bag = new TargetBag(bagsDir / "ddm-invalid-point-syntax", 0)
     validateRules(bag, AIP, rules) shouldBe expected
