@@ -108,7 +108,7 @@ object ProfileVersion0 {
 
 
     // BAG-SEQUENCE
-    NumberedRule("4.2", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), dependsOn = List("1.2.5")),
+    NumberedRule("4.2", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
     NumberedRule("4.3", storeSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
     NumberedRule("4.4", userSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5"))
   )
