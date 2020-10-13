@@ -15,44 +15,41 @@
  */
 package nl.knaw.dans.easy.validatebag
 
-import java.net.URL
-
 import better.files.File
 import better.files.File.currentWorkingDirectory
-import javax.xml.validation.{ Schema, SchemaFactory }
+import javax.xml.validation.Schema
 import org.scalatest.exceptions.TestFailedException
 
 import scala.util._
 
-class XmlValidatorSpec extends TestSupportFixture {
-  private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
-  private val testSchemaDDM: Schema = schemaFactory.newSchema(new URL(ddmSchemaUrl))
-  private val testSchemaFiles: Schema = schemaFactory.newSchema(new URL(filesSchemaUrl))
-  private val validatorDDM = new XmlValidator(schema = testSchemaDDM)
-  private val validatorFiles = new XmlValidator(schema = testSchemaFiles)
+class XmlValidatorSpec extends TestSupportFixture with SchemaFixture {
 
   "Validate" should "return a success when handed a ddm correct xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/dataset.xml"
-    validateXmlFile(validatorDDM, xmlFileToTest, testSchemaDDM) shouldBe a[Success[_]]
+    assume(isAvailable(triedDdmSchema))
+    validateXmlFile(ddmValidator, xmlFileToTest, triedDdmSchema.get) shouldBe a[Success[_]]
   }
 
   it should "return a failure when handed an incorrect ddm xml file" in {
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/ddm-incorrect-dai/metadata/dataset.xml"
-    validateXmlFile(validatorDDM, xmlFileToTest, testSchemaDDM) should matchPattern {
+    assume(isAvailable(triedDdmSchema))
+    validateXmlFile(ddmValidator, xmlFileToTest, triedDdmSchema.get) should matchPattern {
       case Failure(tfe: TestFailedException) if tfe.getMessage().contains("does not conform to") =>
     }
   }
 
   it should "return a failure when handed an incorrect files xml file" in {
+    assume(isAvailable(triedDdmSchema))
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/filesxml-non-file-element/metadata/files.xml"
-    validateXmlFile(validatorFiles, xmlFileToTest, testSchemaDDM) should matchPattern {
+    validateXmlFile(filesXmlValidator, xmlFileToTest, triedDdmSchema.get) should matchPattern {
       case Failure(tfe: TestFailedException) if tfe.getMessage().contains("does not conform to") =>
     }
   }
 
   it should "return a success when handed an correct files xml file" in {
+    assume(isAvailable(triedDdmSchema))
     val xmlFileToTest = currentWorkingDirectory / "src/test/resources/bags/metadata-correct/metadata/files.xml"
-    validateXmlFile(validatorFiles, xmlFileToTest, testSchemaDDM) shouldBe a[Success[_]]
+    validateXmlFile(filesXmlValidator, xmlFileToTest, triedDdmSchema.get) shouldBe a[Success[_]]
   }
 
   private def validateXmlFile(validator: XmlValidator, xmlFileToTest: File, schema: Schema): Try[Unit] = {

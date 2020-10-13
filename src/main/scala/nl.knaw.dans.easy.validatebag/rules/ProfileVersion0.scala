@@ -68,6 +68,8 @@ object ProfileVersion0 {
         "license.txt",
         "license.html",
         "depositor-info",
+        "original/dataset.xml",
+        "original/files.xml",
         "depositor-info/agreements.xml",
         "depositor-info/message-from-depositor.txt",
         "depositor-info/depositor-agreement.pdf",

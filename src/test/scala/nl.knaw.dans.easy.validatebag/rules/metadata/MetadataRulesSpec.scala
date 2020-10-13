@@ -16,10 +16,9 @@
 package nl.knaw.dans.easy.validatebag.rules.metadata
 
 import java.io.InputStream
-import java.net.{ URI, URL }
+import java.net.URI
 import java.nio.file.Paths
 
-import javax.xml.validation.SchemaFactory
 import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, InfoPackageType, SIP }
 import nl.knaw.dans.easy.validatebag._
 import nl.knaw.dans.easy.validatebag.rules.ProfileVersion0
@@ -30,8 +29,7 @@ import org.apache.commons.configuration.PropertiesConfiguration
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
 
-class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
-  private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
+class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanConnectFixture {
   private lazy val licensesDir = Paths.get("target/easy-licenses/licenses")
   private lazy val licenses = new PropertiesConfiguration(licensesDir.resolve("licenses.properties").toFile)
     .getKeys.asScala.filterNot(_.isEmpty)
@@ -44,23 +42,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       "http://schema.datacite.org/meta/kernel-4/metadata.xsd")
   }
 
-  private lazy val ddmValidator = Try {
-    logger.info("Creating ddm.xml validator...")
-    val ddmSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"))
-    val v = new XmlValidator(ddmSchema)
-    logger.info("ddm.xml validator created.")
-    v
-  }.unsafeGetOrThrow
-
-  private lazy val filesXmlValidator = Try {
-    logger.info("Creating files.xml validator...")
-    val filesXmlSchema = schemaFactory.newSchema(new URL("https://easy.dans.knaw.nl/schemas/bag/metadata/files/files.xsd"))
-    val v = new XmlValidator(filesXmlSchema)
-    logger.info("files.xml validator created.")
-    v
-  }.unsafeGetOrThrow
-
   "xmlFileConformsToSchema" should "report validation errors if XML not valid" in {
+    assume(isAvailable(triedDdmSchema))
     testRuleViolationRegex(
       rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "ddm-unknown-element",
@@ -69,6 +52,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   it should "succeed if XML is valid" in {
+    assume(isAvailable(triedDdmSchema))
     testRuleSuccess(
       rule = xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "some schema name", ddmValidator),
       inputBag = "metadata-correct")
@@ -156,7 +140,11 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     val xmlValidator = new XmlValidator(null) {
       override def validate(is: InputStream): Try[Unit] = Success(())
     }
-    val validatorMap = Map("dataset.xml" -> xmlValidator, "files.xml" -> xmlValidator, "agreements.xml" -> xmlValidator)
+    val validatorMap = Map(
+      "dataset.xml" -> (if(isAvailable(triedDdmSchema)) ddmValidator else xmlValidator),
+      "files.xml" -> (if(isAvailable(triedFileSchema)) filesXmlValidator else xmlValidator),
+      "agreements.xml" -> (if(isAvailable(triedAgreementSchema, triedDdmSchema)) agreementsXmlValidator else xmlValidator),
+    ) // agreement validation fails at run time when DC schema is not available
     ProfileVersion0.apply(validatorMap, allowedLicences = Seq.empty, BagStore(new URI(""), 1000, 1000))
   }
 
@@ -168,9 +156,12 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
     if (msgs.length == 1)
       Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msgs.head))))
     else {
-      val msg = CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
-      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, msg))))
+      Failure(CompositeException(Seq(RuleViolationException(ruleNumber, compositeMessage(msgs)))))
     }
+  }
+
+  private def compositeMessage(msgs: Seq[String]) = {
+    CompositeException(msgs.map(RuleViolationDetailsException)).getMessage()
   }
 
   private def validateRules(bag: TargetBag, infoPackageType: InfoPackageType, rules: Seq[NumberedRule]): Try[Unit] = {
@@ -289,7 +280,8 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       inputBag = "ddm-no-srs-names")
   }
 
-  it should "report all invalid points (not numeric, single coordinate(plain, lower, upper), RD-range)" in {
+  it should "report all invalid points (single coordinate(plain, lower, upper), RD-range)" in {
+    // schema validation (3.1.1) is OK, rule 3.1.7 check the ranges
     val expected = aRuleViolation("3.1.7",
       "Point has less than two coordinates: 1.0",
       "Point has less than two coordinates: 1",
@@ -298,12 +290,28 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       "Point is outside RD bounds: 300000 629001",
       "Point is outside RD bounds: -7001 289000",
       "Point is outside RD bounds: 300001 629000",
-      "Point has non numeric coordinates: XXX 629000",
-      "Point has non numeric coordinates: 300000 YYY",
       "Point has less than two coordinates: 300000",
     )
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
-    val bag = new TargetBag(bagsDir / "ddm-invalid-points", 0)
+    val bag = new TargetBag(bagsDir / "ddm-invalid-point-values", 0)
+    validateRules(bag, AIP, rules) shouldBe expected
+    validateRules(bag, SIP, rules) shouldBe expected
+  }
+
+  it should "report all invalid points (non-numeric)" in {
+    // schema validation (3.1.1) fails, rule 3.1.7 is not executed
+    val expected = aRuleViolation("3.1.1", "metadata/dataset.xml does not conform to DANS dataset metadata schema: " +
+      compositeMessage(Seq(
+        "cvc-datatype-valid.1.2.1: 'blabla' is not a valid value for 'double'.",
+        "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+        "cvc-datatype-valid.1.2.1: 'XXX' is not a valid value for 'double'.",
+        "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+        "cvc-datatype-valid.1.2.1: 'YYY' is not a valid value for 'double'.",
+        "cvc-complex-type.2.2: Element 'pos' must have no element [children], and the value must be valid.",
+      )))
+
+    val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
+    val bag = new TargetBag(bagsDir / "ddm-invalid-point-syntax", 0)
     validateRules(bag, AIP, rules) shouldBe expected
     validateRules(bag, SIP, rules) shouldBe expected
   }
@@ -333,6 +341,7 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
   }
 
   "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "fail if a file element is described twice" in {
+    assume(isAvailable(triedFileSchema))
     testRuleViolation(
       rule = filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
@@ -439,7 +448,6 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
 
   "all files.xml rules" should "succeed if files.xml is correct" in {
     Seq[Rule](
-      filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
       filesXmlHasDocumentElementFiles,
       filesXmlHasOnlyFiles,
       filesXmlFileElementsAllHaveFilepathAttribute,
@@ -448,10 +456,16 @@ class MetadataRulesSpec extends TestSupportFixture with CanConnectFixture {
       filesXmlFilesHaveOnlyAllowedNamespaces,
       filesXmlFilesHaveOnlyAllowedAccessRights)
       .foreach(testRuleSuccess(_, inputBag = "metadata-correct"))
+    assume(isAvailable(triedFileSchema))
+    testRuleSuccess(
+      filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
+      inputBag = "metadata-correct"
+    )
   }
 
   // Reusing some test data. This rules is actually not used for files.xml.
   "xmlFileIfExistsConformsToSchema" should "fail if file exists but does not conform" in {
+    assume(isAvailable(triedFileSchema))
     testRuleViolation(
       rule = xmlFileIfExistsConformsToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
       inputBag = "filesxml-file-described-twice",
