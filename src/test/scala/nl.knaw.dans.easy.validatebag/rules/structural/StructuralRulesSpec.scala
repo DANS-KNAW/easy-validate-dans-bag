@@ -91,6 +91,29 @@ class StructuralRulesSpec extends TestSupportFixture {
       inputBag = "metadata-correct"
     )
   }
+
+  it should "succeed if an original dir is present in" in {
+    testRuleSuccess(
+      rule = containsNothingElseThan(Paths.get("metadata"),
+        Seq(
+          "dataset.xml",
+          "files.xml",
+          "amd.xml",
+          "emd.xml",
+          "license.txt",
+          "license.html",
+          "original",
+          "original/dataset.xml",
+          "original/files.xml",
+          "depositor-info",
+          "depositor-info/agreements.xml",
+          "depositor-info/message-from-depositor.txt",
+          "depositor-info/depositor-agreement.pdf",
+          "depositor-info/depositor-agreement.txt",
+        )),
+      inputBag = "metadata-with-original"
+    )
+  }
 }
 
 
