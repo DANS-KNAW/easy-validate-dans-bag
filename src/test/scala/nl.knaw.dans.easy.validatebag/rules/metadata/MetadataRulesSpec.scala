@@ -35,13 +35,6 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     .getKeys.asScala.filterNot(_.isEmpty)
     .map(s => normalizeLicenseUri(new URI(s))).toSeq.collectResults.unsafeGetOrThrow
 
-  override def beforeEach() {
-    assumeCanConnect("https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd",
-      "http://www.w3.org/2001/03/xml.xsd",
-      "http://dublincore.org/schemas/xmls/qdc/2008/02/11/dc.xsd",
-      "http://schema.datacite.org/meta/kernel-4/metadata.xsd")
-  }
-
   "xmlFileConformsToSchema" should "report validation errors if XML not valid" in {
     assume(isAvailable(triedDdmSchema))
     testRuleViolationRegex(
@@ -299,6 +292,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
   }
 
   it should "report all invalid points (non-numeric)" in {
+    assume(isAvailable(triedFileSchema))
     // schema validation (3.1.1) fails, rule 3.1.7 is not executed
     val expected = aRuleViolation("3.1.1", "metadata/dataset.xml does not conform to DANS dataset metadata schema: " +
       compositeMessage(Seq(
