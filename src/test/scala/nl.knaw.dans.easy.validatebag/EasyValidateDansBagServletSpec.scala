@@ -25,6 +25,8 @@ import org.scalatest.OptionValues._
 import org.scalatra.test.EmbeddedJettyContainer
 import org.scalatra.test.scalatest.ScalatraSuite
 
+import scala.util.Try
+
 class EasyValidateDansBagServletSpec extends TestSupportFixture
   with SchemaFixture
   with EmbeddedJettyContainer
@@ -35,16 +37,14 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
     if (isAvailable(triedAgreementSchema, triedFileSchema, triedDdmSchema)) {
       // offline schema's -> no app -> no servlet
       // (otherwise test suite aborts, now tests are ignored)
-      try {
-        val configuration = Configuration(
-          testVersion,
-          createProperties(),
-          Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0")),
-        )
-        val app = new EasyValidateDansBagApp(configuration)
-        val servlet = new EasyValidateDansBagServlet(app)
-        addServlet(servlet, "/*")
-      }
+      val configuration = Configuration(
+        testVersion,
+        createProperties(),
+        Seq(new URI("http://creativecommons.org/licenses/by-sa/4.0")),
+      )
+      val app = new EasyValidateDansBagApp(configuration)
+      val servlet = new EasyValidateDansBagServlet(app)
+      addServlet(servlet, "/*")
       true
     }
     else false
