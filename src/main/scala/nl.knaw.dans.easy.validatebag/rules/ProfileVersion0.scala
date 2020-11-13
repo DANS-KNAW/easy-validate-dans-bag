@@ -66,6 +66,7 @@ object ProfileVersion0 {
         "amd.xml",
         "emd.xml",
         "license.txt",
+        "license.pdf",
         "license.html",
         "depositor-info",
         "original",
