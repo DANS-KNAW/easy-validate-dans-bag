@@ -130,7 +130,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
   }
 
   private val allRules: Seq[NumberedRule] = {
-    val xmlValidator = new XmlValidator(null) {
+    val xmlValidator = new XmlValidator(schemaFactory.newSchema) {
       override def validate(is: InputStream): Try[Unit] = Success(())
     }
     val validatorMap = Map(

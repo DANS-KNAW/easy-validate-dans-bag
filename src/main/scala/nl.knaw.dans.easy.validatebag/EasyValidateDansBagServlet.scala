@@ -38,7 +38,7 @@ class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraSe
   }
 
   post("/validate") {
-    val result = for {
+    (for {
       accept <- Try { request.getHeader("Accept") }
       infoPackageType <- params.get("infoPackageType").map(InfoPackageType.fromString).getOrElse { Success(InfoPackageType.SIP) }
       bagStoreUrl <- params.get("bag-store").map(getBagStoreUrl).sequence[Try, URI]
@@ -48,9 +48,8 @@ class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraSe
         if (accept == "application/json") message.toJson
         else message.toPlainText
       }
-    } yield Ok(body)
-
-    result.getOrRecover {
+    } yield Ok(body))
+    .getOrRecover {
       case t: IllegalArgumentException =>
         logger.warn(s"validation of bag failed with message: ${ t.getMessage } ")
         BadRequest(s"Input error: ${ t.getMessage }")

@@ -34,21 +34,12 @@ import scala.xml.{ Node, Utility, XML }
  * @param profileVersion the profile version used
  */
 class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
-  private val bagReader = new BagReader()
-  private val ddmPath = profileVersion match {
-    case 0 => Paths.get("metadata/dataset.xml")
-    case 1 => Paths.get("data/pdi/dataset.xml")
-  }
-  private val filesXmlPath = profileVersion match {
-    case 0 => Paths.get("metadata/files.xml")
-    case 1 => Paths.get("data/pdi/files.xml")
-  }
 
   lazy val tryBag: Try[Bag] = Try { bagReader.read(bagDir.path) }
 
   lazy val tryDdm: Try[Node] = Try {
     Utility.trim {
-      XML.loadFile((bagDir / ddmPath.toString).toJava)
+      XML.loadFile((bagDir / ddmPaths(profileVersion).toString).toJava)
     }
   }.recoverWith {
     case t: Throwable => Try { fail(s"Unparseable XML: ${ t.getMessage }") }
@@ -56,7 +47,7 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
 
   lazy val tryFilesXml: Try[Node] = Try {
     Utility.trim {
-      XML.loadFile((bagDir / filesXmlPath.toString).toJava)
+      XML.loadFile((bagDir / filesXmlPaths(profileVersion).toString).toJava)
     }
   }.recoverWith {
     case t: Throwable => Try { fail(s"Unparseable XML: ${ t.getMessage }") }

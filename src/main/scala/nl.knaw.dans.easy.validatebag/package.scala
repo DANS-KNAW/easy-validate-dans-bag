@@ -15,7 +15,10 @@
  */
 package nl.knaw.dans.easy
 
+import java.nio.file.Paths
+
 import better.files._
+import gov.loc.repository.bagit.reader.BagReader
 import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 
 import scala.util.{ Failure, Try }
@@ -32,6 +35,10 @@ package object validatebag {
     0 -> ProfileVersion0.versionUri,
     1 -> ProfileVersion1.versionUri,
   )
+
+  val bagReader = new BagReader()
+  val ddmPaths = Map(0 -> Paths.get("metadata/dataset.xml"), 1 -> Paths.get("data/pdi/files.xml"))
+  val filesXmlPaths = Map(0 -> Paths.get("metadata/files.xml"), 1 -> Paths.get("data/pdi/files.xml"))
 
   object InfoPackageType extends Enumeration {
     type InfoPackageType = Value

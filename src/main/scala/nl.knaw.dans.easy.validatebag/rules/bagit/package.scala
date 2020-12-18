@@ -144,7 +144,7 @@ package object bagit extends DebugEnhancedLogging {
 
   def bagInfoCreatedElementIsIso8601Date(t: TargetBag): Try[Unit] = {
     trace(())
-    val result = for {
+    (for {
       bag <- t.tryBag
       valueOfCreated <- Option(bag.getMetadata.get("Created"))
         .map {
@@ -153,9 +153,8 @@ package object bagit extends DebugEnhancedLogging {
         }
         .getOrElse(Failure(RuleViolationDetailsException("No Created-entry found in bag-info.txt")))
       _ = DateTime.parse(valueOfCreated, ISODateTimeFormat.dateTime)
-    } yield ()
-
-    result.map(_ => ()).recoverWith {
+    } yield ())
+      .map(_ => ()).recoverWith {
       case e: RuleViolationDetailsException => Failure(e)
       case _: Throwable =>
         Failure(RuleViolationDetailsException("Created-entry in bag-info.txt not in correct ISO 8601 format"))

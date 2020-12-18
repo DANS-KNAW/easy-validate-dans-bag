@@ -27,12 +27,13 @@ import scala.util.Try
 
 class XmlValidator(schema: Schema) {
 
+  val validator = schema.newValidator()
+
   def validate(is: InputStream): Try[Unit] = {
     val errorHandler = new AccumulatingErrorHandler
     Try {
-        val validator = schema.newValidator()
-        validator.setErrorHandler(errorHandler)
-        validator.validate(new StreamSource(is))
+      validator.setErrorHandler(errorHandler)
+      validator.validate(new StreamSource(is))
     }.flatMap(_ => errorHandler.errors.toList.map(x => Try[Unit] { throw x }).collectResults.map(_ => ()))
   }
 }

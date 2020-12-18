@@ -15,16 +15,19 @@
  */
 package nl.knaw.dans.easy.validatebag.rules.profile
 
+import javax.xml.validation.{ Schema, SchemaFactory }
 import nl.knaw.dans.easy.validatebag._
 import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 import org.scalatest.Inspectors
 
 class NumberedRulesSpec extends TestSupportFixture with Inspectors {
 
+  private val schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
+
   private val xmlValidators: Map[String, XmlValidator] = Map(
-    "dataset.xml" -> new XmlValidator(null),
-    "files.xml" -> new XmlValidator(null),
-    "agreements.xml" -> new XmlValidator(null)
+    "dataset.xml" -> new XmlValidator(schemaFactory.newSchema),
+    "files.xml" -> new XmlValidator(schemaFactory.newSchema),
+    "agreements.xml" -> new XmlValidator(schemaFactory.newSchema)
   )
 
   private val allRules: Map[ProfileVersion, RuleBase] = {
