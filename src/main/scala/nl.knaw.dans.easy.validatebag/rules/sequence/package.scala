@@ -26,6 +26,7 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.string._
 
 import scala.util.{ Success, Try }
+import scala.collection.JavaConverters._
 
 package object sequence extends DebugEnhancedLogging {
 
@@ -74,7 +75,8 @@ package object sequence extends DebugEnhancedLogging {
           for {
             uuid <- getUuidFromIsVersionOfValue(isVersionOf)
             referredBagInfoText <- bagStore.getBagInfoText(uuid)
-            referredBagUser <- getReferredBagUser(uuid, referredBagInfoText.lines.filter(_.startsWith("EASY-User-Account")))
+            users = referredBagInfoText.split("\n").find(_.startsWith("EASY-User-Account"))
+            referredBagUser <- getReferredBagUser(uuid, users)
             _ = if (user != referredBagUser) fail(s"User $user is different from the user $referredBagUser in bag $isVersionOf, pointed to by Is-Version-Of field in bag-info.txt")
           } yield ()
         ))
@@ -98,13 +100,8 @@ package object sequence extends DebugEnhancedLogging {
     getBagInfoTxtValue(t, "EASY-User-Account").getOrElse(fail(s"Could not read the user account from bag-info.txt in ${ t.bagDir }")).getOrElse("")
   }
 
-  def getReferredBagUser(versionOfId: UUID, userLines: Iterator[String]): Try[String] = {
-    if (userLines.hasNext) {
-      val userLine = userLines.next
-      Try(userLine.substring(userLine.indexOf(":") + 1).trim)
-    }
-    else
-      fail(s"No user found for isVersionOf bag $versionOfId")
+  def getReferredBagUser(versionOfId: UUID, userLine: Option[String]): Try[String] = Try {
+    userLine.map(s => s.split(":")(1).trim).getOrElse(fail(s"No user found for isVersionOf bag $versionOfId"))
   }
 
   private def failIfNotTrueWithMessage(bool: Boolean, msg: String): Unit = {
