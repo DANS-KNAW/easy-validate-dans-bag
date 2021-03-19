@@ -17,7 +17,7 @@ DESCRIPTION
 Determines whether a DANS bag is valid according to the DANS BagIt Profile v0 or v1. If the bag
 does not specify what version of the profile it claims to comply with, v0 is assumed. This module has
 both a command line and an HTTP interface. The command line interface is documented in the
-[ARGUMENTS](#arguments) section below. The HTTP interface is documented in the <a href="../api.html" target="__blank">Swagger UI</a>.
+[ARGUMENTS](#arguments) section below. The HTTP interface is documented in the <a href="api.html" target="__blank">Swagger UI</a>.
 
 ARGUMENTS
 ---------
