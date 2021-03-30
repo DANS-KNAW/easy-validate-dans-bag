@@ -24,7 +24,7 @@ import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.joda.time.DateTime
 import org.json4s.ext.EnumNameSerializer
-import org.json4s.native.Serialization.writePretty
+import org.json4s.native.Serialization
 import org.json4s.{ DefaultFormats, Formats }
 
 import java.net.URI
@@ -47,7 +47,7 @@ object Command extends App with DebugEnhancedLogging {
     verify()
   }
   debug("Creating application object...")
-  val app = new EasyValidateDansBagApp(configuration)
+  implicit val app: EasyValidateDansBagApp = new EasyValidateDansBagApp(configuration)
   debug(s"Executing command line: ${ args.mkString(" ") }")
   runSubcommand(app).doIfSuccess { case (ok, msg) =>
     if (ok) Console.err.println(s"OK: $msg")
@@ -57,10 +57,6 @@ object Command extends App with DebugEnhancedLogging {
     .doIfFailure { case NonFatal(e) => Console.err.println(s"FAILED: ${ e.getMessage }") }
 
   closeVerifier()
-
-  implicit val formats: Formats = new DefaultFormats {} +
-    new EnumNameSerializer(InfoPackageType) +
-    EncodingURISerializer
 
   private def runSubcommand(app: EasyValidateDansBagApp): Try[(IsOk, FeedBackMessage)] = {
     commandLine.subcommand
@@ -77,7 +73,7 @@ object Command extends App with DebugEnhancedLogging {
           val packageType = if (commandLine.aip()) AIP
                             else SIP
           if (commandLine.sipdir())
-            validateBatch(File(commandLine.bag()), packageType, maybeBagStore)
+            validateBatch(File(commandLine.bag()), packageType, maybeBagStore)(app)
           else app.validate(commandLine.bag().toUri, packageType, maybeBagStore).map(formatMsg)
         }
       }
@@ -103,11 +99,11 @@ object Command extends App with DebugEnhancedLogging {
     (true, "Service terminated normally.")
   }
 
-  def validateBatch(sipDir: BagDir, packageType: validatebag.InfoPackageType.Value, maybeBagStore: Option[URI]) = {
+  def validateBatch(sipDir: BagDir, packageType: validatebag.InfoPackageType.Value, maybeBagStore: Option[URI])(implicit app: EasyValidateDansBagApp) = {
     val sipToTriedMsg = sipDir.list.map { sip =>
       sip.list.filter(_.isDirectory).toList match {
         case List(bagDir) => sip -> app.validate(bagDir.toJava.toURI, packageType, maybeBagStore)
-        case dirs => sip -> Failure(new Exception(s"Expecting one bag directory, got: ${ dirs.size }"))
+        case dirs => sip -> Failure(new Exception(s"Expecting one bag directory in $sip, got: ${ dirs.size }"))
       }
     }.toMap.mapValues {
       case Failure(e) => e.getMessage
@@ -118,16 +114,19 @@ object Command extends App with DebugEnhancedLogging {
     }
     val now = DateTime.now()
     val rejectedDir = sipDir.parent / s"${ sipDir.name }-nonvalid-$now"
+    val (violations, failures) = sipToTriedMsg.values
+      .partition(_.isInstanceOf[ResultMessage])
     if (sipToTriedMsg.nonEmpty) {
-      rejectedDir.createDirectory()
+      implicit val formats: Formats = new DefaultFormats {} +
+        new EnumNameSerializer(InfoPackageType) +
+        EncodingURISerializer
       (sipDir.parent / s"${ sipDir.name }-nonvalid-$now.json")
-        .writeText(writePretty(sipToTriedMsg.values))
+        .writeText(Serialization.writePretty(sipToTriedMsg.values))
+      rejectedDir.createDirectory()
       sipToTriedMsg.keys.foreach(sip =>
         sip.moveTo(rejectedDir / sip.name)(CopyOptions.atomically)
       )
     }
-    val (violations, failures) = sipToTriedMsg.values
-      .partition(_.isInstanceOf[ResultMessage])
     Success(sipToTriedMsg.isEmpty -> s"violations:${ violations.size }, failures=${ failures.size }; moved to $rejectedDir")
   }
 }
