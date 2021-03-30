@@ -27,7 +27,7 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
   val description: String = s"""Determines whether a DANS bag is valid according to the DANS BagIt Profile."""
   val synopsis: String =
     s"""
-       |  $printedName [--aip] [--sipdir] [--bag-store <uri>] [--response-format|-f json|text] <bag>
+       |  $printedName [--aip] [--bag-store <uri>] [--response-format|-f json|text] [--sipdir] <bag>
        |  $printedName run-service""".stripMargin
 
   version(s"$printedName v${ configuration.version }")

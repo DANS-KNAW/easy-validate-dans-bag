@@ -17,15 +17,17 @@ package nl.knaw.dans.easy.validatebag
 
 import better.files.File
 import better.files.File.CopyOptions
+import nl.knaw.dans.easy.validatebag
 import nl.knaw.dans.easy.validatebag.InfoPackageType._
 import nl.knaw.dans.easy.validatebag.rules.bagit.closeVerifier
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.joda.time.DateTime
 import org.json4s.ext.EnumNameSerializer
-import org.json4s.native.Serialization
+import org.json4s.native.Serialization.writePretty
 import org.json4s.{ DefaultFormats, Formats }
 
+import java.net.URI
 import java.nio.file.Paths
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
@@ -74,45 +76,17 @@ object Command extends App with DebugEnhancedLogging {
           val maybeBagStore = commandLine.bagStore.toOption
           val packageType = if (commandLine.aip()) AIP
                             else SIP
-          if (!commandLine.sipdir()) // single bag
-            app.validate(commandLine.bag().toUri, packageType, maybeBagStore).map(formatMsg)
-          else {
-            val deposits = File(commandLine.bag())
-            val now = DateTime.now()
-            val rejectedDir = deposits.parent / s"${ deposits.name }-nonvalid-$now"
-            val sipToTriedMsg = deposits.list.map { sip =>
-              val bagDir = sip.list.filter(_.isDirectory).toSeq.head
-              sip -> app.validate(bagDir.toJava.toURI, packageType, maybeBagStore)
-            }.toMap
-            val violations = sipToTriedMsg.values.filter {
-              case Success(ResultMessage(_, _, _, _, false, _)) => true
-              case _ => false
-            }
-            val failures = sipToTriedMsg.values.filter(_.isFailure).map {
-              case Failure(e) => e.getMessage
-              case _ => "not expected to happen"
-            }
-            (deposits.parent / s"${ deposits.name }-nonvalid-$now.json")
-              .writeText(Serialization.writePretty(violations ++ failures))
-
-            def reject(sip: BagDir) = sip.moveTo(rejectedDir / sip.name)(CopyOptions.atomically)
-
-            sipToTriedMsg.foreach {
-              case (sip, Success(ResultMessage(_, _, _, _, false, _))) => reject(sip)
-              case (sip, Failure(_)) => reject(sip)
-              case _ =>
-            }
-            val msg: FeedBackMessage = s"violations:${ violations.size }, failures=${ failures.size }; moved to $rejectedDir"
-            val isOk: IsOk = violations.isEmpty && failures.isEmpty
-            Success(isOk, msg)
-          }
+          if (commandLine.sipdir())
+            validateBatch(File(commandLine.bag()), packageType, maybeBagStore)
+          else app.validate(commandLine.bag().toUri, packageType, maybeBagStore).map(formatMsg)
         }
       }
   }
 
   private def formatMsg(msg: ResultMessage) = {
-    if (commandLine.responseFormat() == "json") (msg.isCompliant, msg.toJson)
-    else (msg.isCompliant, msg.toPlainText)
+    val str = if (commandLine.responseFormat() == "json") msg.toJson
+              else msg.toPlainText
+    msg.isCompliant -> str
   }
 
   private def runAsService(app: EasyValidateDansBagApp): Try[(IsOk, FeedBackMessage)] = Try {
@@ -127,5 +101,33 @@ object Command extends App with DebugEnhancedLogging {
     service.start()
     Thread.currentThread.join()
     (true, "Service terminated normally.")
+  }
+
+  def validateBatch(sipDir: BagDir, packageType: validatebag.InfoPackageType.Value, maybeBagStore: Option[URI]) = {
+    val sipToTriedMsg = sipDir.list.map { sip =>
+      sip.list.filter(_.isDirectory).toList match {
+        case List(bagDir) => sip -> app.validate(bagDir.toJava.toURI, packageType, maybeBagStore)
+        case dirs => sip -> Failure(new Exception(s"Expecting one bag directory, got: ${ dirs.size }"))
+      }
+    }.toMap.mapValues {
+      case Failure(e) => e.getMessage
+      case Success(msg) => msg
+    }.filter { // drop valid bags
+      case (_, ResultMessage(_, _, _, _, true, _)) => false
+      case _ => true
+    }
+    val now = DateTime.now()
+    val rejectedDir = sipDir.parent / s"${ sipDir.name }-nonvalid-$now"
+    if (sipToTriedMsg.nonEmpty) {
+      rejectedDir.createDirectory()
+      (sipDir.parent / s"${ sipDir.name }-nonvalid-$now.json")
+        .writeText(writePretty(sipToTriedMsg.values))
+      sipToTriedMsg.keys.foreach(sip =>
+        sip.moveTo(rejectedDir / sip.name)(CopyOptions.atomically)
+      )
+    }
+    val (violations, failures) = sipToTriedMsg.values
+      .partition(_.isInstanceOf[ResultMessage])
+    Success(sipToTriedMsg.isEmpty -> s"violations:${ violations.size }, failures=${ failures.size }; moved to $rejectedDir")
   }
 }

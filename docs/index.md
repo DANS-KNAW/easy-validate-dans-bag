@@ -7,7 +7,7 @@ Determines whether a DANS bag is valid according to the DANS BagIt Profile.
 SYNOPSIS
 --------
 
-    easy-validate-dans-bag [--aip] [--bag-store <uri>] [--response-format,-f json|text] <bag>
+    easy-validate-dans-bag [--aip] [--bag-store <uri>] [--response-format|-f json|text] [--sipdir] <bag>
     easy-validate-dans-bag run-service
 
 
@@ -24,18 +24,19 @@ ARGUMENTS
 
     Options:
 
-          --aip                      Validate as AIP (instead of as SIP)
+          --aip                      Validate the bag(s) as AIP (instead of as SIP)
           --bag-store  <arg>         The bag store to use for deep validation
       -f, --response-format  <arg>   Format for the result report (default = text)
+          --sipdir                   Validate bags inside directories of trailing argument
       -h, --help                     Show help message
       -v, --version                  Show version of this program
-    
-     trailing arguments:
-      bag (not required)   The bag to validate
-    
-    Subcommand: run-service - Starts EASY Validate Dans Bag as a daemon that services HTTP requests
-      -h, --help   Show help message
-    ---
+      
+      trailing arguments:
+       bag (not required)   The bag to validate or in case of '--sipdir': directory with bags in sub directories
+      
+      Subcommand: run-service - Starts EASY Validate Dans Bag as a daemon that services HTTP requests
+        -h, --help   Show help message
+      ---
 
 INSTALLATION AND CONFIGURATION
 ------------------------------
