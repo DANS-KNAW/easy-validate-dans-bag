@@ -31,7 +31,7 @@ class BatchSpec extends TestSupportFixture with SchemaFixture {
     // offline schema's -> no app
     val app: EasyValidateDansBagApp = createApp
 
-    testDir.delete()
+    testDir.delete(swallowIOExceptions = true)
     val sipDir = testDir / "input"
     (sipDir / "empty").createDirectories()
     (sipDir / "multiple" / "1").createDirectories()
