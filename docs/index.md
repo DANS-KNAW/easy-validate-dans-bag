@@ -37,6 +37,18 @@ ARGUMENTS
       Subcommand: run-service - Starts EASY Validate Dans Bag as a daemon that services HTTP requests
         -h, --help   Show help message
       ---
+      
+EXAMPLES
+--------
+
+    easy-validate-dans-bag --aip bagDir
+    Validates the bag inside the bagDir as an AIP, without deep validation (i.e. checking the bag store in case of Is-Version-Of in the bag-info.txt)
+      
+    easy-validate-dans-bag --aip -f json --sipdir sipsDir
+    Validates the bags inside the sipsDir as AIPs, without deep validation. 
+    The valid bags are untouched, the non-valid bags are moved to a new `sipsDir-nonvalid-timestamp` directory. 
+    A JSON file with the same name lists the reasons for the violations  
+            
 
 INSTALLATION AND CONFIGURATION
 ------------------------------
