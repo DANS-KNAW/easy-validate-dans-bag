@@ -47,19 +47,18 @@ package object structural extends DebugEnhancedLogging {
     if (extraFiles.nonEmpty) fail(s"Directory $d contains files or directories that are not allowed: ${ extraFiles.mkString(", ") }")
   }
 
-  def hasValidFileNames(t: TargetBag): Try[Unit] = Try {
+  def hasOnlyValidFileNames(t: TargetBag): Try[Unit] = Try {
     val invalidCharacters = """:*?"<>|;#"""
     trace(())
-    t.tryBag.flatMap { bag =>
-      bag.getPayLoadManifests.asScala.headOption
-        .map { pm =>
-          val invalidFiles = pm.getFileToChecksumMap.keySet().toArray.filter { case path: Path =>
-            invalidCharacters.exists(path.name.contains(_))
-          }
-          if (invalidFiles.isEmpty) Success(())
-          else fail(s"$t contains payload files or directories with invalid characters: ${ invalidFiles.mkString(", ") }")
-        }
-        .getOrElse(Failure(new IOException(s"no payload manifest in $t")))
+    t.tryBag.map { bag =>
+      val files = bag.getPayLoadManifests.asScala.headOption.toArray.flatMap(
+        _.getFileToChecksumMap.keySet().asScala.toArray[Path]
+      )
+      val invalidFiles = files.filter { path =>
+        invalidCharacters.exists(c => path.name.contains(c))
+      }
+      if (invalidFiles.nonEmpty)
+        fail(invalidFiles.mkString("Payload files must have valid characters. Invalid ones: ",", ", ""))
     }
   }
 }

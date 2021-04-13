@@ -78,7 +78,7 @@ object ProfileVersion0 {
         "depositor-info/depositor-agreement.txt",
       )
     ), dependsOn = List("2.1")),
-    NumberedRule("2.6", hasValidFileNames, dependsOn = List("1.3.1(b)")),
+    NumberedRule("2.6", hasOnlyValidFileNames, dependsOn = List("1.3.1(b)")),
 
     // METADATA
 

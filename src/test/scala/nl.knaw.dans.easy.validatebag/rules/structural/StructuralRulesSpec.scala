@@ -121,16 +121,16 @@ class StructuralRulesSpec extends TestSupportFixture {
 
   "hasValidFileNames" should "succeed if all payload files have valid characters" in {
     testRuleSuccess(
-      bagShaPayloadManifestContainsAllPayloadFiles,
+      hasOnlyValidFileNames,
       inputBag = "bagit-two-payload-files-without-md5",
     )
   }
 
   it should "fail if a payload file has invalid characters" in {
     testRuleViolation(
-      bagShaPayloadManifestContainsAllPayloadFiles,
+      hasOnlyValidFileNames,
       inputBag = "bagit-payload-files-with-invalid-chars",
-      includedInErrorMsg = "contains files or directories that are not allowed"
+      includedInErrorMsg = "Payload files must have valid characters. Invalid ones: l:eeg.txt"
     )
   }
 }
