@@ -55,6 +55,7 @@ object ProfileVersion1 {
     NumberedRule("2.1", containsDir(Paths.get("data/content"))),
     NumberedRule("2.2", containsDir(Paths.get("data/pdi"))),
     NumberedRule("2.3", containsDir(Paths.get("data/lic")), AIP),
+    NumberedRule("2.6", hasOnlyValidFileNames, dependsOn = List("1.3.1(b)")),
 
     // data/pdi
     NumberedRule("2.2.1", containsFile(Paths.get("data/pdi/dataset.xml")), dependsOn = List("2.2")),

@@ -17,13 +17,13 @@ package nl.knaw.dans.easy.validatebag.rules
 
 import better.files.File.apply
 import nl.knaw.dans.easy.validatebag.TargetBag
+import nl.knaw.dans.easy.validatebag.rules.bagit.debug
 import nl.knaw.dans.easy.validatebag.validation.fail
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-import java.io.IOException
 import java.nio.file.Path
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 package object structural extends DebugEnhancedLogging {
   def containsDir(d: Path)(t: TargetBag): Try[Unit] = Try {
@@ -51,14 +51,18 @@ package object structural extends DebugEnhancedLogging {
     val invalidCharacters = """:*?"<>|;#"""
     trace(())
     t.tryBag.map { bag =>
-      val files = bag.getPayLoadManifests.asScala.headOption.toArray.flatMap(
-        _.getFileToChecksumMap.keySet().asScala.toArray[Path]
-      )
-      val invalidFiles = files.filter { path =>
-        invalidCharacters.exists(c => path.name.contains(c))
-      }
-      if (invalidFiles.nonEmpty)
-        fail(invalidFiles.mkString("Payload files must have valid characters. Invalid ones: ",", ", ""))
+      bag.getPayLoadManifests.asScala.headOption
+        .foreach { manifest =>
+          val filesInManifest = manifest.getFileToChecksumMap.keySet().asScala.toArray[Path]
+          trace(filesInManifest.mkString(", "))
+          val invalidFiles = filesInManifest.filter { path =>
+            invalidCharacters.exists(c => path.name.contains(c))
+          }
+          trace(invalidFiles.mkString(", "))
+          trace(invalidFiles.nonEmpty)
+          if (invalidFiles.nonEmpty)
+            fail(invalidFiles.mkString("Payload files must have valid characters. Invalid ones: ", ", ", ""))
+        }
     }
   }
 }

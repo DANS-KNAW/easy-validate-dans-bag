@@ -127,10 +127,10 @@ class StructuralRulesSpec extends TestSupportFixture {
   }
 
   it should "fail if a payload file has invalid characters" in {
-    testRuleViolation(
+    testRuleViolationRegex(
       hasOnlyValidFileNames,
       inputBag = "bagit-payload-files-with-invalid-chars",
-      includedInErrorMsg = "Payload files must have valid characters. Invalid ones: l:eeg.txt"
+      includedInErrorMsg = "Payload files must have valid characters. Invalid ones: .*/data/l:eeg.txt".r
     )
   }
 }
