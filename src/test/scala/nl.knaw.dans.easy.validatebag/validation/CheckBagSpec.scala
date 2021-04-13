@@ -51,7 +51,7 @@ class CheckBagSpec extends TestSupportFixture {
 
   it should "fail if there is a non-readable file in the bag directory" in {
     val minimal = bagsDir / "generic-minimal"
-    val leegTxt = minimal / "data/leeg.txt"
+    val leegTxt = minimal / "data/l:eeg.txt"
     inside(checkRules(new TargetBag(minimal), emptyRuleBase)(expectUnreadable(leegTxt))) {
       case Failure(iae: IllegalArgumentException) =>
         iae.getMessage should include("non-readable")

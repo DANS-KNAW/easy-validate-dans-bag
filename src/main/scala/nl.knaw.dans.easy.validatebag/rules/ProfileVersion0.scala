@@ -28,7 +28,6 @@ import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
 object ProfileVersion0 {
   val versionNumber = 0
   val versionUri = "doi:10.17026/dans-z52-ybfe"
-
   def apply(implicit xmlValidators: Map[String, XmlValidator], allowedLicences: Seq[URI], bagStore: BagStore): Seq[NumberedRule] = Seq(
     // BAGIT-RELATED
 
@@ -79,6 +78,7 @@ object ProfileVersion0 {
         "depositor-info/depositor-agreement.txt",
       )
     ), dependsOn = List("2.1")),
+    NumberedRule("2.6", hasValidFileNames, dependsOn = List("1.3.1(b)")),
 
     // METADATA
 
