@@ -62,6 +62,7 @@ object ProfileVersion0 {
       Paths.get("metadata"),
       Seq(
         "dataset.xml",
+        "provenance.xml",
         "files.xml",
         "amd.xml",
         "emd.xml",
