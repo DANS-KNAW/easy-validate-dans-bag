@@ -422,7 +422,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       rule = filesXmlFilesHaveOnlyAllowedAccessRights,
       inputBag = "filesxml-invalid-access-rights",
       includedInErrorMsg =
-        """(0) files.xml: invalid access rights 'open access' in accessRights element for file: 'data/l:eeg.txt' (allowed values ANONYMOUS, RESTRICTED_REQUEST, NONE)
+        """(0) files.xml: invalid access rights 'open access' in accessRights element for file: 'data/leeg.txt' (allowed values ANONYMOUS, RESTRICTED_REQUEST, NONE)
           |(1) files.xml: invalid access rights 'restricted access' in accessRights element for file: 'data/leeg2.txt' (allowed values ANONYMOUS, RESTRICTED_REQUEST, NONE)
           |(2) files.xml: invalid access rights 'admin' in accessRights element for file: 'data/leeg2.txt' (allowed values ANONYMOUS, RESTRICTED_REQUEST, NONE)""".stripMargin
     )
