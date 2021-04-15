@@ -15,10 +15,10 @@
  */
 package nl.knaw.dans.easy.validatebag.rules.structural
 
-import java.nio.file.Paths
-
+import nl.knaw.dans.easy.validatebag.rules.bagit.bagShaPayloadManifestContainsAllPayloadFiles
 import nl.knaw.dans.easy.validatebag.{ TargetBag, TestSupportFixture }
 
+import java.nio.file.Paths
 import scala.util.Failure
 
 class StructuralRulesSpec extends TestSupportFixture {
@@ -77,6 +77,7 @@ class StructuralRulesSpec extends TestSupportFixture {
       rule = containsNothingElseThan(Paths.get("metadata"),
         Seq(
         "dataset.xml",
+        "provenance.xml",
         "files.xml",
         "amd.xml",
         "emd.xml",
@@ -98,6 +99,7 @@ class StructuralRulesSpec extends TestSupportFixture {
       rule = containsNothingElseThan(Paths.get("metadata"),
         Seq(
           "dataset.xml",
+          "provenance.xml",
           "files.xml",
           "amd.xml",
           "emd.xml",
@@ -114,6 +116,21 @@ class StructuralRulesSpec extends TestSupportFixture {
           "depositor-info/depositor-agreement.txt",
         )),
       inputBag = "metadata-with-original"
+    )
+  }
+
+  "hasValidFileNames" should "succeed if all payload files have valid characters" in {
+    testRuleSuccess(
+      hasOnlyValidFileNames,
+      inputBag = "bagit-two-payload-files-without-md5",
+    )
+  }
+
+  it should "fail if a payload file has invalid characters" in {
+    testRuleViolationRegex(
+      hasOnlyValidFileNames,
+      inputBag = "bagit-payload-files-with-invalid-chars",
+      includedInErrorMsg = "Payload files must have valid characters. Invalid ones: .*/data/l:eeg.txt".r
     )
   }
 }
