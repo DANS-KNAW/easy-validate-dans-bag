@@ -48,21 +48,20 @@ package object structural extends DebugEnhancedLogging {
   }
 
   def hasOnlyValidFileNames(t: TargetBag): Try[Unit] = Try {
-    val invalidCharacters = """:*?"<>|;#"""
     trace(())
-    t.tryBag.map { bag =>
-      bag.getPayLoadManifests.asScala.headOption
-        .foreach { manifest =>
-          val filesInManifest = manifest.getFileToChecksumMap.keySet().asScala.toArray[Path]
-          trace(filesInManifest.mkString(", "))
-          val invalidFiles = filesInManifest.filter { path =>
-            invalidCharacters.exists(c => path.name.contains(c))
-          }
-          trace(invalidFiles.mkString(", "))
-          trace(invalidFiles.nonEmpty)
-          if (invalidFiles.nonEmpty)
-            fail(invalidFiles.mkString("Payload files must have valid characters. Invalid ones: ", ", ", ""))
-        }
+    val filesInManifest = t.tryBag.map { bag =>
+      bag.getPayLoadManifests.asScala.headOption.getOrElse(fail(s"Dependent rule should have failed: no manifest found for ${t.bagDir}"))
+    }.getOrElse(fail(s"Dependent rule should have failed: Could not get bag ${t.bagDir}"))
+      .getFileToChecksumMap.keySet().asScala.toArray[Path]
+    trace(filesInManifest.mkString(", "))
+
+    val invalidCharacters = """:*?"<>|;#"""
+    val invalidFiles = filesInManifest.filter { path =>
+      invalidCharacters.exists(c => path.name.contains(c))
     }
+    trace(invalidFiles.mkString(", "))
+    trace(invalidFiles.nonEmpty)
+    if (invalidFiles.nonEmpty)
+      fail(invalidFiles.mkString("Payload files must have valid characters. Invalid ones: ", ", ", ""))
   }
 }
