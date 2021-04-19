@@ -93,6 +93,7 @@ object ProfileVersion0 {
     NumberedRule("3.1.7", pointsHaveAtLeastTwoValues, dependsOn = List("3.1.1")),
     NumberedRule("3.1.8", archisIdentifiersHaveAtMost10Characters, dependsOn = List("3.1.1")),
     NumberedRule("3.1.9", allUrlsAreValid, dependsOn = List("3.1.1")),
+    NumberedRule("3.1.10", ddmMustHaveRightsHolder, dependsOn = List("3.1.1")),
 
     // files.xml
     NumberedRule("3.2.1", filesXmlConformsToSchemaIfFilesNamespaceDeclared(xmlValidators("files.xml")), dependsOn = List("2.2(b)")),
