@@ -187,6 +187,16 @@ package object metadata extends DebugEnhancedLogging {
       }
   }
 
+  def ddmMustHaveRightsHolder(t: TargetBag): Try[Unit] = {
+    trace(())
+    for {
+      ddm <- t.tryDdm
+      inRole = (ddm \\ "role").text.toLowerCase.contains("rightsholder")
+      _ = if (!inRole && (ddm \ "dcmiMetadata" \ "rightsHolder").isEmpty)
+            fail(s"No rightsHolder")
+    } yield ()
+  }
+
   def ddmDaisAreValid(t: TargetBag): Try[Unit] = {
     trace(())
     for {

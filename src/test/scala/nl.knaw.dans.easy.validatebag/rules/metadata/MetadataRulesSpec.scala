@@ -129,6 +129,14 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "ddm-correct-dai")
   }
 
+  "ddmMustHaveRightsHolder" should "require a rights holder" in {
+    testRuleViolation(
+      rule = ddmMustHaveRightsHolder,
+      inputBag = "ddm-without-rights-holder",
+      includedInErrorMsg = "No rightsHolder",
+    )
+  }
+
   private val allRules: Seq[NumberedRule] = {
     val xmlValidator = new XmlValidator(null) {
       override def validate(is: InputStream): Try[Unit] = Success(())
