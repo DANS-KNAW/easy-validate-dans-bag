@@ -62,6 +62,7 @@ object ProfileVersion0 {
       Seq(
         "dataset.xml",
         "provenance.xml",
+        "pre-staged.csv",
         "files.xml",
         "amd.xml",
         "emd.xml",
