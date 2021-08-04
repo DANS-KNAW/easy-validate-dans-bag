@@ -56,8 +56,8 @@ package object structural extends DebugEnhancedLogging {
     trace(filesInManifest.mkString(", "))
 
     val invalidCharacters = """:*?"<>|;#"""
-    val invalidFiles = filesInManifest.filter { path =>
-      invalidCharacters.exists(c => path.name.contains(c))
+    val invalidFiles = filesInManifest.filter { file =>
+      invalidCharacters.exists(c => file.pathAsString.contains(c))
     }
     trace(invalidFiles.mkString(", "))
     trace(invalidFiles.nonEmpty)
