@@ -15,23 +15,23 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import better.files.File
-
-import java.net.{URI, URISyntaxException}
+import java.net.{ URI, URISyntaxException }
 import java.nio.ByteBuffer
-import java.nio.charset.{CharacterCodingException, Charset, StandardCharsets}
-import java.nio.file.{Path, Paths}
+import java.nio.charset.{ CharacterCodingException, Charset, StandardCharsets }
+import java.nio.file.{ Path, Paths }
 import nl.knaw.dans.easy.validatebag.validation._
-import nl.knaw.dans.easy.validatebag.{TargetBag, XmlValidator}
+import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import resource.managed
-import org.apache.commons.csv.{CSVFormat, CSVParser}
+import org.apache.commons.csv.{ CSVFormat, CSVParser }
 
-import scala.collection.JavaConverters.{asScalaIteratorConverter, iterableAsScalaIterableConverter}
+import better.files.File
+
+import scala.collection.JavaConverters.{ asScalaIteratorConverter, iterableAsScalaIterableConverter }
 import scala.collection._
 import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
