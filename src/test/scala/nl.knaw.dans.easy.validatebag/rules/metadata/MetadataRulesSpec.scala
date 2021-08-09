@@ -363,9 +363,9 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       includedInErrorMsg = "Not all 'file' elements have a 'filepath' attribute")
   }
 
-  "filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles" should "fail if a file is described twice" in {
+  "filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles" should "fail if a file is described twice" in {
     testRuleViolation(
-      rule = filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles,
+      rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "filesxml-file-described-twice",
       includedInErrorMsg = "Duplicate filepaths found"
     )
@@ -373,7 +373,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
 
   it should "fail if a file is not described" in {
     testRuleViolation(
-      rule = filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles,
+      rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "filesxml-file-described-twice",
       includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder"
     )
@@ -381,19 +381,19 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
 
   it should "succeed when payload files match with fileXML" in {
     testRuleSuccess(
-      rule = filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles,
+      rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "metadata-correct")
   }
 
   it should "succeed when payload files combined with file paths in pre-staged.csv match with fileXML" in {
     testRuleSuccess(
-      rule = filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles,
+      rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "metadata-pre-staged-csv")
   }
 
   it should "fail when payload files combined with file paths in pre-staged.csv doesn't match with fileXML" in {
     testRuleViolation(
-      rule = filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles,
+      rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "metadata-pre-staged-csv-one-missing",
       includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder. Difference: (only in bag: {}, only in files.xml: {data/leeg3.txt})"
     )
@@ -465,7 +465,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       filesXmlHasDocumentElementFiles,
       filesXmlHasOnlyFiles,
       filesXmlFileElementsAllHaveFilepathAttribute,
-      filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles,
+      filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       filesXmlAllFilesHaveFormat,
       filesXmlFilesHaveOnlyAllowedNamespaces,
       filesXmlFilesHaveOnlyAllowedAccessRights)

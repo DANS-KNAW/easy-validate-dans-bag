@@ -15,23 +15,22 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.{ URI, URISyntaxException }
+import java.net.{URI, URISyntaxException}
 import java.nio.ByteBuffer
-import java.nio.charset.{ CharacterCodingException, Charset, StandardCharsets }
-import java.nio.file.{ Path, Paths }
+import java.nio.charset.{CharacterCodingException, Charset, StandardCharsets}
+import java.nio.file.{Path, Paths}
 import nl.knaw.dans.easy.validatebag.validation._
-import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
+import nl.knaw.dans.easy.validatebag.{TargetBag, XmlValidator}
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import resource.managed
-import org.apache.commons.csv.{ CSVFormat, CSVParser }
-
+import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
 import better.files.File
 
-import scala.collection.JavaConverters.{ asScalaIteratorConverter, iterableAsScalaIterableConverter }
+import scala.collection.JavaConverters.{asScalaIteratorConverter, iterableAsScalaIterableConverter}
 import scala.collection._
 import scala.util.matching.Regex
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
@@ -496,7 +495,7 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  def filesXmlNoDuplicatesAndMatchesWithPayloadAndPreStagedFiles(t: TargetBag): Try[Unit] = {
+  def filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryFilesXml.map { xml =>
       val files = xml \ "file"
@@ -533,23 +532,19 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  // borrowed from easy-split-multi-deposit/MultiDepositParser.scala
+  // modified from https://github.com/DANS-KNAW/easy-convert-bag-to-deposit/blob/7e3bd6bdd5a9ab01dc646c580bb459653c27fc42/src/main/scala/nl.knaw.dans.easy.bag2deposit/UserTransformer.scala#L27-L34
   private def readFilePathsFromCsvFile(csvFile: File): Set[String] = {
-    managed(CSVParser.parse(csvFile.toJava, StandardCharsets.UTF_8, CSVFormat.RFC4180))
-      .map(csvParse)
-      .tried
-      .getOrElse(List.empty)
-      .drop(1)
-      .map(line => line._2.head)
-      .toSet
+    if (!csvFile.exists)
+      Set.empty
+    else
+      parseCsv(csvFile).map(line => line.get(0)).filterNot(_.isEmpty).toSet
   }
 
-  private def csvParse(parser: CSVParser): List[(Int, List[String])] = {
-    parser.iterator().asScala
-      .map(_.asScala.toList.map(_.trim))
-      .zipWithIndex
-      .collect { case (row, index) if !row.forall(_.trim.isEmpty) => index + 1 -> row }
-      .toList
+  private def parseCsv(file: File, nrOfHeaderLines: Int = 1, format: CSVFormat = CSVFormat.RFC4180): Iterable[CSVRecord] = {
+    trace(file)
+    managed(CSVParser.parse(file.toJava, Charset.forName("UTF-8"), format))
+      .map(_.asScala.filter(_.asScala.nonEmpty).drop(nrOfHeaderLines))
+      .tried.unsafeGetOrThrow
   }
 
   def filesXmlAllFilesHaveFormat(t: TargetBag): Try[Unit] = {
