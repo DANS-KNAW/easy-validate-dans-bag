@@ -15,19 +15,22 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.{ URI, URISyntaxException }
+import java.net.{URI, URISyntaxException}
 import java.nio.ByteBuffer
-import java.nio.charset.{ CharacterCodingException, Charset }
-import java.nio.file.{ Path, Paths }
-
+import java.nio.charset.{CharacterCodingException, Charset, StandardCharsets}
+import java.nio.file.{Path, Paths}
 import nl.knaw.dans.easy.validatebag.validation._
-import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
+import nl.knaw.dans.easy.validatebag.{TargetBag, XmlValidator}
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import resource.managed
+import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
+import better.files.File
 
+import scala.collection.JavaConverters.{asScalaIteratorConverter, iterableAsScalaIterableConverter}
 import scala.collection._
 import scala.util.matching.Regex
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
@@ -502,7 +505,7 @@ package object metadata extends DebugEnhancedLogging {
     }
   }
 
-  def filesXmlAllFilesDescribedOnce(t: TargetBag): Try[Unit] = {
+  def filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryFilesXml.map { xml =>
       val files = xml \ "file"
@@ -512,29 +515,47 @@ package object metadata extends DebugEnhancedLogging {
       val pathsInFileXml = pathsInFilesXmlList.toSet
       val filesInBagPayload = (t.bagDir / "data").walk().filter(_.isRegularFile).toSet
       val payloadPaths = filesInBagPayload.map(t.bagDir.path relativize _).map(_.toString)
-      val fileSetsEqual = pathsInFileXml == payloadPaths
+      val preStagedFilePaths = readFilePathsFromCsvFile((t.bagDir / "metadata/pre-staged.csv"))
+      val payloadAndPreStagedFilePaths = payloadPaths ++ preStagedFilePaths
+      val fileSetsEqual = pathsInFileXml == payloadAndPreStagedFilePaths
 
       if (noDuplicatesFound && fileSetsEqual) ()
       else {
-        def stringDiff[T](left: Set[T], right: Set[T]): String = {
+        def stringDiff[T](name: String, left: Set[T], right: Set[T]): String = {
           val set = left diff right
-          if (set.isEmpty) "{}"
-          else set.mkString("{", ", ", "}")
+          if (set.isEmpty) ""
+          else s"only in $name: " + set.mkString("{", ", ", "}")
         }
 
-        lazy val onlyInBag = stringDiff(payloadPaths, pathsInFileXml)
-        lazy val onlyInFilesXml = stringDiff(pathsInFileXml, payloadPaths)
+        lazy val onlyInBag = stringDiff("bag", payloadPaths, pathsInFileXml)
+        lazy val onlyInPreStaged = stringDiff("pre-staged.csv", preStagedFilePaths, pathsInFileXml)
+        lazy val onlyInFilesXml = stringDiff("files.xml", pathsInFileXml, payloadAndPreStagedFilePaths)
 
         val msg1 = if (noDuplicatesFound) ""
                    else s"   - Duplicate filepaths found: ${ duplicatePathsInFilesXml.mkString("{", ", ", "}") }\n"
         val msg2 = if (fileSetsEqual) ""
-                   else "   - Filepaths in files.xml not equal to files found in data folder. Difference: " +
-                     s"(only in bag: $onlyInBag, only in files.xml: $onlyInFilesXml)"
+                   else "   - Filepaths in files.xml not equal to files found in data folder. Difference - " +
+                     s"$onlyInBag $onlyInPreStaged $onlyInFilesXml"
 
         val msg = msg1 + msg2
         fail(s"files.xml: errors in filepath-attributes:\n$msg")
       }
     }
+  }
+
+  // modified from https://github.com/DANS-KNAW/easy-convert-bag-to-deposit/blob/7e3bd6bdd5a9ab01dc646c580bb459653c27fc42/src/main/scala/nl.knaw.dans.easy.bag2deposit/UserTransformer.scala#L27-L34
+  private def readFilePathsFromCsvFile(csvFile: File): Set[String] = {
+    if (!csvFile.exists)
+      Set.empty
+    else
+      parseCsv(csvFile).map(line => line.get(0)).filterNot(_.isEmpty).toSet
+  }
+
+  private def parseCsv(file: File, nrOfHeaderLines: Int = 1, format: CSVFormat = CSVFormat.RFC4180): Iterable[CSVRecord] = {
+    trace(file)
+    managed(CSVParser.parse(file.toJava, Charset.forName("UTF-8"), format))
+      .map(_.asScala.filter(_.asScala.nonEmpty).drop(nrOfHeaderLines))
+      .tried.unsafeGetOrThrow
   }
 
   def filesXmlAllFilesHaveFormat(t: TargetBag): Try[Unit] = {
