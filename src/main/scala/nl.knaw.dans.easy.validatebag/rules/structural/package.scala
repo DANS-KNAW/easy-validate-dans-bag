@@ -17,12 +17,13 @@ package nl.knaw.dans.easy.validatebag.rules
 
 import better.files.File.apply
 import nl.knaw.dans.easy.validatebag.TargetBag
-import nl.knaw.dans.easy.validatebag.rules.bagit.debug
 import nl.knaw.dans.easy.validatebag.validation.fail
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import java.nio.file.{ Path, Paths }
 
-import java.nio.file.Path
 import scala.collection.JavaConverters._
+import scala.collection.Set
+import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 package object structural extends DebugEnhancedLogging {
@@ -63,5 +64,63 @@ package object structural extends DebugEnhancedLogging {
     trace(invalidFiles.nonEmpty)
     if (invalidFiles.nonEmpty)
       fail(invalidFiles.mkString("Payload files must have valid characters. Invalid ones: ", ", ", ""))
+  }
+
+  val originalFilepathsFile = "original-filepaths.txt"
+  def rootContainsOriginalFilepathsFile(t: TargetBag): Boolean = {
+    (t.bagDir / originalFilepathsFile).exists
+  }
+
+  def readOriginalFilepaths(t: TargetBag): (Set[String], Set[String]) = {
+    val fileToCheck = t.bagDir / originalFilepathsFile
+    var physicalBagRelativePaths = Set[String]()
+    var originalBagRelativePaths = Set[String]()
+    fileToCheck.lines.foreach {
+      line: String =>
+        if(line.indexOf(' ') <= 0) fail(s"Format of ${ originalFilepathsFile } is not valid")
+        val physicalBagRelativePath = line.substring(0, line.indexOf(' '))
+        val originalBagRelativePath = line.substring(line.indexOf(' ')+1)
+        physicalBagRelativePaths += physicalBagRelativePath
+        originalBagRelativePaths += originalBagRelativePath
+    }
+    ( physicalBagRelativePaths, originalBagRelativePaths )
+  }
+
+  def isOriginalFilepathsFileComplete(t: TargetBag): Try[Unit] =  {
+    trace(())
+    t.tryFilesXml.map { xml =>
+      val files = xml \ "file"
+      val pathsInFilesXmlList = files.map(_ \@ "filepath")
+      val pathsInFileXml = pathsInFilesXmlList.toSet
+      val filesInBagPayload = (t.bagDir / "data").walk().filter(_.isRegularFile).toSet
+      val (physicalBagRelativePaths, originalBagRelativePaths) = readOriginalFilepaths(t)
+      val payloadPaths = filesInBagPayload.map(t.bagDir.path relativize _).map(_.toString)
+      val originalFileSetsEqual = pathsInFileXml == originalBagRelativePaths
+      val physicalFileSetsEqual = payloadPaths == physicalBagRelativePaths
+
+      if (originalFileSetsEqual && physicalFileSetsEqual) ()
+      else {
+        def stringDiff[T](name: String, left: Set[T], right: Set[T]): String = {
+          val set = left diff right
+          if (set.isEmpty) ""
+          else s"only in $name: " + set.mkString("{", ", ", "}")
+        }
+
+        lazy val onlyInBag = stringDiff("payload", payloadPaths, physicalBagRelativePaths.toSet)
+        lazy val onlyInFilesXml = stringDiff("files.xml", pathsInFileXml, originalBagRelativePaths.toSet)
+        lazy val onlyInFilepathsPhysical = stringDiff("physical-bag-relative-path", physicalBagRelativePaths.toSet, payloadPaths)
+        lazy val onlyInFilepathsOriginal = stringDiff("original-bag-relative-path", originalBagRelativePaths.toSet, pathsInFileXml)
+
+        val msg1 = if (physicalFileSetsEqual) ""
+                   else s"   - Physical file paths in ${ originalFilepathsFile } not equal to payload in data dir. Difference - " +
+                     s"$onlyInBag $onlyInFilepathsPhysical"
+        val msg2 = if (originalFileSetsEqual) ""
+                   else s"   - Original file paths in ${ originalFilepathsFile } not equal to filepaths in files.xml. Difference - " +
+                     s"$onlyInFilepathsOriginal $onlyInFilesXml"
+
+        val msg = msg1 + msg2
+        fail(s"$originalFilepathsFile errors:\n$msg")
+      }
+    }
   }
 }
