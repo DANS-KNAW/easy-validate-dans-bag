@@ -15,22 +15,23 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.{URI, URISyntaxException}
-import java.nio.ByteBuffer
-import java.nio.charset.{CharacterCodingException, Charset, StandardCharsets}
-import java.nio.file.{Path, Paths}
+import better.files.File
+import nl.knaw.dans.easy.validatebag.rules.structural.readPhysicalToOriginalBagRelativePaths
 import nl.knaw.dans.easy.validatebag.validation._
-import nl.knaw.dans.easy.validatebag.{TargetBag, XmlValidator}
+import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.apache.commons.csv.{ CSVFormat, CSVParser, CSVRecord }
 import resource.managed
-import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
-import better.files.File
 
-import scala.collection.JavaConverters.{asScalaIteratorConverter, iterableAsScalaIterableConverter}
+import java.net.{ URI, URISyntaxException }
+import java.nio.ByteBuffer
+import java.nio.charset.{ CharacterCodingException, Charset }
+import java.nio.file.{ NoSuchFileException, Path, Paths }
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 import scala.collection._
 import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
@@ -500,8 +501,29 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     t.tryFilesXml.map {
       xml =>
-        val files = xml \ "file"
-        if (files.exists(_.attribute("filepath").isEmpty)) fail("Not all 'file' elements have a 'filepath' attribute")
+        val elemsWithoutFilePath = (xml \ "file").filter(_.attribute("filepath").isEmpty)
+        if (elemsWithoutFilePath.nonEmpty) fail(s"${ elemsWithoutFilePath.size } 'file' element(s) don't have a 'filepath' attribute")
+    }
+  }
+
+  def filesXmlFileElementsInOriginalFilePaths(t: TargetBag): Try[Unit] = {
+    trace(())
+
+    // TODO read is also called in isOriginalFilepathsFileComplete, solve like tryFilesXml?
+    Try(readPhysicalToOriginalBagRelativePaths(t)) match {
+      case Failure(e) if e.getClass.getSimpleName == "NoSuchFileException" => Success(())
+      case Failure(e) => Failure(e) // not expected to happen
+      case Success(physicalToOriginalBagRelativePaths) =>
+        t.tryFilesXml.map { xml =>
+          val notInOriginalPaths = (xml \ "file")
+            .map(_.attribute("filepath").getOrElse(Seq.empty).headOption.map(_.text))
+            .withFilter(_.isDefined)
+            .map(_.get)
+            .toSet
+            .diff(physicalToOriginalBagRelativePaths.values.toSet)
+          if (notInOriginalPaths.isEmpty)
+            fail(s"${ notInOriginalPaths.size } 'filepath' attributes are not found in 'original-filepaths.txt' ${ notInOriginalPaths.mkString(", ") }. ")
+        }
     }
   }
 

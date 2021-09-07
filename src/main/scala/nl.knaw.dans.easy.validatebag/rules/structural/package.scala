@@ -71,7 +71,7 @@ package object structural extends DebugEnhancedLogging {
     (t.bagDir / originalFilepathsFile).exists
   }
 
-  def readOriginalFilepaths(t: TargetBag): Map[String, String] = {
+  def readPhysicalToOriginalBagRelativePaths(t: TargetBag): Map[String, String] = {
     val fileToCheck = t.bagDir / originalFilepathsFile
     fileToCheck.lines.map { line =>
       val list = line.split("""[ \t]+""", 2)
@@ -87,7 +87,7 @@ package object structural extends DebugEnhancedLogging {
       val pathsInFilesXmlList = files.map(_ \@ "filepath")
       val pathsInFileXml = pathsInFilesXmlList.toSet
       val filesInBagPayload = (t.bagDir / "data").walk().filter(_.isRegularFile).toSet
-      val physicalToOriginalBagRelativePaths = readOriginalFilepaths(t)
+      val physicalToOriginalBagRelativePaths = readPhysicalToOriginalBagRelativePaths(t)
       val payloadPaths = filesInBagPayload.map(t.bagDir.path relativize _).map(_.toString)
       val originalFileSetsEqual = pathsInFileXml == physicalToOriginalBagRelativePaths.values.toSet
       val physicalFileSetsEqual = payloadPaths == physicalToOriginalBagRelativePaths.keySet

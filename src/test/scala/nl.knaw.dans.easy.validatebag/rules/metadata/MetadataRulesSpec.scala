@@ -368,7 +368,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     testRuleViolation(
       rule = filesXmlFileElementsAllHaveFilepathAttribute,
       inputBag = "filesxml-file-element-without-filepath",
-      includedInErrorMsg = "Not all 'file' elements have a 'filepath' attribute")
+      includedInErrorMsg = "1 'file' element(s) don't have a 'filepath' attribute")
   }
 
   "filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles" should "fail if a file is described twice" in {
