@@ -521,7 +521,7 @@ package object metadata extends DebugEnhancedLogging {
             .map(_.get)
             .toSet
             .diff(physicalToOriginalBagRelativePaths.values.toSet)
-          if (notInOriginalPaths.isEmpty)
+          if (notInOriginalPaths.nonEmpty)
             fail(s"${ notInOriginalPaths.size } 'filepath' attributes are not found in 'original-filepaths.txt' ${ notInOriginalPaths.mkString(", ") }. ")
         }
     }
