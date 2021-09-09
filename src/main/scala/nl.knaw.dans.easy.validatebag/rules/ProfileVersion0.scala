@@ -79,6 +79,8 @@ object ProfileVersion0 {
       )
     ), dependsOn = List("2.1")),
     NumberedRule("2.6", hasOnlyValidFileNames, dependsOn = List("1.3.1(b)")),
+    NumberedRule("2.7.1", optionalFileIsUtf8Decodable(Paths.get(originalFilepathsFile))),
+    NumberedRule("2.7.2", isOriginalFilepathsFileComplete, dependsOn = List("1.1.1(datadir)", "2.7.1", "2.2(b)", "3.2.4")),
 
     // METADATA
 
@@ -100,6 +102,7 @@ object ProfileVersion0 {
     NumberedRule("3.2.2", filesXmlHasDocumentElementFiles, dependsOn = List("2.2(b)")),
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = List("3.2.2")),
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = List("3.2.3")),
+    NumberedRule("3.2.4b", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3","2.7.1", "2.2(b)", "3.2.4")),
     // Second part of 3.2.4 (directories not described) is implicitly checked by 3.2.5
     NumberedRule("3.2.5", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = List("3.2.2")),
