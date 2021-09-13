@@ -84,7 +84,7 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
     val fileToCheck = bagDir / originalFilepathsFile
     if (fileToCheck.exists)
       Option(fileToCheck.lines.map { line =>
-        val list = line.split("""[ \t]+""", 2)
+        val list = line.split("""\s+""", 2)
         if (list.size != 2) throw new IllegalArgumentException(s"invalid line in $originalFilepathsFile : $line")
         (list(1), list(0))
       }.toMap)
