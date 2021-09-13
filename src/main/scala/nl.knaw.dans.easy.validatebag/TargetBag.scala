@@ -15,14 +15,22 @@
  */
 package nl.knaw.dans.easy.validatebag
 
-import java.nio.file.Paths
-
+import better.files.File
 import gov.loc.repository.bagit.domain.Bag
 import gov.loc.repository.bagit.reader.BagReader
+import nl.knaw.dans.easy.validatebag.rules.metadata.trace
+import nl.knaw.dans.easy.validatebag.rules.structural.originalFilepathsFile
 import nl.knaw.dans.easy.validatebag.validation.fail
+import nl.knaw.dans.lib.error.TryExtensions
+import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
+import resource.managed
 
+import java.nio.charset.Charset
+import java.nio.file.Paths
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+import scala.collection.{Iterable, Set}
 import scala.util.Try
-import scala.xml.{ Node, Utility, XML }
+import scala.xml.{Node, Utility, XML}
 
 /**
  * Interface to the bag under validation.
@@ -44,14 +52,18 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
     case 1 => Paths.get("data/pdi/files.xml")
   }
 
-  lazy val tryBag: Try[Bag] = Try { bagReader.read(bagDir.path) }
+  lazy val tryBag: Try[Bag] = Try {
+    bagReader.read(bagDir.path)
+  }
 
   lazy val tryDdm: Try[Node] = Try {
     Utility.trim {
       XML.loadFile((bagDir / ddmPath.toString).toJava)
     }
   }.recoverWith {
-    case t: Throwable => Try { fail(s"Unparseable XML: ${ t.getMessage }") }
+    case t: Throwable => Try {
+      fail(s"Unparseable XML: ${t.getMessage}")
+    }
   }
 
   lazy val tryFilesXml: Try[Node] = Try {
@@ -59,6 +71,39 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
       XML.loadFile((bagDir / filesXmlPath.toString).toJava)
     }
   }.recoverWith {
-    case t: Throwable => Try { fail(s"Unparseable XML: ${ t.getMessage }") }
+    case t: Throwable => Try {
+      fail(s"Unparseable XML: ${t.getMessage}")
+    }
+  }
+
+  lazy val hasOriginalFilePathsFile = (bagDir / originalFilepathsFile).exists
+
+  lazy val tryOptOriginal2PhysicalFilePath = readPhysicalToOriginalBagRelativePaths()
+
+  def readPhysicalToOriginalBagRelativePaths(): Try[Option[Map[String, String]]] = Try {
+    val fileToCheck = bagDir / originalFilepathsFile
+    if (fileToCheck.exists)
+      Option(fileToCheck.lines.map { line =>
+        val list = line.split("""[ \t]+""", 2)
+        if (list.size != 2) throw new IllegalArgumentException(s"invalid line in $originalFilepathsFile : $line")
+        (list(1), list(0))
+      }.toMap)
+    else Option.empty
+  }
+
+  lazy val preStagedFilePaths = readFilePathsFromCsvFile((bagDir / "metadata/pre-staged.csv"))
+
+  private def readFilePathsFromCsvFile(csvFile: File): Set[String] = {
+    if (!csvFile.exists)
+      Set.empty
+    else
+      parseCsv(csvFile).map(line => line.get(0)).filterNot(_.isEmpty).toSet
+  }
+
+  private def parseCsv(file: File, nrOfHeaderLines: Int = 1, format: CSVFormat = CSVFormat.RFC4180): Iterable[CSVRecord] = {
+    trace(file)
+    managed(CSVParser.parse(file.toJava, Charset.forName("UTF-8"), format))
+      .map(_.asScala.filter(_.asScala.nonEmpty).drop(nrOfHeaderLines))
+      .tried.unsafeGetOrThrow
   }
 }

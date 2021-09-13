@@ -75,7 +75,7 @@ package object structural extends DebugEnhancedLogging {
     val fileToCheck = t.bagDir / originalFilepathsFile
     fileToCheck.lines.map { line =>
       val list = line.split("""[ \t]+""", 2)
-      if (list.size != 2) throw new Exception(s"invalid line in $originalFilepathsFile : $line")
+      if (list.size != 2) throw new IllegalArgumentException(s"invalid line in $originalFilepathsFile : $line")
       (list(0), list(1))
     }.toMap
   }
@@ -89,8 +89,10 @@ package object structural extends DebugEnhancedLogging {
       val filesInBagPayload = (t.bagDir / "data").walk().filter(_.isRegularFile).toSet
       val physicalToOriginalBagRelativePaths = readPhysicalToOriginalBagRelativePaths(t)
       val payloadPaths = filesInBagPayload.map(t.bagDir.path relativize _).map(_.toString)
+      val payloadAndPreStagedFilePaths = payloadPaths ++ t.preStagedFilePaths
+
       val originalFileSetsEqual = pathsInFileXml == physicalToOriginalBagRelativePaths.values.toSet
-      val physicalFileSetsEqual = payloadPaths == physicalToOriginalBagRelativePaths.keySet
+      val physicalFileSetsEqual = payloadAndPreStagedFilePaths == physicalToOriginalBagRelativePaths.keySet
 
       if (originalFileSetsEqual && physicalFileSetsEqual) ()
       else {
@@ -100,9 +102,9 @@ package object structural extends DebugEnhancedLogging {
           else s"only in $name: " + set.mkString("{", ", ", "}")
         }
 
-        lazy val onlyInBag = stringDiff("payload", payloadPaths, physicalToOriginalBagRelativePaths.keySet)
+        lazy val onlyInBag = stringDiff("payload", payloadAndPreStagedFilePaths, physicalToOriginalBagRelativePaths.keySet)
         lazy val onlyInFilesXml = stringDiff("files.xml", pathsInFileXml, physicalToOriginalBagRelativePaths.values.toSet)
-        lazy val onlyInFilepathsPhysical = stringDiff("physical-bag-relative-path", physicalToOriginalBagRelativePaths.keySet, payloadPaths)
+        lazy val onlyInFilepathsPhysical = stringDiff("physical-bag-relative-path", physicalToOriginalBagRelativePaths.keySet, payloadAndPreStagedFilePaths)
         lazy val onlyInFilepathsOriginal = stringDiff("original-bag-relative-path", physicalToOriginalBagRelativePaths.values.toSet, pathsInFileXml)
 
         val msg1 = if (physicalFileSetsEqual) ""
