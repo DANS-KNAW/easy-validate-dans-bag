@@ -133,6 +133,21 @@ class StructuralRulesSpec extends TestSupportFixture {
       includedInErrorMsg = "Payload files must have valid characters. Invalid ones: .*/data/l:eeg.txt".r
     )
   }
+
+  "isOriginalFilepathsFileComplete" should "succeed with a valid original-filepaths.txt" in {
+    testRuleSuccess(
+      isOriginalFilepathsFileComplete,
+      inputBag = "original-filepaths-valid-bag",
+    )
+  }
+
+  it should "fail with a non-valid original-filepaths.txt" in {
+    testRuleViolation(
+      isOriginalFilepathsFileComplete,
+      inputBag = "original-filepaths-non-valid-bag",
+      includedInErrorMsg = "12a"
+    )
+  }
 }
 
 

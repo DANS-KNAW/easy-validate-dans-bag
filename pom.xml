@@ -25,7 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-validate-dans-bag</artifactId>
-    <version>1.4.2-SNAPSHOT</version>
+    <version>1.4.4-SNAPSHOT</version>
     <name>EASY Validate DANS Bag</name>
     <url>https://github.com/DANS-KNAW/easy-validate-dans-bag</url>
     <description>Determines whether a DANS bag is valid according to the DANS BagIt Profile.</description>
@@ -62,6 +62,10 @@
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
         </dependency>
         <dependency>
             <groupId>nl.knaw.dans.lib</groupId>

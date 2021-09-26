@@ -45,7 +45,6 @@ object ProfileVersion0 {
     NumberedRule("1.2.4(b)", bagInfoCreatedElementIsIso8601Date, dependsOn = List("1.2.4(a)")),
     NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")),
     NumberedRule("1.2.6(a)", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = List("1.2.1")),
-    NumberedRule("1.2.6(b)", bagInfoDoesNotContain("EASY-User-Account"), SIP, dependsOn = List("1.2.1")),
 
     // Manifests
     NumberedRule("1.3.1(a)", containsFile(Paths.get("manifest-sha1.txt")), AIP),
@@ -80,6 +79,8 @@ object ProfileVersion0 {
       )
     ), dependsOn = List("2.1")),
     NumberedRule("2.6", hasOnlyValidFileNames, dependsOn = List("1.3.1(b)")),
+    NumberedRule("2.7.1", optionalFileIsUtf8Decodable(Paths.get(originalFilepathsFile))),
+    NumberedRule("2.7.2", isOriginalFilepathsFileComplete, dependsOn = List("1.1.1(datadir)", "2.7.1", "2.2(b)", "3.2.4")),
 
     // METADATA
 
@@ -94,14 +95,15 @@ object ProfileVersion0 {
     NumberedRule("3.1.7", pointsHaveAtLeastTwoValues, dependsOn = List("3.1.1")),
     NumberedRule("3.1.8", archisIdentifiersHaveAtMost10Characters, dependsOn = List("3.1.1")),
     NumberedRule("3.1.9", allUrlsAreValid, dependsOn = List("3.1.1")),
+    NumberedRule("3.1.10", ddmMustHaveRightsHolder, dependsOn = List("3.1.1")),
 
     // files.xml
     NumberedRule("3.2.1", filesXmlConformsToSchemaIfFilesNamespaceDeclared(xmlValidators("files.xml")), dependsOn = List("2.2(b)")),
     NumberedRule("3.2.2", filesXmlHasDocumentElementFiles, dependsOn = List("2.2(b)")),
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = List("3.2.2")),
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = List("3.2.3")),
-    // Second part of 3.2.4 (directories not described) is implicitly checked by 3.2.5
-    NumberedRule("3.2.5", filesXmlAllFilesDescribedOnce, dependsOn = List("1.1.1(datadir)", "3.2.4")),
+    NumberedRule("3.2.5(a)", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
+    NumberedRule("3.2.5(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3","2.7.1", "2.2(b)", "3.2.4")),
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = List("3.2.2")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyAllowedNamespaces, dependsOn = List("3.2.2")),
     NumberedRule("3.2.8", filesXmlFilesHaveOnlyAllowedAccessRights, dependsOn = List("3.2.2")),

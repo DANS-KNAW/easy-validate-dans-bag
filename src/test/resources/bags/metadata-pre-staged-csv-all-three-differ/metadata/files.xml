@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<files xmlns="http://easy.dans.knaw.nl/schemas/bag/metadata/files/" xmlns:dcterms="http://purl.org/dc/terms/">
+    <file filepath="data/leeg.txt">
+        <dcterms:format>text/plain</dcterms:format>
+    </file>
+    <file filepath="data/leeg2.txt">
+        <dcterms:format>text/plain</dcterms:format>
+        <accessibleToRights>NONE</accessibleToRights>
+        <visibleToRights>NONE</visibleToRights>
+    </file>
+    <file filepath="data/leeg3.txt">
+        <dcterms:format>text/plain</dcterms:format>
+    </file>
+</files>
+

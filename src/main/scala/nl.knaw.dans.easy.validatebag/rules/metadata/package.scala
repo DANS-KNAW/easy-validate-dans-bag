@@ -15,19 +15,22 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.{ URI, URISyntaxException }
-import java.nio.ByteBuffer
-import java.nio.charset.{ CharacterCodingException, Charset }
-import java.nio.file.{ Path, Paths }
-
+import better.files.File
 import nl.knaw.dans.easy.validatebag.validation._
-import nl.knaw.dans.easy.validatebag.{ TargetBag, XmlValidator }
+import nl.knaw.dans.easy.validatebag.{TargetBag, XmlValidator}
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
+import resource.managed
 
+import java.net.{URI, URISyntaxException}
+import java.nio.ByteBuffer
+import java.nio.charset.{CharacterCodingException, Charset}
+import java.nio.file.{Path, Paths}
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 import scala.collection._
 import scala.util.matching.Regex
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 package object metadata extends DebugEnhancedLogging {
@@ -63,7 +66,7 @@ package object metadata extends DebugEnhancedLogging {
     trace(xmlFile)
     assume(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
     (t.bagDir / xmlFile.toString).inputStream.map(validator.validate).map {
-      _.recoverWith { case t: Throwable => Try(fail(s"$xmlFile does not conform to $schemaName: ${ t.getMessage }")) }
+      _.recoverWith { case t: Throwable => Try(fail(s"$xmlFile does not conform to $schemaName: ${t.getMessage}")) }
     }
   }.get()
 
@@ -89,7 +92,7 @@ package object metadata extends DebugEnhancedLogging {
       ddm =>
         val metadata = ddm \ "dcmiMetadata"
         val licenses = (metadata \ "license").toList
-        debug(s"Found licences: ${ licenses.mkString(", ") }")
+        debug(s"Found licences: ${licenses.mkString(", ")}")
         lazy val rightsHolders = (metadata \ "rightsHolder").toList
         licenses match {
           case license :: Nil if hasXsiType(dctermsNamespace, "URI")(license) =>
@@ -102,7 +105,7 @@ package object metadata extends DebugEnhancedLogging {
             } yield ()).get
           case Nil | _ :: Nil =>
             debug("No licences with xsi:type=\"dcterms:URI\"")
-          case _ => fail(s"Found ${ licenses.size } dcterms:license elements. Only one license is allowed.")
+          case _ => fail(s"Found ${licenses.size} dcterms:license elements. Only one license is allowed.")
         }
     }
   }
@@ -137,9 +140,9 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def doisAreSyntacticallyValid(dois: Seq[String]): Try[Unit] = Try {
-    logger.debug(s"DOIs to check: ${ dois.mkString(", ") }")
+    logger.debug(s"DOIs to check: ${dois.mkString(", ")}")
     val invalidDois = dois.filterNot(syntacticallyValidDoi)
-    if (invalidDois.nonEmpty) fail(s"Invalid DOIs: ${ invalidDois.mkString(", ") }")
+    if (invalidDois.nonEmpty) fail(s"Invalid DOIs: ${invalidDois.mkString(", ")}")
   }
 
   private def syntacticallyValidDoi(doi: String): Boolean = {
@@ -187,6 +190,16 @@ package object metadata extends DebugEnhancedLogging {
       }
   }
 
+  def ddmMustHaveRightsHolder(t: TargetBag): Try[Unit] = {
+    trace(())
+    for {
+      ddm <- t.tryDdm
+      inRole = (ddm \\ "role").text.toLowerCase.contains("rightsholder")
+      _ = if (!inRole && (ddm \ "dcmiMetadata" \ "rightsHolder").isEmpty)
+        fail(s"No rightsHolder")
+    } yield ()
+  }
+
   def ddmDaisAreValid(t: TargetBag): Try[Unit] = {
     trace(())
     for {
@@ -197,9 +210,9 @@ package object metadata extends DebugEnhancedLogging {
 
   private def daisAreValid(ddm: Node): Try[Unit] = Try {
     val dais = (ddm \\ "DAI").filter(_.namespace == dcxDaiNamespace)
-    logger.debug(s"DAIs to check: ${ dais.mkString(", ") }")
+    logger.debug(s"DAIs to check: ${dais.mkString(", ")}")
     val invalidDais = dais.map(_.text.stripPrefix(daiPrefix)).filterNot(s => digest(s.slice(0, s.length - 1), 9) == s.last)
-    if (invalidDais.nonEmpty) fail(s"Invalid DAIs: ${ invalidDais.mkString(", ") }")
+    if (invalidDais.nonEmpty) fail(s"Invalid DAIs: ${invalidDais.mkString(", ")}")
   }
 
   // Calculated the check digit of a DAI. Implementation copied from easy-ddm.
@@ -257,14 +270,14 @@ package object metadata extends DebugEnhancedLogging {
     trace(node)
 
     def offendingPosListMsg(values: Seq[String]): String = {
-      s"(Offending posList starts with: ${ values.take(10).mkString(", ") }...)"
+      s"(Offending posList starts with: ${values.take(10).mkString(", ")}...)"
     }
 
     val values = node.text.split("""\s+""").toList
     val numberOfValues = values.size
-    if (numberOfValues % 2 != 0) fail(s"Found posList with odd number of values: $numberOfValues. ${ offendingPosListMsg(values) }")
-    if (numberOfValues < 8) fail(s"Found posList with too few values (fewer than 4 pairs). ${ offendingPosListMsg(values) }")
-    if (values.take(2) != values.takeRight(2)) fail(s"Found posList with unequal first and last pairs. ${ offendingPosListMsg(values) }")
+    if (numberOfValues % 2 != 0) fail(s"Found posList with odd number of values: $numberOfValues. ${offendingPosListMsg(values)}")
+    if (numberOfValues < 8) fail(s"Found posList with too few values (fewer than 4 pairs). ${offendingPosListMsg(values)}")
+    if (values.take(2) != values.takeRight(2)) fail(s"Found posList with unequal first and last pairs. ${offendingPosListMsg(values)}")
   }
 
   def polygonsInSameMultiSurfaceHaveSameSrsName(t: TargetBag): Try[Unit] = {
@@ -312,11 +325,13 @@ package object metadata extends DebugEnhancedLogging {
 
   private def validatePoint(point: Node, isRD: Boolean): Try[Unit] = Try {
     val value = point.text.trim
-    val coordinates = Try { value.split("""\s+""").map(_.trim.toFloat) }
+    val coordinates = Try {
+      value.split("""\s+""").map(_.trim.toFloat)
+    }
       .getOrRecover(_ => fail(s"Point has non numeric coordinates: $value"))
     if (coordinates.length < 2) fail(s"Point has less than two coordinates: $value")
     else if (isRD && !isValidaRdRange(coordinates))
-           fail(s"Point is outside RD bounds: $value")
+      fail(s"Point is outside RD bounds: $value")
   }
 
   def isRdPoint(spatial: Node): Boolean = {
@@ -355,7 +370,7 @@ package object metadata extends DebugEnhancedLogging {
   }
 
   private def formatInvalidArchisIdentifiers(results: Seq[String]): Seq[String] = {
-    results.zipWithIndex.map { case (msg, index) => s"(${ index + 1 }) $msg" }
+    results.zipWithIndex.map { case (msg, index) => s"(${index + 1}) $msg" }
   }
 
   def allUrlsAreValid(t: TargetBag): Try[Unit] = {
@@ -448,8 +463,8 @@ package object metadata extends DebugEnhancedLogging {
       uri <- getUri(url).recover { case _: URISyntaxException => fail(s"$url is not a valid URI") }
       scheme = uri.getScheme
       _ = if (!(urlProtocols contains scheme))
-            fail(s"protocol '$scheme' in URI '$url' is not one of the accepted protocols [${ urlProtocols.mkString(",") }]$msg")
-          else ()
+        fail(s"protocol '$scheme' in URI '$url' is not one of the accepted protocols [${urlProtocols.mkString(",")}]$msg")
+      else ()
     } yield ()
   }
 
@@ -478,7 +493,7 @@ package object metadata extends DebugEnhancedLogging {
         }
         else {
           val nonFiles = (files \ "_").filterNot(_.label == "file")
-          if (nonFiles.nonEmpty) fail(s"files.xml: children of document element must only be 'file'. Found non-file elements: ${ nonFiles.mkString(", ") }")
+          if (nonFiles.nonEmpty) fail(s"files.xml: children of document element must only be 'file'. Found non-file elements: ${nonFiles.mkString(", ")}")
         }
     }
   }
@@ -487,44 +502,70 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     t.tryFilesXml.map {
       xml =>
-        val files = xml \ "file"
-        if (files.exists(_.attribute("filepath").isEmpty)) fail("Not all 'file' elements have a 'filepath' attribute")
+        val elemsWithoutFilePath = (xml \ "file").filter(_.attribute("filepath").isEmpty)
+        if (elemsWithoutFilePath.nonEmpty) fail(s"${elemsWithoutFilePath.size} 'file' element(s) don't have a 'filepath' attribute")
     }
   }
 
-  def filesXmlAllFilesDescribedOnce(t: TargetBag): Try[Unit] = {
+  def filesXmlFileElementsInOriginalFilePaths(t: TargetBag): Try[Unit] = {
     trace(())
-    t.tryFilesXml.map { xml =>
-      val files = xml \ "file"
-      val pathsInFilesXmlList = files.map(_ \@ "filepath")
-      val duplicatePathsInFilesXml = pathsInFilesXmlList.groupBy(identity).collect { case (k, vs) if vs.size > 1 => k }
-      val noDuplicatesFound = duplicatePathsInFilesXml.isEmpty
-      val pathsInFileXml = pathsInFilesXmlList.toSet
-      val filesInBagPayload = (t.bagDir / "data").walk().filter(_.isRegularFile).toSet
-      val payloadPaths = filesInBagPayload.map(t.bagDir.path relativize _).map(_.toString)
-      val fileSetsEqual = pathsInFileXml == payloadPaths
 
-      if (noDuplicatesFound && fileSetsEqual) ()
-      else {
-        def stringDiff[T](left: Set[T], right: Set[T]): String = {
-          val set = left diff right
-          if (set.isEmpty) "{}"
-          else set.mkString("{", ", ", "}")
+    t.tryOptOriginal2PhysicalFilePath match {
+      case Failure(e) if e.getClass.getSimpleName == "NoSuchFileException" => Success(())
+      case Failure(e) => Failure(e) // not expected to happen
+      case Success(None) => Success(())
+      case Success(Some(original2PhysicalFilePath)) =>
+        val originalFilePaths = original2PhysicalFilePath.keySet
+        t.tryFilesXml.map { xml =>
+          val notInOriginalPaths = (xml \ "file")
+            .map(_.attribute("filepath").getOrElse(Seq.empty).headOption.map(_.text))
+            .withFilter(_.isDefined)
+            .map(_.get)
+            .toSet
+            .diff(originalFilePaths)
+          if (notInOriginalPaths.nonEmpty)
+            fail(s"${notInOriginalPaths.size} 'filepath' attributes are not found in 'original-filepaths.txt' ${notInOriginalPaths.mkString(", ")}. ")
         }
-
-        lazy val onlyInBag = stringDiff(payloadPaths, pathsInFileXml)
-        lazy val onlyInFilesXml = stringDiff(pathsInFileXml, payloadPaths)
-
-        val msg1 = if (noDuplicatesFound) ""
-                   else s"   - Duplicate filepaths found: ${ duplicatePathsInFilesXml.mkString("{", ", ", "}") }\n"
-        val msg2 = if (fileSetsEqual) ""
-                   else "   - Filepaths in files.xml not equal to files found in data folder. Difference: " +
-                     s"(only in bag: $onlyInBag, only in files.xml: $onlyInFilesXml)"
-
-        val msg = msg1 + msg2
-        fail(s"files.xml: errors in filepath-attributes:\n$msg")
-      }
     }
+  }
+
+  def filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles(t: TargetBag): Try[Unit] = {
+    trace(())
+    if (t.hasOriginalFilePathsFile) Success(())
+    else
+      t.tryFilesXml.map { xml =>
+        val files = xml \ "file"
+        val pathsInFilesXmlList = files.map(_ \@ "filepath")
+        val duplicatePathsInFilesXml = pathsInFilesXmlList.groupBy(identity).collect { case (k, vs) if vs.size > 1 => k }
+        val noDuplicatesFound = duplicatePathsInFilesXml.isEmpty
+        val pathsInFileXml = pathsInFilesXmlList.toSet
+        val filesInBagPayload = (t.bagDir / "data").walk().filter(_.isRegularFile).toSet
+        val payloadPaths = filesInBagPayload.map(t.bagDir.path relativize _).map(_.toString)
+        val payloadAndPreStagedFilePaths = payloadPaths ++ t.preStagedFilePaths
+        val fileSetsEqual = pathsInFileXml == payloadAndPreStagedFilePaths
+
+        if (noDuplicatesFound && fileSetsEqual) ()
+        else {
+          def stringDiff[T](name: String, left: Set[T], right: Set[T]): String = {
+            val set = left diff right
+            if (set.isEmpty) ""
+            else s"only in $name: " + set.mkString("{", ", ", "}")
+          }
+
+          lazy val onlyInBag = stringDiff("bag", payloadPaths, pathsInFileXml)
+          lazy val onlyInPreStaged = stringDiff("pre-staged.csv", t.preStagedFilePaths, pathsInFileXml)
+          lazy val onlyInFilesXml = stringDiff("files.xml", pathsInFileXml, payloadAndPreStagedFilePaths)
+
+          val msg1 = if (noDuplicatesFound) ""
+          else s"   - Duplicate filepaths found: ${duplicatePathsInFilesXml.mkString("{", ", ", "}")}\n"
+          val msg2 = if (fileSetsEqual) ""
+          else "   - Filepaths in files.xml not equal to files found in data folder. Difference - " +
+            s"$onlyInBag $onlyInPreStaged $onlyInFilesXml"
+
+          val msg = msg1 + msg2
+          fail(s"files.xml: errors in filepath-attributes:\n$msg")
+        }
+      }
   }
 
   def filesXmlAllFilesHaveFormat(t: TargetBag): Try[Unit] = {
@@ -573,7 +614,7 @@ package object metadata extends DebugEnhancedLogging {
     accessRights.map(rights =>
       if (!allowedAccessRights.contains(rights.text))
         Try {
-          fail(s"files.xml: invalid access rights '${ rights.text }' in accessRights element for file: '${ file \@ "filepath" }' (allowed values ${ allowedAccessRights.mkString(", ") })")
+          fail(s"files.xml: invalid access rights '${rights.text}' in accessRights element for file: '${file \@ "filepath"}' (allowed values ${allowedAccessRights.mkString(", ")})")
         }
       else Success(())
     )
@@ -585,8 +626,8 @@ package object metadata extends DebugEnhancedLogging {
     for {
       _ <- Try(assume(!f.isAbsolute, "Path to UTF-8 text file must be relative."))
       file = t.bagDir / f.toString
-      _ <- if (file.exists) isValidUtf8(file.byteArray).recoverWith { case e: CharacterCodingException => fail(s"Input not valid UTF-8: ${ e.getMessage }") }
-           else Success(())
+      _ <- if (file.exists) isValidUtf8(file.byteArray).recoverWith { case e: CharacterCodingException => fail(s"Input not valid UTF-8: ${e.getMessage}") }
+      else Success(())
     } yield ()
   }
 
