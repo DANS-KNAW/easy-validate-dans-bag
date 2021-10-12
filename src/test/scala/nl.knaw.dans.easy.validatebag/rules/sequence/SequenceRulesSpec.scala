@@ -76,7 +76,7 @@ class SequenceRulesSpec extends TestSupportFixture with MockFactory {
 
   it should "fail if bag store was not on-line" in {
     expectBagStoreIoException()
-    testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "because of an I/O error", doubleCheckBagItValidity = false)
+    testRuleFailure(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "because of an I/O error", doubleCheckBagItValidity = false)
   }
 
   it should "succeed if bag was found" in {

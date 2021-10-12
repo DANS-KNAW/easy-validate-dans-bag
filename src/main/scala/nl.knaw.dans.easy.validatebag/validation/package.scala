@@ -46,8 +46,6 @@ package object validation extends DebugEnhancedLogging {
    */
   case class RuleViolationDetailsException(details: String) extends Exception(details)
 
-  private case class RuleNotApplicableException() extends Exception("rule not applicable, testing for something else")
-
   /**
    * Signals a rule violation. This function should be called from the rule functions to indicate that
    * the rule was not met.

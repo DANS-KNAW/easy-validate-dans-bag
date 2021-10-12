@@ -47,7 +47,11 @@ trait BagStore extends DebugEnhancedLogging {
       .header("Accept", "text/plain")
       .timeout(connTimeoutMs = connectionTimeoutMs, readTimeoutMs = readTimeoutMs)
       .method("HEAD")
-      .asBytes.code == 200
+      .asBytes.code match {
+      case 200 => true
+      case 400 => false
+      case s => throw new IllegalStateException(s"Could not verify existence of bag. Bag store returned $s")
+    }
   }
 
   /**

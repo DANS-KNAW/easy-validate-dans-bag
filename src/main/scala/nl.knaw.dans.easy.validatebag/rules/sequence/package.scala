@@ -18,14 +18,13 @@ package nl.knaw.dans.easy.validatebag.rules
 import java.io.IOException
 import java.net.URI
 import java.util.UUID
-
 import nl.knaw.dans.easy.validatebag.validation.fail
-import nl.knaw.dans.easy.validatebag.{ BagStore, TargetBag }
+import nl.knaw.dans.easy.validatebag.{BagStore, TargetBag}
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.string._
 
-import scala.util.{ Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.collection.JavaConverters._
 
 package object sequence extends DebugEnhancedLogging {
@@ -37,7 +36,8 @@ package object sequence extends DebugEnhancedLogging {
         for {
           uuid <- getUuidFromIsVersionOfValue(isVersionOf)
           exists <- bagStore.bagExists(uuid).recoverWith {
-            case _: IOException => Try(fail(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified, because of an I/O error"))
+            case _: IOException => Failure(new IllegalStateException(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified, because of an I/O error"))
+            case e: IllegalStateException => Failure(new IllegalStateException(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified: ${e.getMessage}"))
           }
           _ = if (!exists) fail(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, is not found in bag stores")
         } yield ()
