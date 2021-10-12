@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.validatebag
 import java.net.URI
 import java.util.UUID
 
-import nl.knaw.dans.easy.validatebag.validation.fail
+import nl.knaw.dans.easy.validatebag.validation.reject
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import scalaj.http.{ Http, HttpResponse }
 
@@ -91,7 +91,7 @@ trait BagStore extends DebugEnhancedLogging {
           Success(body)
         case HttpResponse(body, code, _) =>
           logger.error(s"call to $url failed: $code - $body")
-          fail(s"Could not read from bagstore, at '$url' (code: $code)")
+          reject(s"Could not read from bagstore, at '$url' (code: $code)")
       }
   }
 
