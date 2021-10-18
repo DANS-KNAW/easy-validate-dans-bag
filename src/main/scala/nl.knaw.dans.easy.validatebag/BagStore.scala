@@ -49,7 +49,7 @@ trait BagStore extends DebugEnhancedLogging {
       .method("HEAD")
       .asBytes.code match {
       case 200 => true
-      case 400 => false
+      case 404 => false
       case s => throw new IllegalStateException(s"Could not verify existence of bag. Bag store returned $s")
     }
   }
