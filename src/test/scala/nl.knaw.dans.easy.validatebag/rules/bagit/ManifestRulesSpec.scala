@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.validatebag.rules.bagit
 import nl.knaw.dans.easy.validatebag.TestSupportFixture
 
 class ManifestRulesSpec extends TestSupportFixture {
-  "bagShaPayloadManifestContainsAllPayloadFiles" should "fail if not all payload files have a SHA-1 checksum" in {
+  "bagShaPayloadManifestContainsAllPayloadFiles" should "be rejected if not all payload files have a SHA-1 checksum" in {
     testRuleViolationRegex(
       bagShaPayloadManifestContainsAllPayloadFiles,
       inputBag = "bagit-two-payload-files-without-sha1",
@@ -26,7 +26,7 @@ class ManifestRulesSpec extends TestSupportFixture {
     )
   }
 
-  it should "succeed if not all payload files have an MD5 checksum" in {
+  it should "be accepted if not all payload files have an MD5 checksum" in {
     testRuleSuccess(
       bagShaPayloadManifestContainsAllPayloadFiles,
       inputBag = "bagit-two-payload-files-without-md5"

@@ -23,7 +23,7 @@ import scala.util.Failure
 
 class RulesSpec extends TestSupportFixture {
 
-  "containsFile" should "fail if file name is different case" in {
+  "containsFile" should "cause rejection if file name is different case" in {
     /*
      * This test will fail for different reasons on case sensitive and case insensitive file systems respectively. Hence the regex with two
      * alternative error messages.
@@ -31,7 +31,7 @@ class RulesSpec extends TestSupportFixture {
     testRuleViolationRegex(containsFile(Paths.get("Metadata")), "metadata-correct", "(not found in bag|differs in case)".r)
   }
 
-  it should "fail if target is a directory instead of a file" in {
+  it should "cause rejection if target is a directory instead of a file" in {
     testRuleViolation(containsFile(Paths.get("data")), "generic-minimal", "not found in bag")
   }
 
@@ -39,7 +39,7 @@ class RulesSpec extends TestSupportFixture {
     testRuleSuccess(containsFile(Paths.get("bagit.txt")), "metadata-correct")
   }
 
-  it should "fail if an absolute path in passed" in {
+  it should "cause rejection if an absolute path in passed" in {
     val absolutePath = "/an/absolute/path.jpeg"
     containsFile(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: File $absolutePath must be a relative path" =>

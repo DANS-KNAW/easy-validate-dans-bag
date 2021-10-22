@@ -45,7 +45,7 @@ package object bagit extends DebugEnhancedLogging {
   def bagIsValid(t: TargetBag): Try[Unit] = {
     trace(())
 
-    def failBecauseInvalid(t: Throwable, targetBag: TargetBag): Try[Unit] = {
+    def rejectBecauseInvalid(t: Throwable, targetBag: TargetBag): Try[Unit] = {
       val details = s"Bag is not valid: Exception = ${ t.getClass.getSimpleName }, cause = ${ t.getCause }, message = ${ t.getMessage }"
       logger.warn(s"[${ targetBag.bagDir.name }] $details")
       Try(reject(details))
@@ -75,15 +75,15 @@ package object bagit extends DebugEnhancedLogging {
            * Note that VerificationException is not included below, as it indicates a error during validation rather
            * than that the bag is non-valid.
            */
-          case cause: MissingPayloadManifestException => failBecauseInvalid(cause, t)
-          case cause: MissingBagitFileException => failBecauseInvalid(cause, t)
-          case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause, t)
-          case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause, t)
-          case cause: FileNotInManifestException => failBecauseInvalid(cause, t)
-          case cause: MaliciousPathException => failBecauseInvalid(cause, t)
-          case cause: CorruptChecksumException => failBecauseInvalid(cause, t)
-          case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause, t)
-          case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause, t)
+          case cause: MissingPayloadManifestException => rejectBecauseInvalid(cause, t)
+          case cause: MissingBagitFileException => rejectBecauseInvalid(cause, t)
+          case cause: MissingPayloadDirectoryException => rejectBecauseInvalid(cause, t)
+          case cause: FileNotInPayloadDirectoryException => rejectBecauseInvalid(cause, t)
+          case cause: FileNotInManifestException => rejectBecauseInvalid(cause, t)
+          case cause: MaliciousPathException => rejectBecauseInvalid(cause, t)
+          case cause: CorruptChecksumException => rejectBecauseInvalid(cause, t)
+          case cause: UnsupportedAlgorithmException => rejectBecauseInvalid(cause, t)
+          case cause: InvalidBagitFileFormatException => rejectBecauseInvalid(cause, t)
         }
     }.doIfSuccess(_ => logger.info(s"[${ t.bagDir.name }] successfully verified bag"))
   }
