@@ -20,7 +20,7 @@ import gov.loc.repository.bagit.domain.Bag
 import gov.loc.repository.bagit.reader.BagReader
 import nl.knaw.dans.easy.validatebag.rules.metadata.trace
 import nl.knaw.dans.easy.validatebag.rules.structural.originalFilepathsFile
-import nl.knaw.dans.easy.validatebag.validation.fail
+import nl.knaw.dans.easy.validatebag.validation.reject
 import nl.knaw.dans.lib.error.TryExtensions
 import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
 import resource.managed
@@ -62,7 +62,7 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
     }
   }.recoverWith {
     case t: Throwable => Try {
-      fail(s"Unparseable XML: ${t.getMessage}")
+      reject(s"Unparseable XML: ${t.getMessage}")
     }
   }
 
@@ -72,7 +72,7 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
     }
   }.recoverWith {
     case t: Throwable => Try {
-      fail(s"Unparseable XML: ${t.getMessage}")
+      reject(s"Unparseable XML: ${t.getMessage}")
     }
   }
 

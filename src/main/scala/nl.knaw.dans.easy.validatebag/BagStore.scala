@@ -15,14 +15,12 @@
  */
 package nl.knaw.dans.easy.validatebag
 
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import scalaj.http.{Http, HttpResponse}
+
 import java.net.URI
 import java.util.UUID
-
-import nl.knaw.dans.easy.validatebag.validation.fail
-import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import scalaj.http.{ Http, HttpResponse }
-
-import scala.util.{ Success, Try }
+import scala.util.{Success, Try}
 
 /**
  * Simple, incomplete interface to the bag store service that provides only the methods necessary to perform validations.
@@ -47,7 +45,11 @@ trait BagStore extends DebugEnhancedLogging {
       .header("Accept", "text/plain")
       .timeout(connTimeoutMs = connectionTimeoutMs, readTimeoutMs = readTimeoutMs)
       .method("HEAD")
-      .asBytes.code == 200
+      .asBytes.code match {
+      case 200 => true
+      case 404 => false
+      case s => throw new IllegalStateException(s"Could not verify existence of bag. Bag store returned $s")
+    }
   }
 
   /**
@@ -64,7 +66,12 @@ trait BagStore extends DebugEnhancedLogging {
       .header("Accept", "text/plain")
       .timeout(connTimeoutMs = connectionTimeoutMs, readTimeoutMs = readTimeoutMs)
       .method("HEAD")
-      .asBytes.code == 200
+      .asBytes.code
+    match {
+      case 200 => true
+      case 404 => false
+      case code => throw new IllegalStateException(s"Could not verify existence of bag in this store. Bag store returned $code")
+    }
   }
 
   /**
@@ -87,7 +94,7 @@ trait BagStore extends DebugEnhancedLogging {
           Success(body)
         case HttpResponse(body, code, _) =>
           logger.error(s"call to $url failed: $code - $body")
-          fail(s"Could not read from bagstore, at '$url' (code: $code)")
+          throw new IllegalStateException(s"Could not read from bagstore, at '$url' (code: $code)")
       }
   }
 

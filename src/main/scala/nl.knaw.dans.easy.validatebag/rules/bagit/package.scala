@@ -45,16 +45,16 @@ package object bagit extends DebugEnhancedLogging {
   def bagIsValid(t: TargetBag): Try[Unit] = {
     trace(())
 
-    def failBecauseInvalid(t: Throwable, targetBag: TargetBag): Try[Unit] = {
+    def rejectBecauseInvalid(t: Throwable, targetBag: TargetBag): Try[Unit] = {
       val details = s"Bag is not valid: Exception = ${ t.getClass.getSimpleName }, cause = ${ t.getCause }, message = ${ t.getMessage }"
       logger.warn(s"[${ targetBag.bagDir.name }] $details")
-      Try(fail(details))
+      Try(reject(details))
     }
 
     if (!t.bagDir.exists) {
       val details = s"[${ t.bagDir.name }] Bag directory does not exist"
       logger.warn(details)
-      Try(fail(details))
+      Try(reject(details))
     }
     else {
       t.tryBag
@@ -63,7 +63,7 @@ package object bagit extends DebugEnhancedLogging {
             /*
              * This seems to be the only reason when failing to read the bag should be construed as its being non-valid.
              */
-            Try(fail("Mandatory file 'bagit.txt' is missing.")).asInstanceOf[Try[Bag]]
+            Try(reject("Mandatory file 'bagit.txt' is missing.")).asInstanceOf[Try[Bag]]
         }
         .map(bagVerifier.isValid(_, false))
         .recoverWith {
@@ -75,15 +75,15 @@ package object bagit extends DebugEnhancedLogging {
            * Note that VerificationException is not included below, as it indicates a error during validation rather
            * than that the bag is non-valid.
            */
-          case cause: MissingPayloadManifestException => failBecauseInvalid(cause, t)
-          case cause: MissingBagitFileException => failBecauseInvalid(cause, t)
-          case cause: MissingPayloadDirectoryException => failBecauseInvalid(cause, t)
-          case cause: FileNotInPayloadDirectoryException => failBecauseInvalid(cause, t)
-          case cause: FileNotInManifestException => failBecauseInvalid(cause, t)
-          case cause: MaliciousPathException => failBecauseInvalid(cause, t)
-          case cause: CorruptChecksumException => failBecauseInvalid(cause, t)
-          case cause: UnsupportedAlgorithmException => failBecauseInvalid(cause, t)
-          case cause: InvalidBagitFileFormatException => failBecauseInvalid(cause, t)
+          case cause: MissingPayloadManifestException => rejectBecauseInvalid(cause, t)
+          case cause: MissingBagitFileException => rejectBecauseInvalid(cause, t)
+          case cause: MissingPayloadDirectoryException => rejectBecauseInvalid(cause, t)
+          case cause: FileNotInPayloadDirectoryException => rejectBecauseInvalid(cause, t)
+          case cause: FileNotInManifestException => rejectBecauseInvalid(cause, t)
+          case cause: MaliciousPathException => rejectBecauseInvalid(cause, t)
+          case cause: CorruptChecksumException => rejectBecauseInvalid(cause, t)
+          case cause: UnsupportedAlgorithmException => rejectBecauseInvalid(cause, t)
+          case cause: InvalidBagitFileFormatException => rejectBecauseInvalid(cause, t)
         }
     }.doIfSuccess(_ => logger.info(s"[${ t.bagDir.name }] successfully verified bag"))
   }
@@ -93,7 +93,7 @@ package object bagit extends DebugEnhancedLogging {
     for {
       _ <- containsFile(Paths.get("bag-info.txt"))(t)
       _ <- t.tryBag.recoverWith {
-        case e: InvalidBagMetadataException => Try(fail(s"bag-info.txt exists but is malformed: ${ e.getMessage }"))
+        case e: InvalidBagMetadataException => Try(reject(s"bag-info.txt exists but is malformed: ${ e.getMessage }"))
       }
     } yield ()
   }
@@ -103,7 +103,7 @@ package object bagit extends DebugEnhancedLogging {
     bagIsValid(t)
       .recoverWith {
         case cause: RuleViolationDetailsException =>
-          Try(fail(s"${ cause.details } (WARNING: bag may still be virtually-valid, but this version of the service cannot check that."))
+          Try(reject(s"${ cause.details } (WARNING: bag may still be virtually-valid, but this version of the service cannot check that."))
       }
   }
 
@@ -112,7 +112,7 @@ package object bagit extends DebugEnhancedLogging {
     t.tryBag.map { bag =>
       Option(bag.getMetadata.get(element))
         .withFilter(_.size() > 1)
-        .foreach(_ => fail(s"bag-info.txt may contain at most one element: $element"))
+        .foreach(_ => reject(s"bag-info.txt may contain at most one element: $element"))
     }
   }
 
@@ -121,14 +121,14 @@ package object bagit extends DebugEnhancedLogging {
     t.tryBag.map { bag =>
       val values = bag.getMetadata.get(element)
       val numberFound = Option(values).map(_.size).getOrElse(0)
-      if (numberFound != 1) fail(s"bag-info.txt must contain exactly one '$element' element; number found: $numberFound")
+      if (numberFound != 1) reject(s"bag-info.txt must contain exactly one '$element' element; number found: $numberFound")
     }
   }
 
   def bagInfoDoesNotContain(element: String)(t: TargetBag): Try[Unit] = {
     trace(element)
     t.tryBag.map { bag =>
-      if (bag.getMetadata.contains(element)) fail(s"bag-info.txt must not contain element: $element")
+      if (bag.getMetadata.contains(element)) reject(s"bag-info.txt must not contain element: $element")
     }
   }
 
@@ -137,7 +137,7 @@ package object bagit extends DebugEnhancedLogging {
     getBagInfoTxtValue(t, element).map {
       _.foreach {
         s =>
-          if (s != value) fail(s"$element must be $value; found: $s")
+          if (s != value) reject(s"$element must be $value; found: $s")
       }
     }
   }
@@ -174,7 +174,7 @@ package object bagit extends DebugEnhancedLogging {
             debug(s"Payload files: ${ filesInManifest.mkString(", ") }")
             if (filesInManifest != filesInPayload) {
               val filesOnlyInPayload = filesInPayload -- filesInManifest // The other way around should have been caught by the validity check
-              fail(s"All payload files must have an SHA-1 checksum. Files missing from SHA-1 manifest: ${ filesOnlyInPayload.mkString(", ") }")
+              reject(s"All payload files must have an SHA-1 checksum. Files missing from SHA-1 manifest: ${ filesOnlyInPayload.mkString(", ") }")
             }
         }
     }
