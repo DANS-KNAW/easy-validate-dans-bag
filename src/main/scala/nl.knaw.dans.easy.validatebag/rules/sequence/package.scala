@@ -18,14 +18,13 @@ package nl.knaw.dans.easy.validatebag.rules
 import java.io.IOException
 import java.net.URI
 import java.util.UUID
-
-import nl.knaw.dans.easy.validatebag.validation.fail
-import nl.knaw.dans.easy.validatebag.{ BagStore, TargetBag }
+import nl.knaw.dans.easy.validatebag.validation.reject
+import nl.knaw.dans.easy.validatebag.{BagStore, TargetBag}
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.string._
 
-import scala.util.{ Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.collection.JavaConverters._
 
 package object sequence extends DebugEnhancedLogging {
@@ -37,9 +36,10 @@ package object sequence extends DebugEnhancedLogging {
         for {
           uuid <- getUuidFromIsVersionOfValue(isVersionOf)
           exists <- bagStore.bagExists(uuid).recoverWith {
-            case _: IOException => Try(fail(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified, because of an I/O error"))
+            case _: IOException => Failure(new IllegalStateException(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified, because of an I/O error"))
+            case e: IllegalStateException => Failure(new IllegalStateException(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified: ${e.getMessage}"))
           }
-          _ = if (!exists) fail(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, is not found in bag stores")
+          _ = if (!exists) reject(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, is not found in bag stores")
         } yield ()
       ))
       .flatMap(_.getOrElse(Success(())))
@@ -53,9 +53,9 @@ package object sequence extends DebugEnhancedLogging {
           for {
             uuid <- getUuidFromIsVersionOfValue(isVersionOf)
             exists <- bagStore.bagExistsInThisStore(uuid).recoverWith {
-              case _: IOException => Try(fail(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified, because of an I/O error"))
+              case _: IOException => Try(reject(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, could not be verified, because of an I/O error"))
             }
-            _ = if (!exists) fail(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, is not found in bag store ${ bagStore.getBagStoreUrl }")
+            _ = if (!exists) reject(s"Bag with bag-id $uuid, pointed to by Is-Version-Of field in bag-info.txt, is not found in bag store ${ bagStore.getBagStoreUrl }")
           } yield ()
         ))
         .flatMap(_.getOrElse(Success(())))
@@ -77,7 +77,7 @@ package object sequence extends DebugEnhancedLogging {
             referredBagInfoText <- bagStore.getBagInfoText(uuid)
             users = referredBagInfoText.split("\n").find(_.startsWith("EASY-User-Account"))
             referredBagUser <- getReferredBagUser(uuid, users)
-            _ = if (user != referredBagUser) fail(s"User $user is different from the user $referredBagUser in bag $isVersionOf, pointed to by Is-Version-Of field in bag-info.txt")
+            _ = if (user != referredBagUser) reject(s"User $user is different from the user $referredBagUser in bag $isVersionOf, pointed to by Is-Version-Of field in bag-info.txt")
           } yield ()
         ))
         .flatMap(_.getOrElse(Success(())))
@@ -93,18 +93,18 @@ package object sequence extends DebugEnhancedLogging {
     failIfNotTrueWithMessage(uri.getScheme == "urn", "Is-Version-Of value must be a URN")
     failIfNotTrueWithMessage(uri.getSchemeSpecificPart.startsWith("uuid:"), "Is-Version-Of URN must be of subtype UUID")
     val Array(_, uuidStr) = uri.getSchemeSpecificPart.split(':')
-    uuidStr.toUUID.toTry.getOrRecover(e => fail(e.getMessage))
+    uuidStr.toUUID.toTry.getOrRecover(e => reject(e.getMessage))
   }
 
   private def getUser(t: TargetBag): String = {
-    getBagInfoTxtValue(t, "EASY-User-Account").getOrElse(fail(s"Could not read the user account from bag-info.txt in ${ t.bagDir }")).getOrElse("")
+    getBagInfoTxtValue(t, "EASY-User-Account").getOrElse(reject(s"Could not read the user account from bag-info.txt in ${ t.bagDir }")).getOrElse("")
   }
 
   def getReferredBagUser(versionOfId: UUID, userLine: Option[String]): Try[String] = Try {
-    userLine.map(s => s.split(":")(1).trim).getOrElse(fail(s"No user found for isVersionOf bag $versionOfId"))
+    userLine.map(s => s.split(":")(1).trim).getOrElse(reject(s"No user found for isVersionOf bag $versionOfId"))
   }
 
   private def failIfNotTrueWithMessage(bool: Boolean, msg: String): Unit = {
-    if (!bool) fail(msg)
+    if (!bool) reject(msg)
   }
 }

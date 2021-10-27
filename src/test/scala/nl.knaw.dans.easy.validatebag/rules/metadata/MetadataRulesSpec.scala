@@ -75,7 +75,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "ddm-correct-license-uri-with-trailing-slash")
   }
 
-  it should "fail if there is no rights holder" in {
+  it should "cause rejection if there is no rights holder" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-license-uri-but-no-rightsholder",
@@ -88,21 +88,21 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "ddm-CC-0-license-but-no-rightsholder")
   }
 
-  it should "fail if the license is not on the list" in {
+  it should "cause rejection if the license is not on the list" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-license-uri-not-on-list",
       includedInErrorMsg = "unknown or unsupported license")
   }
 
-  it should "fail if the license is not an HTTP or HTTPS URI" in {
+  it should "cause rejection if the license is not an HTTP or HTTPS URI" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-license-not-a-uri",
       includedInErrorMsg = "must be a valid URI")
   }
 
-  it should "fail if there are two license elements with xsi:type URI" in {
+  it should "cause rejection if there are two license elements with xsi:type URI" in {
     testRuleViolation(
       rule = ddmMayContainDctermsLicenseFromList(licenses),
       inputBag = "ddm-two-license-uris",
@@ -193,7 +193,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     validateRules(bag, SIP, rules) shouldBe Success(())
   }
 
-  it should "fail if there is no URN:NBN-identifier" in {
+  it should "cause rejection if there is no URN:NBN-identifier" in {
     val msg = "URN:NBN identifier is missing"
     val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
     val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
@@ -262,7 +262,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "ddm-poslist-correct")
   }
 
-  "polygonsInSameMultiSurfaceHaveSameSrsName" should "fail if polygons in the same multi-surface have different srsNames" in {
+  "polygonsInSameMultiSurfaceHaveSameSrsName" should "cause rejection if polygons in the same multi-surface have different srsNames" in {
     testRuleViolation(
       rule = polygonsInSameMultiSurfaceHaveSameSrsName,
       inputBag = "ddm-different-srs-names",
@@ -318,7 +318,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     validateRules(bag, SIP, rules) shouldBe expected
   }
 
-  "archisIdentifiersHaveAtMost10Characters" should "fail if archis identifiers have values that are too long" in {
+  "archisIdentifiersHaveAtMost10Characters" should "cause rejection if archis identifiers have values that are too long" in {
     testRuleViolation(
       rule = archisIdentifiersHaveAtMost10Characters,
       inputBag = "ddm-invalid-archis-identifiers",
@@ -342,7 +342,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "fail if a file element is described twice" in {
+  "filesXmlConformsToSchemaIfDeclaredInDefaultNamespace" should "cause rejection if a file element is described twice" in {
     assume(isAvailable(triedFileSchema))
     testRuleViolation(
       rule = filesXmlConformsToSchemaIfFilesNamespaceDeclared(filesXmlValidator),
@@ -350,21 +350,21 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       includedInErrorMsg = "Duplicate unique value")
   }
 
-  "filesXmlHasDocumentElementFiles" should "fail if files.xml has document element other than 'files'" in {
+  "filesXmlHasDocumentElementFiles" should "cause rejection if files.xml has document element other than 'files'" in {
     testRuleViolation(
       rule = filesXmlHasDocumentElementFiles,
       inputBag = "filesxml-no-files-as-document-element",
       includedInErrorMsg = "document element must be 'files'")
   }
 
-  "filesXmlHasOnlyFiles" should "fail if files.xml/files has non-file child and files.xsd namespace has been declared" in {
+  "filesXmlHasOnlyFiles" should "cause rejection if files.xml/files has non-file child and files.xsd namespace has been declared" in {
     testRuleViolation(
       rule = filesXmlHasOnlyFiles,
       inputBag = "filesxml-non-file-element",
       includedInErrorMsg = "non-file elements")
   }
 
-  "filesXmlFileElementsAllHaveFilepathAttribute" should "fail if a file element has no filepath attribute" in {
+  "filesXmlFileElementsAllHaveFilepathAttribute" should "cause rejection if a file element has no filepath attribute" in {
     testRuleViolation(
       rule = filesXmlFileElementsAllHaveFilepathAttribute,
       inputBag = "filesxml-file-element-without-filepath",
@@ -378,7 +378,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  "filesXmlFileElementsInOriginalFilePaths" should "fail if a file element has no filepath attribute" in {
+  "filesXmlFileElementsInOriginalFilePaths" should "cause rejection if a file element has no filepath attribute" in {
     testRuleViolation(
       rule = filesXmlFileElementsInOriginalFilePaths,
       inputBag = "original-filepaths-non-valid-bag",
@@ -386,7 +386,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  "filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles" should "fail if a file is described twice" in {
+  "filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles" should "cause rejection if a file is described twice" in {
     testRuleViolation(
       rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "filesxml-file-described-twice",
@@ -394,7 +394,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  it should "fail if a file is not described" in {
+  it should "cause rejection if a file is not described" in {
     testRuleViolation(
       rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "filesxml-file-described-twice",
@@ -414,7 +414,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "metadata-pre-staged-csv")
   }
 
-  it should "fail when payload files combined with file paths in pre-staged.csv doesn't match with fileXML" in {
+  it should "cause rejection when payload files combined with file paths in pre-staged.csv doesn't match with fileXML" in {
     testRuleViolation(
       rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "metadata-pre-staged-csv-one-missing",
@@ -422,7 +422,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  it should "fail and report about differing file paths in the payload, in pre-staged.csv and in the filesXml" in {
+  it should "cause rejection and report about differing file paths in the payload, in pre-staged.csv and in the filesXml" in {
     testRuleViolation(
       rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "metadata-pre-staged-csv-all-three-differ",
@@ -430,7 +430,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  "filesXmlAllFilesHaveFormat" should "fail if there is a file element without a dct:format child" in {
+  "filesXmlAllFilesHaveFormat" should "cause rejection if there is a file element without a dct:format child" in {
     testRuleViolation(
       rule = filesXmlAllFilesHaveFormat,
       inputBag = "filesxml-no-dct-format",
@@ -438,7 +438,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     )
   }
 
-  "filesXmlFilesHaveOnlyDcTerms" should "fail if there is a file element with a non dct child and files.xsd namespace has been declared" in {
+  "filesXmlFilesHaveOnlyDcTerms" should "cause rejection if there is a file element with a non dct child and files.xsd namespace has been declared" in {
     testRuleViolation(
       rule = filesXmlFilesHaveOnlyAllowedNamespaces,
       inputBag = "filesxml-non-dct-child",
@@ -468,7 +468,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "filesxml-invalid-default-namespace-child")
   }
 
-  "filesXmlFilesHaveOnlyAllowedAccessRights" should "fail if there are access rights values other than those defined in allowedAccessRights" in {
+  "filesXmlFilesHaveOnlyAllowedAccessRights" should "cause rejection if there are access rights values other than those defined in allowedAccessRights" in {
     testRuleViolation(
       rule = filesXmlFilesHaveOnlyAllowedAccessRights,
       inputBag = "filesxml-invalid-access-rights",
@@ -509,7 +509,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
   }
 
   // Reusing some test data. This rules is actually not used for files.xml.
-  "xmlFileIfExistsConformsToSchema" should "fail if file exists but does not conform" in {
+  "xmlFileIfExistsConformsToSchema" should "cause rejection if file exists but does not conform" in {
     assume(isAvailable(triedFileSchema))
     testRuleViolation(
       rule = xmlFileIfExistsConformsToSchema(Paths.get("metadata/files.xml"), "files.xml schema", filesXmlValidator),
@@ -530,14 +530,14 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       inputBag = "generic-minimal")
   }
 
-  it should "fail if file contains non-UTF-8 bytes" in {
+  it should "cause rejection if file contains non-UTF-8 bytes" in {
     testRuleViolation(
       rule = optionalFileIsUtf8Decodable(Paths.get("data/ceci-n-est-pas-d-utf8.jpg")),
       inputBag = "generic-minimal-with-binary-data",
       includedInErrorMsg = "Input not valid UTF-8")
   }
 
-  it should "fail if an absolute path is inserted" in {
+  it should "cause rejection if an absolute path is inserted" in {
     optionalFileIsUtf8Decodable(Paths.get("/an/absolute/path.jpeg"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == "assumption failed: Path to UTF-8 text file must be relative." =>
     }

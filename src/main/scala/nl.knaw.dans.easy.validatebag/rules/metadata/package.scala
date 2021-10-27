@@ -66,7 +66,7 @@ package object metadata extends DebugEnhancedLogging {
     trace(xmlFile)
     assume(!xmlFile.isAbsolute, "Path to xmlFile must be relative.")
     (t.bagDir / xmlFile.toString).inputStream.map(validator.validate).map {
-      _.recoverWith { case t: Throwable => Try(fail(s"$xmlFile does not conform to $schemaName: ${t.getMessage}")) }
+      _.recoverWith { case t: Throwable => Try(reject(s"$xmlFile does not conform to $schemaName: ${t.getMessage}")) }
     }
   }.get()
 
@@ -97,15 +97,15 @@ package object metadata extends DebugEnhancedLogging {
         licenses match {
           case license :: Nil if hasXsiType(dctermsNamespace, "URI")(license) =>
             (for {
-              licenseUri <- getUri(license.text).recover { case _: URISyntaxException => fail("License must be a valid URI") }
-              _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") fail("License URI must have scheme http or https")
+              licenseUri <- getUri(license.text).recover { case _: URISyntaxException => reject("License must be a valid URI") }
+              _ = if (licenseUri.getScheme != "http" && licenseUri.getScheme != "https") reject("License URI must have scheme http or https")
               normalizedLicenseUri <- normalizeLicenseUri(licenseUri)
-              _ = if (!allowedLicenses.contains(normalizedLicenseUri)) fail(s"Found unknown or unsupported license: $licenseUri")
-              _ = if (rightsHolders.isEmpty && !normalizedLicenseUri.toString.equals("http://creativecommons.org/publicdomain/zero/1.0")) fail(s"Valid license found, but no rightsHolder specified")
+              _ = if (!allowedLicenses.contains(normalizedLicenseUri)) reject(s"Found unknown or unsupported license: $licenseUri")
+              _ = if (rightsHolders.isEmpty && !normalizedLicenseUri.toString.equals("http://creativecommons.org/publicdomain/zero/1.0")) reject(s"Valid license found, but no rightsHolder specified")
             } yield ()).get
           case Nil | _ :: Nil =>
             debug("No licences with xsi:type=\"dcterms:URI\"")
-          case _ => fail(s"Found ${licenses.size} dcterms:license elements. Only one license is allowed.")
+          case _ => reject(s"Found ${licenses.size} dcterms:license elements. Only one license is allowed.")
         }
     }
   }
@@ -120,7 +120,7 @@ package object metadata extends DebugEnhancedLogging {
       ddm <- t.tryDdm
       urns <- getIdentifiers(ddm, "URN")
       nbns = urns.filter(_.contains("urn:nbn"))
-      _ = if (nbns.isEmpty) fail("URN:NBN identifier is missing")
+      _ = if (nbns.isEmpty) reject("URN:NBN identifier is missing")
     } yield ()
   }
 
@@ -142,7 +142,7 @@ package object metadata extends DebugEnhancedLogging {
   private def doisAreSyntacticallyValid(dois: Seq[String]): Try[Unit] = Try {
     logger.debug(s"DOIs to check: ${dois.mkString(", ")}")
     val invalidDois = dois.filterNot(syntacticallyValidDoi)
-    if (invalidDois.nonEmpty) fail(s"Invalid DOIs: ${invalidDois.mkString(", ")}")
+    if (invalidDois.nonEmpty) reject(s"Invalid DOIs: ${invalidDois.mkString(", ")}")
   }
 
   private def syntacticallyValidDoi(doi: String): Boolean = {
@@ -196,7 +196,7 @@ package object metadata extends DebugEnhancedLogging {
       ddm <- t.tryDdm
       inRole = (ddm \\ "role").text.toLowerCase.contains("rightsholder")
       _ = if (!inRole && (ddm \ "dcmiMetadata" \ "rightsHolder").isEmpty)
-        fail(s"No rightsHolder")
+        reject(s"No rightsHolder")
     } yield ()
   }
 
@@ -212,7 +212,7 @@ package object metadata extends DebugEnhancedLogging {
     val dais = (ddm \\ "DAI").filter(_.namespace == dcxDaiNamespace)
     logger.debug(s"DAIs to check: ${dais.mkString(", ")}")
     val invalidDais = dais.map(_.text.stripPrefix(daiPrefix)).filterNot(s => digest(s.slice(0, s.length - 1), 9) == s.last)
-    if (invalidDais.nonEmpty) fail(s"Invalid DAIs: ${invalidDais.mkString(", ")}")
+    if (invalidDais.nonEmpty) reject(s"Invalid DAIs: ${invalidDais.mkString(", ")}")
   }
 
   // Calculated the check digit of a DAI. Implementation copied from easy-ddm.
@@ -251,7 +251,7 @@ package object metadata extends DebugEnhancedLogging {
       ddm <- t.tryDdm
       posLists <- getPolygonPosLists(ddm)
       _ <- posLists.map(validatePosList).collectResults.recoverWith {
-        case ce: CompositeException => Try(fail(ce.getMessage))
+        case ce: CompositeException => Try(reject(ce.getMessage))
       }
     } yield ()
   }
@@ -275,9 +275,9 @@ package object metadata extends DebugEnhancedLogging {
 
     val values = node.text.split("""\s+""").toList
     val numberOfValues = values.size
-    if (numberOfValues % 2 != 0) fail(s"Found posList with odd number of values: $numberOfValues. ${offendingPosListMsg(values)}")
-    if (numberOfValues < 8) fail(s"Found posList with too few values (fewer than 4 pairs). ${offendingPosListMsg(values)}")
-    if (values.take(2) != values.takeRight(2)) fail(s"Found posList with unequal first and last pairs. ${offendingPosListMsg(values)}")
+    if (numberOfValues % 2 != 0) reject(s"Found posList with odd number of values: $numberOfValues. ${offendingPosListMsg(values)}")
+    if (numberOfValues < 8) reject(s"Found posList with too few values (fewer than 4 pairs). ${offendingPosListMsg(values)}")
+    if (values.take(2) != values.takeRight(2)) reject(s"Found posList with unequal first and last pairs. ${offendingPosListMsg(values)}")
   }
 
   def polygonsInSameMultiSurfaceHaveSameSrsName(t: TargetBag): Try[Unit] = {
@@ -289,7 +289,7 @@ package object metadata extends DebugEnhancedLogging {
     } yield ()
 
     result.recoverWith {
-      case ce: CompositeException => Try(fail(ce.getMessage))
+      case ce: CompositeException => Try(reject(ce.getMessage))
     }
   }
 
@@ -300,7 +300,7 @@ package object metadata extends DebugEnhancedLogging {
   private def validateMultiSurface(ms: Node): Try[Unit] = {
     val polygons = getPolygons(ms)
     if (polygons.isEmpty || polygons.flatMap(_.attribute("srsName").map(_.text)).distinct.size <= 1) Success(())
-    else Try(fail("Found MultiSurface element containing polygons with different srsNames"))
+    else Try(reject("Found MultiSurface element containing polygons with different srsNames"))
   }
 
   def pointsHaveAtLeastTwoValues(t: TargetBag): Try[Unit] = {
@@ -315,7 +315,7 @@ package object metadata extends DebugEnhancedLogging {
     } yield ()
 
     result.recoverWith {
-      case ce: CompositeException => Try(fail(ce.getMessage))
+      case ce: CompositeException => Try(reject(ce.getMessage))
     }
   }
 
@@ -328,10 +328,10 @@ package object metadata extends DebugEnhancedLogging {
     val coordinates = Try {
       value.split("""\s+""").map(_.trim.toFloat)
     }
-      .getOrRecover(_ => fail(s"Point has non numeric coordinates: $value"))
-    if (coordinates.length < 2) fail(s"Point has less than two coordinates: $value")
+      .getOrRecover(_ => reject(s"Point has non numeric coordinates: $value"))
+    if (coordinates.length < 2) reject(s"Point has less than two coordinates: $value")
     else if (isRD && !isValidaRdRange(coordinates))
-      fail(s"Point is outside RD bounds: $value")
+      reject(s"Point is outside RD bounds: $value")
   }
 
   def isRdPoint(spatial: Node): Boolean = {
@@ -351,7 +351,7 @@ package object metadata extends DebugEnhancedLogging {
       ddm <- t.tryDdm
       identifiers = getArchisIdentifiers(ddm)
       validationErrors = identifiers.map(validateArchisIdentifier).collect { case Failure(e) => e.getMessage }
-      _ = if (validationErrors.nonEmpty) fail(formatInvalidArchisIdentifiers(validationErrors).mkString("\n"))
+      _ = if (validationErrors.nonEmpty) reject(formatInvalidArchisIdentifiers(validationErrors).mkString("\n"))
     } yield ()
   }
 
@@ -366,7 +366,7 @@ package object metadata extends DebugEnhancedLogging {
 
   private def validateArchisIdentifier(identifier: String): Try[Unit] = {
     if (identifier.length <= 10) Success(())
-    else Try(fail(s"Archis identifier must be 10 or fewer characters long: $identifier"))
+    else Try(reject(s"Archis identifier must be 10 or fewer characters long: $identifier"))
   }
 
   private def formatInvalidArchisIdentifiers(results: Seq[String]): Seq[String] = {
@@ -385,7 +385,7 @@ package object metadata extends DebugEnhancedLogging {
     } yield ()
 
     result.recoverWith {
-      case ce: CompositeException => Try(fail(ce.getMessage))
+      case ce: CompositeException => Try(reject(ce.getMessage))
     }
   }
 
@@ -460,28 +460,28 @@ package object metadata extends DebugEnhancedLogging {
   private def validateUrlType(url: String, name: Option[String] = None): Try[Unit] = {
     val msg = name.fold("")(name => s" (value of attribute '$name')")
     for {
-      uri <- getUri(url).recover { case _: URISyntaxException => fail(s"$url is not a valid URI") }
+      uri <- getUri(url).recover { case _: URISyntaxException => reject(s"$url is not a valid URI") }
       scheme = uri.getScheme
       _ = if (!(urlProtocols contains scheme))
-        fail(s"protocol '$scheme' in URI '$url' is not one of the accepted protocols [${urlProtocols.mkString(",")}]$msg")
+        reject(s"protocol '$scheme' in URI '$url' is not one of the accepted protocols [${urlProtocols.mkString(",")}]$msg")
       else ()
     } yield ()
   }
 
   private def validateDoiType(doi: String): Try[Unit] = Try {
     if (syntacticallyValidDoiUrl(doi)) ()
-    else fail(s"DOI '$doi' is not valid")
+    else reject(s"DOI '$doi' is not valid")
   }
 
   private def validateUrnType(urn: String): Try[Unit] = Try {
     if (syntacticallyValidUrn(urn)) ()
-    else fail(s"URN '$urn' is not valid")
+    else reject(s"URN '$urn' is not valid")
   }
 
   def filesXmlHasDocumentElementFiles(t: TargetBag): Try[Unit] = {
     trace(())
     t.tryFilesXml.map(
-      xml => if (xml.label != "files") fail("files.xml: document element must be 'files'"))
+      xml => if (xml.label != "files") reject("files.xml: document element must be 'files'"))
   }
 
   def filesXmlHasOnlyFiles(t: TargetBag): Try[Unit] = {
@@ -493,7 +493,7 @@ package object metadata extends DebugEnhancedLogging {
         }
         else {
           val nonFiles = (files \ "_").filterNot(_.label == "file")
-          if (nonFiles.nonEmpty) fail(s"files.xml: children of document element must only be 'file'. Found non-file elements: ${nonFiles.mkString(", ")}")
+          if (nonFiles.nonEmpty) reject(s"files.xml: children of document element must only be 'file'. Found non-file elements: ${nonFiles.mkString(", ")}")
         }
     }
   }
@@ -503,7 +503,7 @@ package object metadata extends DebugEnhancedLogging {
     t.tryFilesXml.map {
       xml =>
         val elemsWithoutFilePath = (xml \ "file").filter(_.attribute("filepath").isEmpty)
-        if (elemsWithoutFilePath.nonEmpty) fail(s"${elemsWithoutFilePath.size} 'file' element(s) don't have a 'filepath' attribute")
+        if (elemsWithoutFilePath.nonEmpty) reject(s"${elemsWithoutFilePath.size} 'file' element(s) don't have a 'filepath' attribute")
     }
   }
 
@@ -524,7 +524,7 @@ package object metadata extends DebugEnhancedLogging {
             .toSet
             .diff(originalFilePaths)
           if (notInOriginalPaths.nonEmpty)
-            fail(s"${notInOriginalPaths.size} 'filepath' attributes are not found in 'original-filepaths.txt' ${notInOriginalPaths.mkString(", ")}. ")
+            reject(s"${notInOriginalPaths.size} 'filepath' attributes are not found in 'original-filepaths.txt' ${notInOriginalPaths.mkString(", ")}. ")
         }
     }
   }
@@ -563,7 +563,7 @@ package object metadata extends DebugEnhancedLogging {
             s"$onlyInBag $onlyInPreStaged $onlyInFilesXml"
 
           val msg = msg1 + msg2
-          fail(s"files.xml: errors in filepath-attributes:\n$msg")
+          reject(s"files.xml: errors in filepath-attributes:\n$msg")
         }
       }
   }
@@ -574,7 +574,7 @@ package object metadata extends DebugEnhancedLogging {
       val files = xml \ "file"
       val allFilesHaveFormat = files.forall(_.child.exists(n =>
         xml.getNamespace(n.prefix) == "http://purl.org/dc/terms/" && n.label == "format"))
-      if (!allFilesHaveFormat) fail("files.xml: not all <file> elements contain a <dcterms:format>")
+      if (!allFilesHaveFormat) reject("files.xml: not all <file> elements contain a <dcterms:format>")
     }
   }
 
@@ -590,7 +590,7 @@ package object metadata extends DebugEnhancedLogging {
           case n: Elem => allowedFilesXmlNamespaces contains xml.getNamespace(n.prefix)
           case _ => true // Don't check non-element nodes
         }
-        if (!hasOnlyAllowedNamespaces) fail("files.xml: non-dc/dcterms elements found in some file elements")
+        if (!hasOnlyAllowedNamespaces) reject("files.xml: non-dc/dcterms elements found in some file elements")
       }
     }
   }
@@ -605,7 +605,7 @@ package object metadata extends DebugEnhancedLogging {
 
   private def validateFileAccessRights(files: NodeSeq): Try[Unit] = {
     files.map(validateAccessRights).collectResults.map(_ => ()).recoverWith {
-      case ce: CompositeException => Try(fail(ce.getMessage))
+      case ce: CompositeException => Try(reject(ce.getMessage))
     }
   }
 
@@ -614,7 +614,7 @@ package object metadata extends DebugEnhancedLogging {
     accessRights.map(rights =>
       if (!allowedAccessRights.contains(rights.text))
         Try {
-          fail(s"files.xml: invalid access rights '${rights.text}' in accessRights element for file: '${file \@ "filepath"}' (allowed values ${allowedAccessRights.mkString(", ")})")
+          reject(s"files.xml: invalid access rights '${rights.text}' in accessRights element for file: '${file \@ "filepath"}' (allowed values ${allowedAccessRights.mkString(", ")})")
         }
       else Success(())
     )
@@ -626,7 +626,7 @@ package object metadata extends DebugEnhancedLogging {
     for {
       _ <- Try(assume(!f.isAbsolute, "Path to UTF-8 text file must be relative."))
       file = t.bagDir / f.toString
-      _ <- if (file.exists) isValidUtf8(file.byteArray).recoverWith { case e: CharacterCodingException => fail(s"Input not valid UTF-8: ${e.getMessage}") }
+      _ <- if (file.exists) isValidUtf8(file.byteArray).recoverWith { case e: CharacterCodingException => reject(s"Input not valid UTF-8: ${e.getMessage}") }
       else Success(())
     } yield ()
   }

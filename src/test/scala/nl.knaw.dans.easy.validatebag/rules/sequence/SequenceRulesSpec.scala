@@ -69,14 +69,14 @@ class SequenceRulesSpec extends TestSupportFixture with MockFactory {
     (bagStoreMock.bagExists(_: UUID)) expects * anyNumberOfTimes() returning Failure(new IOException())
   }
 
-  "bagInfoIsVersionOfIfExistsPointsToArchivedBag" should "fail if UUID not found in bag-store" in {
+  "bagInfoIsVersionOfIfExistsPointsToArchivedBag" should "cause rejection if UUID not found in bag-store" in {
     expectUuidDoesNotExist()
     testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "not found in bag stores", doubleCheckBagItValidity = false)
   }
 
   it should "fail if bag store was not on-line" in {
     expectBagStoreIoException()
-    testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "because of an I/O error", doubleCheckBagItValidity = false)
+    testRuleFailure(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "because of an I/O error", doubleCheckBagItValidity = false)
   }
 
   it should "succeed if bag was found" in {
@@ -89,22 +89,22 @@ class SequenceRulesSpec extends TestSupportFixture with MockFactory {
     testRuleSuccess(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-without-is-version-of", doubleCheckBagItValidity = false)
   }
 
-  it should "fail if a Is-Version-Of field is present without urn" in {
+  it should "cause rejection if a Is-Version-Of field is present without urn" in {
     expectUuidDoesNotExist()
     testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-without-urn", includedInErrorMsg = "Is-Version-Of value must be a URN", doubleCheckBagItValidity = false)
   }
 
-  it should "fail if the scheme part does not start with uuid" in {
+  it should "cause rejection if the scheme part does not start with uuid" in {
     expectUuidDoesNotExist()
     testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-invalid-scheme", includedInErrorMsg = "Is-Version-Of URN must be of subtype UUID", doubleCheckBagItValidity = false)
   }
 
-  it should "fail if the UUID is NOT in canonical textual representation" in {
+  it should "cause rejection if the UUID is NOT in canonical textual representation" in {
     expectUuidDoesNotExist()
     testRuleViolation(rule = bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of-invalid-uuid", includedInErrorMsg = "String '75fc6989/hierook-4c7a-b49d-superinvalidenzo' is not a UUID", doubleCheckBagItValidity = false)
   }
 
-  "storeSameAsInArchivedBag" should "fail if UUID not found in this bag-store" in {
+  "storeSameAsInArchivedBag" should "cause rejection if UUID not found in this bag-store" in {
     expectUuidDoesNotExistInThisStore()
     testRuleViolation(rule = storeSameAsInArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "not found in bag store https://host:99999/stores/wrongstore", doubleCheckBagItValidity = false)
   }
@@ -114,7 +114,7 @@ class SequenceRulesSpec extends TestSupportFixture with MockFactory {
     testRuleSuccess(rule = storeSameAsInArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", doubleCheckBagItValidity = false)
   }
 
-  "userSameAsInArchivedBag" should "fail if the user is different in Is-Version-Of bag" in {
+  "userSameAsInArchivedBag" should "cause rejection if the user is different in Is-Version-Of bag" in {
     expectDifferentUser()
     testRuleViolation(rule = userSameAsInArchivedBag(bagStoreMock), inputBag = "baginfo-with-is-version-of", includedInErrorMsg = "User user001 is different from the user user002", doubleCheckBagItValidity = false)
   }

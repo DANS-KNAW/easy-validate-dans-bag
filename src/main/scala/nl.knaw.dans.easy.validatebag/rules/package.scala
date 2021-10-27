@@ -17,7 +17,7 @@ package nl.knaw.dans.easy.validatebag
 
 import java.nio.file.Path
 
-import nl.knaw.dans.easy.validatebag.validation.fail
+import nl.knaw.dans.easy.validatebag.validation.reject
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.util.Try
@@ -40,10 +40,10 @@ package object rules extends DebugEnhancedLogging {
     assume(!f.isAbsolute, s"File $f must be a relative path")
     val fileToCheck = t.bagDir / f.toString
     if (!fileToCheck.isRegularFile)
-      fail(s"Mandatory file '$f' not found in bag.")
+      reject(s"Mandatory file '$f' not found in bag.")
     val relativeRealPath = t.bagDir.path.relativize(fileToCheck.path.toRealPath())
     val relativeRequiredPath = t.bagDir.path.relativize(fileToCheck.path)
     if (relativeRealPath != relativeRequiredPath)
-      fail(s"Path name differs in case; found: $relativeRealPath, required: $relativeRequiredPath")
+      reject(s"Path name differs in case; found: $relativeRealPath, required: $relativeRequiredPath")
   }
 }

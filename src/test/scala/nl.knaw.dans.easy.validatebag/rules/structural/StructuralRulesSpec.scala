@@ -23,11 +23,11 @@ import scala.util.Failure
 
 class StructuralRulesSpec extends TestSupportFixture {
 
-  "containsDir" should "fail metadata directory not found" in {
+  "containsDir" should "cause rejection metadata directory not found" in {
     testRuleViolation(containsDir(Paths.get("metadata")), "generic-minimal", "not found in bag")
   }
 
-  it should "fail if target is a file instead of a directory" in {
+  it should "cause rejection if target is a file instead of a directory" in {
     testRuleViolation(containsDir(Paths.get("bagit.txt")), "generic-minimal", "not found in bag")
   }
 
@@ -35,14 +35,14 @@ class StructuralRulesSpec extends TestSupportFixture {
     testRuleSuccess(containsDir(Paths.get("metadata")), "metadata-correct")
   }
 
-  it should "fail if given an absolute path" in {
+  it should "cause rejection if given an absolute path" in {
     val absolutePath = "/an/absolute/path.jpeg"
     containsDir(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: Directory $absolutePath must be a relative path" =>
     }
   }
 
-  "containsNothingElseThan" should "fail if other file is present" in {
+  "containsNothingElseThan" should "cause rejection if other file is present" in {
     testRuleViolation(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
       inputBag = "metadata-extra-file",
@@ -50,14 +50,14 @@ class StructuralRulesSpec extends TestSupportFixture {
     )
   }
 
-  it should "fail if given an absolute path" in {
+  it should "cause rejection if given an absolute path" in {
     val absolutePath = "/an/absolute/path.jpeg"
     containsNothingElseThan(Paths.get(absolutePath), Seq("dataset.xml", "files.xml"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: Directory $absolutePath must be a relative path" =>
     }
   }
 
-  it should "fail if other directory is present" in {
+  it should "cause rejection if other directory is present" in {
     testRuleViolation(
       rule = containsNothingElseThan(Paths.get("metadata"), Seq("dataset.xml", "files.xml")),
       inputBag = "metadata-extra-subdir",
@@ -126,7 +126,7 @@ class StructuralRulesSpec extends TestSupportFixture {
     )
   }
 
-  it should "fail if a payload file has invalid characters" in {
+  it should "cause rejection if a payload file has invalid characters" in {
     testRuleViolationRegex(
       hasOnlyValidFileNames,
       inputBag = "bagit-payload-files-with-invalid-chars",
@@ -141,7 +141,7 @@ class StructuralRulesSpec extends TestSupportFixture {
     )
   }
 
-  it should "fail with a non-valid original-filepaths.txt" in {
+  it should "cause rejection with a non-valid original-filepaths.txt" in {
     testRuleViolation(
       isOriginalFilepathsFileComplete,
       inputBag = "original-filepaths-non-valid-bag",

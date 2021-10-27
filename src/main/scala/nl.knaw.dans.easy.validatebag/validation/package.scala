@@ -46,15 +46,13 @@ package object validation extends DebugEnhancedLogging {
    */
   case class RuleViolationDetailsException(details: String) extends Exception(details)
 
-  private case class RuleNotApplicableException() extends Exception("rule not applicable, testing for something else")
-
   /**
    * Signals a rule violation. This function should be called from the rule functions to indicate that
    * the rule was not met.
    *
    * @param details the details about the rule violation
    */
-  def  fail[T](details: String): T = throw RuleViolationDetailsException(details)
+  def  reject[T](details: String): T = throw RuleViolationDetailsException(details)
 
   /**
    * Validates if the bag pointed to is compliant with the DANS BagIt Profile version it claims to

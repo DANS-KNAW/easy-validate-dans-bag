@@ -64,6 +64,17 @@ trait TestSupportFixture extends AnyFlatSpec with Matchers with Inside with Befo
     }
   }
 
+  protected def testRuleFailure(rule: Rule, inputBag: String, includedInErrorMsg: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
+    val result = rule(new TargetBag(bagsDir / inputBag, profileVersion))
+    if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
+    result shouldBe a[Failure[_]]
+    inside(result) {
+      case Failure(e: RuleViolationDetailsException) =>
+        fail(s"Not the expected type of exception: $e")
+      case Failure(e) => e.getMessage should include(includedInErrorMsg)
+    }
+  }
+
   protected def testRuleSuccess(rule: Rule, inputBag: String, profileVersion: ProfileVersion = 0, doubleCheckBagItValidity: Boolean = true): Unit = {
     if (doubleCheckBagItValidity) shouldBeValidAccordingToBagIt(inputBag)
     rule(new TargetBag(bagsDir / inputBag, profileVersion)) shouldBe a[Success[_]]
