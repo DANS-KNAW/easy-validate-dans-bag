@@ -115,6 +115,10 @@ object ProfileVersion0 {
     NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/depositor-info/message-from-depositor.txt"))),
 
 
+    NumberedRule("3.6", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "Administrative metadata schema", xmlValidators("amd.xml"))),
+    NumberedRule("3.7", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY metadata schema", xmlValidators("emd.xml"))),
+
+
     // BAG-SEQUENCE
     NumberedRule("4.2", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
     NumberedRule("4.3", storeSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2")),
