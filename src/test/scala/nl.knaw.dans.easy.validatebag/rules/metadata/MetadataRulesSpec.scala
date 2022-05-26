@@ -179,14 +179,14 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     // the next test succeeds with
     // https://github.com/DANS-KNAW/easy-validate-dans-bag/blob/d67357fe306843adbc4b66e960d36f4364ae9228/src/test/scala/nl.knaw.dans.easy.validatebag/EasyValidateDansBagServletSpec.scala#L42
     // that test injects the reported license in the configuration
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2", expectedMsg)
+    validateRules(new TargetBag(bagsDir / "valid-bag", "0.0.0"), SIP, allRules) shouldBe aRuleViolation("3.1.2", expectedMsg)
 
     // excluded rules that would cause more errors than the not configured license
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2", expectedMsg)
+    validateRules(new TargetBag(bagsDir / "valid-bag", "0.0.0"), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2", expectedMsg)
   }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
-    val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)
+    val bag = new TargetBag(bagsDir / "ddm-correct-doi", "0.0.0")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
     validateRules(bag, AIP, rules) shouldBe Success(())
@@ -195,7 +195,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
 
   it should "cause rejection if there is no URN:NBN-identifier" in {
     val msg = "URN:NBN identifier is missing"
-    val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", 0)
+    val bag = new TargetBag(bagsDir / "ddm-missing-urn-nbn", "0.0.0")
     val rules = onlyRules("3.1.3(a)", "3.1.1", "2.2(a)", "2.1")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Failure(RuleViolationDetailsException(msg))
     validateRules(bag, SIP, rules) shouldBe Success(())
@@ -204,7 +204,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
 
   "ddmDoiIdentifiersAreValid" should "report invalid DOI-identifiers" in {
     val msg = "Invalid DOIs: 11.1234/fantasy-doi-id, 10/1234/fantasy-doi-id, 10.1234.fantasy-doi-id, http://doi.org/10.1234.567/issn-987-654, https://doi.org/10.1234.567/issn-987-654"
-    val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", 0)
+    val bag = new TargetBag(bagsDir / "ddm-incorrect-doi", "0.0.0")
     val rules = onlyRules("3.1.3(a)", "3.1.3(b)", "3.1.1", "2.2(a)", "2.1")
     ddmContainsUrnNbnIdentifier(bag) shouldBe Success(())
     ddmDoiIdentifiersAreValid(bag) shouldBe Failure(RuleViolationDetailsException(msg))
@@ -294,7 +294,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       "Point has less than two coordinates: 300000",
     )
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
-    val bag = new TargetBag(bagsDir / "ddm-invalid-point-values", 0)
+    val bag = new TargetBag(bagsDir / "ddm-invalid-point-values", "0.0.0")
     validateRules(bag, AIP, rules) shouldBe expected
     validateRules(bag, SIP, rules) shouldBe expected
   }
@@ -313,7 +313,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       )))
 
     val rules = onlyRules("3.1.7", "2.1", "2.2(a)", "3.1.1")
-    val bag = new TargetBag(bagsDir / "ddm-invalid-point-syntax", 0)
+    val bag = new TargetBag(bagsDir / "ddm-invalid-point-syntax", "0.0.0")
     validateRules(bag, AIP, rules) shouldBe expected
     validateRules(bag, SIP, rules) shouldBe expected
   }
@@ -538,7 +538,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
   }
 
   it should "cause rejection if an absolute path is inserted" in {
-    optionalFileIsUtf8Decodable(Paths.get("/an/absolute/path.jpeg"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+    optionalFileIsUtf8Decodable(Paths.get("/an/absolute/path.jpeg"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", "0.0.0")) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == "assumption failed: Path to UTF-8 text file must be relative." =>
     }
   }

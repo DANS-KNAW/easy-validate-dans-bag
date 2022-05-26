@@ -41,7 +41,7 @@ class RulesSpec extends TestSupportFixture {
 
   it should "cause rejection if an absolute path in passed" in {
     val absolutePath = "/an/absolute/path.jpeg"
-    containsFile(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+    containsFile(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", "0.0.0")) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: File $absolutePath must be a relative path" =>
     }
   }

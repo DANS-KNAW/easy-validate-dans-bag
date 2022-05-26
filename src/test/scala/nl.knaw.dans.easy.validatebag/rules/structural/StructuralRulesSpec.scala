@@ -37,7 +37,7 @@ class StructuralRulesSpec extends TestSupportFixture {
 
   it should "cause rejection if given an absolute path" in {
     val absolutePath = "/an/absolute/path.jpeg"
-    containsDir(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+    containsDir(Paths.get(absolutePath))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", "0.0.0")) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: Directory $absolutePath must be a relative path" =>
     }
   }
@@ -52,7 +52,7 @@ class StructuralRulesSpec extends TestSupportFixture {
 
   it should "cause rejection if given an absolute path" in {
     val absolutePath = "/an/absolute/path.jpeg"
-    containsNothingElseThan(Paths.get(absolutePath), Seq("dataset.xml", "files.xml"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", 0)) should matchPattern {
+    containsNothingElseThan(Paths.get(absolutePath), Seq("dataset.xml", "files.xml"))(new TargetBag(bagsDir / "generic-minimal-with-binary-data", "0.0.0")) should matchPattern {
       case Failure(ae: AssertionError) if ae.getMessage == s"assumption failed: Directory $absolutePath must be a relative path" =>
     }
   }

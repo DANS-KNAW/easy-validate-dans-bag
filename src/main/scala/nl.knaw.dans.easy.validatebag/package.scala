@@ -21,17 +21,12 @@ import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 import scala.util.{ Failure, Try }
 
 package object validatebag {
-  type ProfileVersion = Int
+  type ProfileVersion = String
   type RuleNumber = String
   type ErrorMessage = String
   type BagDir = File
   type Rule = TargetBag => Try[Unit]
   type RuleBase = Seq[NumberedRule]
-
-  val profileVersionDois = Map(
-    0 -> ProfileVersion0.versionUri,
-    1 -> ProfileVersion1.versionUri,
-  )
 
   object InfoPackageType extends Enumeration {
     type InfoPackageType = Value

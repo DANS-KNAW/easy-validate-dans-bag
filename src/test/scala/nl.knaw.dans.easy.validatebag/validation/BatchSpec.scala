@@ -41,7 +41,7 @@ class BatchSpec extends TestSupportFixture with SchemaFixture {
     File("src/test/resources/bags/baginfo-missing-bag-infotxt")
       .copyTo(sipDir / "invalid-bag" / UUID.randomUUID().toString)
 
-    Command.validateBatch(sipDir, SIP, None)(app) should matchPattern {
+    Command.validateBatch(sipDir, SIP, "0.0.0", None)(app) should matchPattern {
       case Success((false, msg)) if msg.toString.startsWith(
         s"violations:1, failures=2; moved to $sipDir-nonvalid-20"
       ) =>

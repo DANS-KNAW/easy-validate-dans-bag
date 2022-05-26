@@ -41,9 +41,10 @@ class EasyValidateDansBagServlet(app: EasyValidateDansBagApp) extends ScalatraSe
     val result = for {
       accept <- Try { request.getHeader("Accept") }
       infoPackageType <- params.get("infoPackageType").map(InfoPackageType.fromString).getOrElse { Success(InfoPackageType.SIP) }
+      profileVersion = params.get("profileVersion").getOrElse("0.0.0")
       bagStoreUrl <- params.get("bag-store").map(getBagStoreUrl).sequence[Try, URI]
       uri <- params.get("uri").map(getFileUrl).getOrElse(Failure(new IllegalArgumentException("Required query parameter 'uri' not found")))
-      message <- app.validate(uri, infoPackageType, bagStoreUrl)
+      message <- app.validate(uri, infoPackageType, profileVersion, bagStoreUrl)
       body <- Try {
         if (accept == "application/json") message.toJson
         else message.toPlainText

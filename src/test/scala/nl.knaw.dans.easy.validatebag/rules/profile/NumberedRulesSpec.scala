@@ -29,8 +29,8 @@ class NumberedRulesSpec extends TestSupportFixture with Inspectors {
 
   private val allRules: Map[ProfileVersion, RuleBase] = {
     Map(
-      0 -> ProfileVersion0(xmlValidators, null, null),
-      1 -> ProfileVersion1(xmlValidators))
+      "0.0.0" -> ProfileVersion0(xmlValidators, null, null),
+      "1.0.0" -> ProfileVersion1(xmlValidators, null))
   }
 
   "rulesCheck" should "succeed if all rules, that other rules depend on, exist" in {

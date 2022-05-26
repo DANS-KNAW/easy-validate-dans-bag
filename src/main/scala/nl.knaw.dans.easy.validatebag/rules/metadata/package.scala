@@ -194,7 +194,7 @@ package object metadata extends DebugEnhancedLogging {
     trace(())
     for {
       ddm <- t.tryDdm
-      inRole = (ddm \\ "role").text.toLowerCase.contains("rightsholder")
+      inRole = (ddm \\ "role").text.toLowerCase.contains("rightsholder") // FIXME: this will true if there is a <role>rightsholder</role> anywhere in the document
       _ = if (!inRole && (ddm \ "dcmiMetadata" \ "rightsHolder").isEmpty)
         reject(s"No rightsHolder")
     } yield ()

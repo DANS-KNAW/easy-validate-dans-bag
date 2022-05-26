@@ -43,8 +43,8 @@ object ProfileVersion0 {
     NumberedRule("1.2.3(b)", bagInfoElementIfExistsHasValue("BagIt-Profile-URI", versionUri), dependsOn = List("1.2.3(a)")),
     NumberedRule("1.2.4(a)", bagInfoContainsExactlyOneOf("Created"), dependsOn = List("1.2.1")),
     NumberedRule("1.2.4(b)", bagInfoCreatedElementIsIso8601Date, dependsOn = List("1.2.4(a)")),
-    NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")),
-    NumberedRule("1.2.6(a)", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = List("1.2.1")),
+    NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")), // TODO: check that value is urn:uuid ?
+    NumberedRule("1.2.6(a)", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = List("1.2.1")), // TODO: check "at most" for SIP ?
 
     // Manifests
     NumberedRule("1.3.1(a)", containsFile(Paths.get("manifest-sha1.txt")), AIP),
@@ -114,10 +114,9 @@ object ProfileVersion0 {
     // message-from-depositor.txt
     NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/depositor-info/message-from-depositor.txt"))),
 
-
     // BAG-SEQUENCE
-    NumberedRule("4.2", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
-    NumberedRule("4.3", storeSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2")),
-    NumberedRule("4.4", userSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2"))
+    NumberedRule("4.1", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
+    NumberedRule("4.2", storeSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2")),
+    NumberedRule("4.3", userSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2"))
   )
 }

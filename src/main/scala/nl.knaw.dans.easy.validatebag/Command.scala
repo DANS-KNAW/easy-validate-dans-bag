@@ -72,9 +72,15 @@ object Command extends App with DebugEnhancedLogging {
           val maybeBagStore = commandLine.bagStore.toOption
           val packageType = if (commandLine.aip()) AIP
                             else SIP
+          val profileVersion = commandLine.profileVersion() match {
+            case "0" => "0.0.0"
+            case "1" => "1.0.0"
+            case v => v
+          }
+
           if (commandLine.sipdir())
-            validateBatch(File(commandLine.bag()), packageType, maybeBagStore)(app)
-          else app.validate(commandLine.bag().toUri, packageType, maybeBagStore).map(formatMsg)
+            validateBatch(File(commandLine.bag()), packageType, profileVersion, maybeBagStore)(app)
+          else app.validate(commandLine.bag().toUri, packageType, profileVersion, maybeBagStore).map(formatMsg)
         }
       }
   }
@@ -99,10 +105,10 @@ object Command extends App with DebugEnhancedLogging {
     (true, "Service terminated normally.")
   }
 
-  def validateBatch(sipDir: BagDir, packageType: validatebag.InfoPackageType.Value, maybeBagStore: Option[URI])(implicit app: EasyValidateDansBagApp) = {
+  def validateBatch(sipDir: BagDir, packageType: validatebag.InfoPackageType.Value, profileVersion: ProfileVersion, maybeBagStore: Option[URI])(implicit app: EasyValidateDansBagApp) = {
     val sipToTriedMsg = sipDir.list.map { sip =>
       sip.list.filter(_.isDirectory).toList match {
-        case List(bagDir) => sip -> app.validate(bagDir.toJava.toURI, packageType, maybeBagStore)
+        case List(bagDir) => sip -> app.validate(bagDir.toJava.toURI, packageType, profileVersion, maybeBagStore)
         case dirs => sip -> Failure(new Exception(s"Expecting one bag directory in $sip, got: ${ dirs.size }"))
       }
     }.toMap.mapValues {
