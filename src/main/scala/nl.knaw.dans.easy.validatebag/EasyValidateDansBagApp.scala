@@ -62,20 +62,19 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   val allRules: Map[ProfileVersion, RuleBase] = {
     Map(
       0 -> ProfileVersion0(xmlValidators, configuration.allowedLicenses, bagStore),
-      1 -> ProfileVersion1(xmlValidators))
+      1 -> ProfileVersion1(xmlValidators, configuration.allowedLicenses))
   }
 
-  def validate(uri: URI, infoPackageType: InfoPackageType, bagStoreUrl: Option[URI]): Try[ResultMessage] = {
+  def validate(uri: URI, infoPackageType: InfoPackageType, profileVersion: ProfileVersion, bagStoreUrl: Option[URI]): Try[ResultMessage] = {
     bagStore.bagStoreUrl = bagStoreUrl // store name used in deep validation
     val bagName = resolveAndLogBagName(uri)
     for {
       bag <- getBagPath(uri)
-      version <- getProfileVersion(bag)
-      violations <- validation.checkRules(new TargetBag(bag, version), allRules(version), infoPackageType)(isReadable = _.isReadable)
+      violations <- validation.checkRules(new TargetBag(bag, profileVersion), allRules(profileVersion), infoPackageType)(isReadable = _.isReadable)
         .map(_ => Seq.empty)
         .recoverWith(extractViolations)
       _ = logResult(bagName, violations)
-    } yield ResultMessage(uri, bag.getFileName.toString, version, infoPackageType, violations)
+    } yield ResultMessage(uri, bag.getFileName.toString, profileVersion, infoPackageType, violations)
   }
 
   private def resolveAndLogBagName(uri: URI): String = {
@@ -88,10 +87,6 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   private def logResult(bagName: String, violations: Seq[(String, String)]): Unit = {
     if (violations.isEmpty) logger.info(s"[$bagName] did not violate any rules and is validated successfully")
     else violations.foreach { case (number: String, message: String) => logger.warn(s"[$bagName] broke rule $number: $message") }
-  }
-
-  private def getProfileVersion(path: BagDir): Try[Int] = {
-    validation.getProfileVersion(path)
   }
 
   private def getBagPath(uri: URI): Try[Path] = Try {

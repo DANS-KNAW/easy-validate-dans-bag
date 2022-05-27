@@ -113,17 +113,4 @@ package object validation extends DebugEnhancedLogging {
         require(isReadable(f), s"Found non-readable file $f") // Using the passed-in isReadable function here!!
     }
   }
-
-  def getProfileVersion(bag: BagDir): Try[ProfileVersion] = Try {
-    if ((bag / "bag-info.txt").exists) {
-      Try { bagReader.read(bag.path) } // Reading the bag will fail if bag-info.txt is malformed
-        .map { b =>
-          Option(b.getMetadata.get("BagIt-Profile-Version")).map(_.asScala.toList).map {
-            case v :: _ => Try { v.toInt }.filter(profileVersionDois.keys.toSet.contains).getOrElse(ProfileVersion0.versionNumber)
-            case _ => ProfileVersion0.versionNumber
-          }.getOrElse(ProfileVersion0.versionNumber)
-        }
-    }.getOrElse(ProfileVersion0.versionNumber)
-    else ProfileVersion0.versionNumber
-  }
 }

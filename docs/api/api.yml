@@ -43,7 +43,7 @@ paths:
         500:
           $ref: "#/components/responses/InternalServerError"
       parameters:
-        - name: PackageInfoType
+        - name: packageInfoType
           in: query
           description: Information type the bag should be validated as
           required: false
@@ -51,6 +51,13 @@ paths:
             type: string
             enum: [SIP, AIP]
             default: SIP
+        - name: profileVersion
+          in: query
+          description: Major version of the DANS BagIt Profile against which to validate
+          required: false
+          schema:
+            type: int
+            default: 0
         - name: uri
           in: query
           description: URI of the bag to be validated.

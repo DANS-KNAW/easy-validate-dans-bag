@@ -43,14 +43,9 @@ import scala.xml.{Node, Utility, XML}
  */
 class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
   private val bagReader = new BagReader()
-  private val ddmPath = profileVersion match {
-    case 0 => Paths.get("metadata/dataset.xml")
-    case 1 => Paths.get("data/pdi/dataset.xml")
-  }
-  private val filesXmlPath = profileVersion match {
-    case 0 => Paths.get("metadata/files.xml")
-    case 1 => Paths.get("data/pdi/files.xml")
-  }
+  private val ddmPath = Paths.get("metadata/dataset.xml")
+
+  private val filesXmlPath = Paths.get("metadata/files.xml")
 
   lazy val tryBag: Try[Bag] = Try {
     bagReader.read(bagDir.path)
