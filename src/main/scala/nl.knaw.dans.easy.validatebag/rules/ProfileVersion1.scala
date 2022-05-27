@@ -15,19 +15,16 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.nio.file.Paths
 import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
 import nl.knaw.dans.easy.validatebag.rules.bagit._
-import nl.knaw.dans.easy.validatebag.rules.metadata.{ allUrlsAreValid, archisIdentifiersHaveAtMost10Characters, ddmContainsUrnNbnIdentifier, ddmDaisAreValid, ddmDoiIdentifiersAreValid, ddmGmlPolygonPosListIsWellFormed, ddmMayContainDctermsLicenseFromList, ddmMustHaveRightsHolder, filesXmlAllFilesHaveFormat, filesXmlConformsToSchemaIfFilesNamespaceDeclared, filesXmlFileElementsAllHaveFilepathAttribute, filesXmlFileElementsInOriginalFilePaths, filesXmlFilesHaveOnlyAllowedAccessRights, filesXmlFilesHaveOnlyAllowedNamespaces, filesXmlHasDocumentElementFiles, filesXmlHasOnlyFiles, filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, optionalFileIsUtf8Decodable, pointsHaveAtLeastTwoValues, polygonsInSameMultiSurfaceHaveSameSrsName, xmlFileConformsToSchema, xmlFileIfExistsConformsToSchema }
-import nl.knaw.dans.easy.validatebag.rules.sequence.{ bagInfoIsVersionOfIfExistsPointsToArchivedBag, storeSameAsInArchivedBag, userSameAsInArchivedBag }
+import nl.knaw.dans.easy.validatebag.rules.metadata._
 import nl.knaw.dans.easy.validatebag.rules.structural._
-import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+import nl.knaw.dans.easy.validatebag.{ NumberedRule, XmlValidator }
 
 import java.net.URI
+import java.nio.file.Paths
 
 object ProfileVersion1 {
-  val versionNumber = 1
-//  val versionUri = "doi:10.17026/dans-z52-ybfe"
   def apply(implicit xmlValidators: Map[String, XmlValidator], allowedLicences: Seq[URI]): Seq[NumberedRule] = Seq(
     // BAGIT-RELATED
 
@@ -37,10 +34,6 @@ object ProfileVersion1 {
 
     // bag-info.txt
     NumberedRule("1.2.1", bagInfoExistsAndIsWellFormed),
-//    NumberedRule("1.2.2(a)", bagInfoContainsAtMostOneOf("BagIt-Profile-Version"), dependsOn = List("1.2.1")),
-//    NumberedRule("1.2.2(b)", bagInfoElementIfExistsHasValue("BagIt-Profile-Version", versionNumber.toString), dependsOn = List("1.2.2(a)")),
-//    NumberedRule("1.2.3(a)", bagInfoContainsAtMostOneOf("BagIt-Profile-URI"), dependsOn = List("1.2.1")),
-//    NumberedRule("1.2.3(b)", bagInfoElementIfExistsHasValue("BagIt-Profile-URI", versionUri), dependsOn = List("1.2.3(a)")),
     NumberedRule("1.2.4(a)", bagInfoContainsExactlyOneOf("Created"), dependsOn = List("1.2.1")),
     NumberedRule("1.2.4(b)", bagInfoCreatedElementIsIso8601Date, dependsOn = List("1.2.4(a)")),
     NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")), // TODO: check that value is urn:uuid ?
@@ -103,7 +96,7 @@ object ProfileVersion1 {
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = List("3.2.2")),
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = List("3.2.3")),
     NumberedRule("3.2.5(a)", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
-    NumberedRule("3.2.5(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3","2.7.1", "2.2(b)", "3.2.4")),
+    NumberedRule("3.2.5(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3", "2.7.1", "2.2(b)", "3.2.4")),
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = List("3.2.2")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyAllowedNamespaces, dependsOn = List("3.2.2")),
     NumberedRule("3.2.8", filesXmlFilesHaveOnlyAllowedAccessRights, dependsOn = List("3.2.2")),
