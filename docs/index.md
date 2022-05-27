@@ -44,13 +44,17 @@ ARGUMENTS
 EXAMPLES
 --------
 
-    easy-validate-dans-bag --aip bagDir
-    Validates the bag inside the bagDir as an AIP, without deep validation (i.e. checking the bag store in case of Is-Version-Of in the bag-info.txt)
-      
-    easy-validate-dans-bag --aip -f json --sipdir sipsDir
-    Validates the bags inside the sipsDir as AIPs, without deep validation. 
-    The valid bags are untouched, the non-valid bags are moved to a new `sipsDir-nonvalid-timestamp` directory. 
-    A JSON file with the same name lists the reasons for the violations  
+```bash
+# Validates the bag inside the bagDir as an AIP, without deep validation 
+# (i.e. checking the bag store in case of Is-Version-Of in the bag-info.txt)
+easy-validate-dans-bag --aip bagDir
+
+# Validates the bags inside the sipsDir as AIPs, without deep validation.
+# The valid bags are untouched, the non-valid bags are moved to a new 
+# `sipsDir-nonvalid-timestamp` directory. 
+# A JSON file with the same name lists the reasons for the violations  
+easy-validate-dans-bag --aip -f json --sipdir sipsDir
+```
 
 INSTALLATION AND CONFIGURATION
 ------------------------------
