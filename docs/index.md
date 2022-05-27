@@ -26,6 +26,7 @@ ARGUMENTS
 
           --aip                      Validate the bag(s) as AIP (instead of as SIP)
           --bag-store  <arg>         The bag store to use for deep validation
+      -p, --profile-version  <arg>   DANS BagIt Profile to validate against (default = 0)
       -f, --response-format  <arg>   Format for the result report (default = text)
           --sipdir                   Validate bags inside directories of trailing argument
       -h, --help                     Show help message

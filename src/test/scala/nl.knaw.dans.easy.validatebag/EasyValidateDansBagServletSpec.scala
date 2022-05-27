@@ -67,7 +67,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
       val resultMessage = ResultMessage.read(body)
       resultMessage.bagUri shouldBe new URI(s"file://${ bagsDir.path.toAbsolutePath }/metadata-correct/")
       resultMessage.bag shouldBe "metadata-correct"
-      resultMessage.profileVersion shouldBe 0
+      resultMessage.profileVersion shouldBe "0.0.0"
       resultMessage.infoPackageType shouldBe SIP
       resultMessage.isCompliant shouldBe false
       resultMessage.ruleViolations.value.toList should contain only (
@@ -83,7 +83,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
       val resultMessage = ResultMessage.read(body)
       resultMessage.bagUri shouldBe new URI(s"file://${ bagsDir.path.toAbsolutePath }/metadata-correct/")
       resultMessage.bag shouldBe "metadata-correct"
-      resultMessage.profileVersion shouldBe 0
+      resultMessage.profileVersion shouldBe "0.0.0"
       resultMessage.infoPackageType shouldBe AIP
       resultMessage.isCompliant shouldBe false
       resultMessage.ruleViolations.value.toList should contain inOrderOnly(

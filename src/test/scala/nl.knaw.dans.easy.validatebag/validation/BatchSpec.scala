@@ -57,7 +57,7 @@ class BatchSpec extends TestSupportFixture with SchemaFixture {
         include(s"Expecting one bag directory in $sipDir/multiple, got: 2") and
         include(s"${q}bagUri$q:${q}file:$sipDir/invalid-bag/") and
         include(
-          """    "profileVersion":0,
+          """    "profileVersion":"0.0.0",
             |    "infoPackageType":"SIP",
             |    "isCompliant":false,
             |    "ruleViolations":[

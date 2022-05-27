@@ -47,7 +47,7 @@ class ResultMessageSpec extends TestSupportFixture {
         |Bag URI: file://path/to/file.txt
         |Bag: file.txt
         |Information package type: SIP
-        |Profile version: "0.0.0"
+        |Profile version: 0.0.0
         |Is compliant: false
         |Rule violations:
         | - [1] Wrong
@@ -62,7 +62,7 @@ class ResultMessageSpec extends TestSupportFixture {
         |Bag URI: file://path/to/file.txt
         |Bag: file.txt
         |Information package type: SIP
-        |Profile version: "0.0.0"
+        |Profile version: 0.0.0
         |Is compliant: true""".stripMargin
   }
 
@@ -94,7 +94,7 @@ class ResultMessageSpec extends TestSupportFixture {
       """{
         |  "bagUri":"file://path/to/file.txt",
         |  "bag":"file.txt",
-        |  "profileVersion":0,
+        |  "profileVersion":"0.0.0",
         |  "infoPackageType":"SIP",
         |  "isCompliant":true
         |}""".stripMargin
