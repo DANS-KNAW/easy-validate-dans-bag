@@ -61,8 +61,8 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   val version: String = configuration.version
   val allRules: Map[ProfileVersion, RuleBase] = {
     Map(
-      "0.0.0" -> ProfileVersion0(xmlValidators, configuration.allowedLicenses, bagStore),
-      "1.0.0" -> ProfileVersion1(xmlValidators, configuration.allowedLicenses))
+      0 -> ProfileVersion0(xmlValidators, configuration.allowedLicenses, bagStore),
+      1 -> ProfileVersion1(xmlValidators, configuration.allowedLicenses))
   }
 
   def validate(uri: URI, infoPackageType: InfoPackageType, profileVersion: ProfileVersion, bagStoreUrl: Option[URI]): Try[ResultMessage] = {

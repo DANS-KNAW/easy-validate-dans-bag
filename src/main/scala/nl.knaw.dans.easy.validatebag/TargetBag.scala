@@ -41,7 +41,7 @@ import scala.xml.{Node, Utility, XML}
  *
  * @param profileVersion the profile version used
  */
-class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = "0.0.0") {
+class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
   private val bagReader = new BagReader()
   private val ddmPath = Paths.get("metadata/dataset.xml")
 

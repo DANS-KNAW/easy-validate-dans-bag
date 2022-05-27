@@ -42,7 +42,7 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
        |Options:
        |""".stripMargin)
   val aip: ScallopOption[Boolean] = opt[Boolean]("aip", noshort = true, descr = "Validate the bag(s) as AIP (instead of as SIP)")
-  val profileVersion: ScallopOption[String] = opt("profile-version", short = 'p', descr = "DANS BagIt Profile to validate against", default = Some("0"))
+  val profileVersion: ScallopOption[Int] = opt("profile-version", short = 'p', descr = "DANS BagIt Profile to validate against", default = Some(0))
   val sipdir: ScallopOption[Boolean] = opt[Boolean]("sipdir", noshort = true, descr = "Validate bags inside directories of trailing argument")
   val bagStore: ScallopOption[URI] = opt[URI]("bag-store", noshort = true, descr = "The bag store to use for deep validation")
   val responseFormat: ScallopOption[String] = opt[String]("response-format", short = 'f', descr = "Format for the result report", default = Some("text"))

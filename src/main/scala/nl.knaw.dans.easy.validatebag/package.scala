@@ -21,7 +21,7 @@ import nl.knaw.dans.easy.validatebag.rules.{ ProfileVersion0, ProfileVersion1 }
 import scala.util.{ Failure, Try }
 
 package object validatebag {
-  type ProfileVersion = String
+  type ProfileVersion = Int
   type RuleNumber = String
   type ErrorMessage = String
   type BagDir = File

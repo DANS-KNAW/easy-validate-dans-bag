@@ -72,15 +72,10 @@ object Command extends App with DebugEnhancedLogging {
           val maybeBagStore = commandLine.bagStore.toOption
           val packageType = if (commandLine.aip()) AIP
                             else SIP
-          val profileVersion = commandLine.profileVersion() match {
-            case "0" => "0.0.0"
-            case "1" => "1.0.0"
-            case v => v
-          }
 
           if (commandLine.sipdir())
-            validateBatch(File(commandLine.bag()), packageType, profileVersion, maybeBagStore)(app)
-          else app.validate(commandLine.bag().toUri, packageType, profileVersion, maybeBagStore).map(formatMsg)
+            validateBatch(File(commandLine.bag()), packageType, commandLine.profileVersion(), maybeBagStore)(app)
+          else app.validate(commandLine.bag().toUri, packageType, commandLine.profileVersion(), maybeBagStore).map(formatMsg)
         }
       }
   }
