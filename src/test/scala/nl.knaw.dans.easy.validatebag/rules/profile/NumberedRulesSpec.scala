@@ -24,7 +24,9 @@ class NumberedRulesSpec extends TestSupportFixture with Inspectors {
   private val xmlValidators: Map[String, XmlValidator] = Map(
     "dataset.xml" -> new XmlValidator(null),
     "files.xml" -> new XmlValidator(null),
-    "agreements.xml" -> new XmlValidator(null)
+    "agreements.xml" -> new XmlValidator(null),
+    "amd.xml" -> new XmlValidator(null),
+    "emd.xml" -> new XmlValidator(null)
   )
 
   private val allRules: Map[ProfileVersion, RuleBase] = {
@@ -38,7 +40,7 @@ class NumberedRulesSpec extends TestSupportFixture with Inspectors {
       ruleBase => {
         val ruleNumbers = ruleBase.map(_.nr)
         forEvery(ruleBase.flatMap(_.dependsOn)) {
-          dependency => ruleNumbers should contain (dependency)
+          dependency => ruleNumbers should contain(dependency)
         }
       }
     }

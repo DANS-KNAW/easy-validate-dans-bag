@@ -15,19 +15,20 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.URI
-import java.nio.file.Paths
-
-import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
 import nl.knaw.dans.easy.validatebag.rules.bagit._
 import nl.knaw.dans.easy.validatebag.rules.metadata._
 import nl.knaw.dans.easy.validatebag.rules.sequence._
 import nl.knaw.dans.easy.validatebag.rules.structural._
-import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
+import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+
+import java.net.URI
+import java.nio.file.Paths
 
 object ProfileVersion0 {
   val versionNumber = 0
   val versionUri = "doi:10.17026/dans-z52-ybfe"
+
   def apply(implicit xmlValidators: Map[String, XmlValidator], allowedLicences: Seq[URI], bagStore: BagStore): Seq[NumberedRule] = Seq(
     // BAGIT-RELATED
 
@@ -102,8 +103,11 @@ object ProfileVersion0 {
     NumberedRule("3.2.2", filesXmlHasDocumentElementFiles, dependsOn = List("2.2(b)")),
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = List("3.2.2")),
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = List("3.2.3")),
-    NumberedRule("3.2.5(a)", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
-    NumberedRule("3.2.5(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3", "2.7.1", "2.2(b)", "3.2.4")),
+    NumberedRule("3.2.5", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
+
+    // TODO: redundant? It seems to check part of 2.7.2 again
+    NumberedRule("2.7.2(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3", "2.7.1", "2.2(b)", "3.2.4")),
+
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = List("3.2.2")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyAllowedNamespaces, dependsOn = List("3.2.2")),
     NumberedRule("3.2.8", filesXmlFilesHaveOnlyAllowedAccessRights, dependsOn = List("3.2.2")),

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
+import nl.knaw.dans.easy.validatebag.InfoPackageType.AIP
 import nl.knaw.dans.easy.validatebag.rules.bagit._
 import nl.knaw.dans.easy.validatebag.rules.metadata._
 import nl.knaw.dans.easy.validatebag.rules.structural._
@@ -29,7 +29,7 @@ object ProfileVersion1 {
     // BAGIT-RELATED
 
     // Validity
-    NumberedRule("1.1.1", bagIsValid, SIP),
+    NumberedRule("1.1.1", bagIsValid),
     NumberedRule("1.1.1(datadir)", containsDir(Paths.get("data"))),
 
     // bag-info.txt
@@ -37,7 +37,6 @@ object ProfileVersion1 {
     NumberedRule("1.2.4(a)", bagInfoContainsExactlyOneOf("Created"), dependsOn = List("1.2.1")),
     NumberedRule("1.2.4(b)", bagInfoCreatedElementIsIso8601Date, dependsOn = List("1.2.4(a)")),
     NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")), // TODO: check that value is urn:uuid ?
-    NumberedRule("1.2.6(a)", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = List("1.2.1")), // TODO: check "at most" for SIP ?
 
     // Manifests
     NumberedRule("1.3.1(a)", containsFile(Paths.get("manifest-sha1.txt")), AIP),
@@ -91,18 +90,28 @@ object ProfileVersion1 {
     NumberedRule("3.1.10", ddmMustHaveRightsHolder, dependsOn = List("3.1.1")),
 
     // files.xml
-    NumberedRule("3.2.1", filesXmlConformsToSchemaIfFilesNamespaceDeclared(xmlValidators("files.xml")), dependsOn = List("2.2(b)")),
+    NumberedRule("3.2.1", xmlFileConformsToSchema(Paths.get("metadata/files.xml"), "DANS dataset file list schema", xmlValidators("files.xml")), dependsOn = List("2.2(b)")),
     NumberedRule("3.2.2", filesXmlHasDocumentElementFiles, dependsOn = List("2.2(b)")),
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = List("3.2.2")),
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = List("3.2.3")),
-    NumberedRule("3.2.5(a)", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
-    NumberedRule("3.2.5(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3", "2.7.1", "2.2(b)", "3.2.4")),
+    NumberedRule("3.2.5", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
+
+    // TODO: redundant? It seems to check part of 2.7.2 again
+    NumberedRule("2.7.2(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3", "2.7.1", "2.2(b)", "3.2.4")),
+
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = List("3.2.2")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyAllowedNamespaces, dependsOn = List("3.2.2")),
     NumberedRule("3.2.8", filesXmlFilesHaveOnlyAllowedAccessRights, dependsOn = List("3.2.2")),
 
     // agreements.xml
     NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/depositor-info/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
+
+    // amd.xml
+    NumberedRule("3.6.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "EASY Administrative Metadata", xmlValidators("amd.xml"))),
+
+    // emd.xml
+    NumberedRule("3.7.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY Metadata", xmlValidators("emd.xml"))),
+
 
     // message-from-depositor.txt
     NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/depositor-info/message-from-depositor.txt"))),

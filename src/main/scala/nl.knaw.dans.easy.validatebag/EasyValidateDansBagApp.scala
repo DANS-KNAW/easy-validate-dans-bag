@@ -51,7 +51,9 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
   private val xmlValidators: Map[String, XmlValidator] = Map(
     "dataset.xml" -> createValidator(new URL(configuration.properties.getString("schemas.ddm"))),
     "files.xml" -> createValidator(new URL(configuration.properties.getString("schemas.files"))),
-    "agreements.xml" -> createValidator(new URL(configuration.properties.getString("schemas.agreements")))
+    "agreements.xml" -> createValidator(new URL(configuration.properties.getString("schemas.agreements"))),
+    "amd.xml" -> createValidator(new URL(configuration.properties.getString("schemas.amd"))),
+    "emd.xml" -> createValidator(new URL(configuration.properties.getString("schemas.emd")))
   )
 
   private val bagStore = BagStore(new URI(configuration.properties.getString("bagstore-service.base-url")),
