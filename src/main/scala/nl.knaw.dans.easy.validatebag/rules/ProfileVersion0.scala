@@ -15,19 +15,20 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.URI
-import java.nio.file.Paths
-
-import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
 import nl.knaw.dans.easy.validatebag.rules.bagit._
 import nl.knaw.dans.easy.validatebag.rules.metadata._
 import nl.knaw.dans.easy.validatebag.rules.sequence._
 import nl.knaw.dans.easy.validatebag.rules.structural._
-import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
+import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+
+import java.net.URI
+import java.nio.file.Paths
 
 object ProfileVersion0 {
   val versionNumber = 0
   val versionUri = "doi:10.17026/dans-z52-ybfe"
+
   def apply(implicit xmlValidators: Map[String, XmlValidator], allowedLicences: Seq[URI], bagStore: BagStore): Seq[NumberedRule] = Seq(
     // BAGIT-RELATED
 

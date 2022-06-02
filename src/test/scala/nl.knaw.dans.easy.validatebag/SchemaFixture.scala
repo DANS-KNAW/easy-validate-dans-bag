@@ -26,11 +26,15 @@ trait SchemaFixture {
   val ddmSchemaUrl = "https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"
   val filesSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/files/2018/04/files.xsd"
   val agreementsSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/agreements/2018/12/agreements.xsd"
+  val amdSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/amd/amd.xsd"
+  val emdSchemaUrl = "https://easy.dans.knaw.nl/schemas/md/emd/emd.xsd"
 
   private lazy val schemaFactory: SchemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema")
   lazy val triedDdmSchema: Try[Schema] = loadSchema(ddmSchemaUrl)
   lazy val triedFileSchema: Try[Schema] = loadSchema(filesSchemaUrl)
   lazy val triedAgreementSchema: Try[Schema] = loadSchema(agreementsSchemaUrl)
+  lazy val triedAmdSchema: Try[Schema] = loadSchema(amdSchemaUrl)
+  lazy val triedEmdSchema: Try[Schema] = loadSchema(emdSchemaUrl)
 
   def ddmValidator: XmlValidator = validator(triedDdmSchema)
 
