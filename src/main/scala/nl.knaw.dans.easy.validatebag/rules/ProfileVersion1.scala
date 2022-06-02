@@ -29,7 +29,7 @@ object ProfileVersion1 {
     // BAGIT-RELATED
 
     // Validity
-    NumberedRule("1.1.1", bagIsValid, SIP),
+    NumberedRule("1.1.1", bagIsValid),
     NumberedRule("1.1.1(datadir)", containsDir(Paths.get("data"))),
 
     // bag-info.txt
