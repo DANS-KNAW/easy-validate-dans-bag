@@ -104,18 +104,15 @@ object ProfileVersion1 {
     NumberedRule("3.2.8", filesXmlFilesHaveOnlyAllowedAccessRights, dependsOn = List("3.2.2")),
 
     // agreements.xml
-    NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/depositor-info/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml"))),
+    NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/depositor-info/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml")), infoPackageType = AIP),
 
     // amd.xml
-    NumberedRule("3.6.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "EASY Administrative Metadata", xmlValidators("amd.xml"))),
+    NumberedRule("3.6.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "EASY Administrative Metadata", xmlValidators("amd.xml")), infoPackageType = AIP),
 
     // emd.xml
-    NumberedRule("3.7.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY Metadata", xmlValidators("emd.xml"))),
+    NumberedRule("3.7.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY Metadata", xmlValidators("emd.xml")), infoPackageType = AIP),
 
     // emd.xml
-    NumberedRule("3.8.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/provenance.xml"), "DANS Provenance Metadata", xmlValidators("provenance.xml"))),
-
-    // message-from-depositor.txt
-    NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/depositor-info/message-from-depositor.txt"))),
+    NumberedRule("3.8.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/provenance.xml"), "DANS Provenance Metadata", xmlValidators("provenance.xml")), infoPackageType = AIP),
   )
 }
