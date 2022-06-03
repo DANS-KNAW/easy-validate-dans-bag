@@ -15,19 +15,20 @@
  */
 package nl.knaw.dans.easy.validatebag.rules
 
-import java.net.URI
-import java.nio.file.Paths
-
-import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
 import nl.knaw.dans.easy.validatebag.rules.bagit._
 import nl.knaw.dans.easy.validatebag.rules.metadata._
 import nl.knaw.dans.easy.validatebag.rules.sequence._
 import nl.knaw.dans.easy.validatebag.rules.structural._
-import nl.knaw.dans.easy.validatebag.InfoPackageType.{ AIP, SIP }
+import nl.knaw.dans.easy.validatebag.{ BagStore, NumberedRule, XmlValidator }
+
+import java.net.URI
+import java.nio.file.Paths
 
 object ProfileVersion0 {
   val versionNumber = 0
   val versionUri = "doi:10.17026/dans-z52-ybfe"
+
   def apply(implicit xmlValidators: Map[String, XmlValidator], allowedLicences: Seq[URI], bagStore: BagStore): Seq[NumberedRule] = Seq(
     // BAGIT-RELATED
 
@@ -43,8 +44,8 @@ object ProfileVersion0 {
     NumberedRule("1.2.3(b)", bagInfoElementIfExistsHasValue("BagIt-Profile-URI", versionUri), dependsOn = List("1.2.3(a)")),
     NumberedRule("1.2.4(a)", bagInfoContainsExactlyOneOf("Created"), dependsOn = List("1.2.1")),
     NumberedRule("1.2.4(b)", bagInfoCreatedElementIsIso8601Date, dependsOn = List("1.2.4(a)")),
-    NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")),
-    NumberedRule("1.2.6(a)", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = List("1.2.1")),
+    NumberedRule("1.2.5", bagInfoContainsAtMostOneOf("Is-Version-Of"), dependsOn = List("1.2.1")), // TODO: check that value is urn:uuid ?
+    NumberedRule("1.2.6(a)", bagInfoContainsExactlyOneOf("EASY-User-Account"), AIP, dependsOn = List("1.2.1")), // TODO: check "at most" for SIP ?
 
     // Manifests
     NumberedRule("1.3.1(a)", containsFile(Paths.get("manifest-sha1.txt")), AIP),
@@ -102,8 +103,11 @@ object ProfileVersion0 {
     NumberedRule("3.2.2", filesXmlHasDocumentElementFiles, dependsOn = List("2.2(b)")),
     NumberedRule("3.2.3", filesXmlHasOnlyFiles, dependsOn = List("3.2.2")),
     NumberedRule("3.2.4", filesXmlFileElementsAllHaveFilepathAttribute, dependsOn = List("3.2.3")),
-    NumberedRule("3.2.5(a)", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
-    NumberedRule("3.2.5(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3","2.7.1", "2.2(b)", "3.2.4")),
+    NumberedRule("3.2.5", filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles, dependsOn = List("1.1.1(datadir)", "3.2.4")),
+
+    // TODO: redundant? It seems to check part of 2.7.2 again
+    NumberedRule("2.7.2(b)", filesXmlFileElementsInOriginalFilePaths, dependsOn = List("3.2.3", "2.7.1", "2.2(b)", "3.2.4")),
+
     NumberedRule("3.2.6", filesXmlAllFilesHaveFormat, dependsOn = List("3.2.2")),
     NumberedRule("3.2.7", filesXmlFilesHaveOnlyAllowedNamespaces, dependsOn = List("3.2.2")),
     NumberedRule("3.2.8", filesXmlFilesHaveOnlyAllowedAccessRights, dependsOn = List("3.2.2")),
@@ -114,14 +118,9 @@ object ProfileVersion0 {
     // message-from-depositor.txt
     NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/depositor-info/message-from-depositor.txt"))),
 
-
-    NumberedRule("3.6", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "Administrative metadata schema", xmlValidators("amd.xml"))),
-    NumberedRule("3.7", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY metadata schema", xmlValidators("emd.xml"))),
-
-
     // BAG-SEQUENCE
-    NumberedRule("4.2", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
-    NumberedRule("4.3", storeSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2")),
-    NumberedRule("4.4", userSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2"))
+    NumberedRule("4.1", bagInfoIsVersionOfIfExistsPointsToArchivedBag(bagStore), AIP, dependsOn = List("1.2.5")),
+    NumberedRule("4.2", storeSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2")),
+    NumberedRule("4.3", userSameAsInArchivedBag(bagStore), AIP, dependsOn = List("1.2.5", "4.2"))
   )
 }

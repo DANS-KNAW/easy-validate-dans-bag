@@ -24,13 +24,15 @@ class NumberedRulesSpec extends TestSupportFixture with Inspectors {
   private val xmlValidators: Map[String, XmlValidator] = Map(
     "dataset.xml" -> new XmlValidator(null),
     "files.xml" -> new XmlValidator(null),
-    "agreements.xml" -> new XmlValidator(null)
+    "agreements.xml" -> new XmlValidator(null),
+    "amd.xml" -> new XmlValidator(null),
+    "emd.xml" -> new XmlValidator(null)
   )
 
   private val allRules: Map[ProfileVersion, RuleBase] = {
     Map(
       0 -> ProfileVersion0(xmlValidators, null, null),
-      1 -> ProfileVersion1(xmlValidators))
+      1 -> ProfileVersion1(xmlValidators, null))
   }
 
   "rulesCheck" should "succeed if all rules, that other rules depend on, exist" in {
@@ -38,7 +40,7 @@ class NumberedRulesSpec extends TestSupportFixture with Inspectors {
       ruleBase => {
         val ruleNumbers = ruleBase.map(_.nr)
         forEvery(ruleBase.flatMap(_.dependsOn)) {
-          dependency => ruleNumbers should contain (dependency)
+          dependency => ruleNumbers should contain(dependency)
         }
       }
     }

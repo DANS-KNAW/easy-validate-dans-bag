@@ -28,11 +28,6 @@ package object validatebag {
   type Rule = TargetBag => Try[Unit]
   type RuleBase = Seq[NumberedRule]
 
-  val profileVersionDois = Map(
-    0 -> ProfileVersion0.versionUri,
-    1 -> ProfileVersion1.versionUri,
-  )
-
   object InfoPackageType extends Enumeration {
     type InfoPackageType = Value
     val SIP, AIP, BOTH = Value

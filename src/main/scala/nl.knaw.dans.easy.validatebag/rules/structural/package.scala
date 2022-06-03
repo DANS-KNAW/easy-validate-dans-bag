@@ -44,7 +44,7 @@ package object structural extends DebugEnhancedLogging {
     trace(d, ps)
     assume(!d.isAbsolute, s"Directory $d must be a relative path")
     val extraFiles = (t.bagDir / d.toString).list.filterNot(ps contains _.name).map(t.bagDir relativize _.path)
-    if (extraFiles.nonEmpty) reject(s"Directory $d contains files or directories that are not allowed: ${ extraFiles.mkString(", ") }")
+    if (extraFiles.nonEmpty) reject(s"Directory $d contains files or directories that are not allowed: ${ extraFiles.toList.sorted.mkString(", ") }")
   }
 
   def hasOnlyValidFileNames(t: TargetBag): Try[Unit] = Try {

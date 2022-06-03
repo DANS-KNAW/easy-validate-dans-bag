@@ -1,15 +1,17 @@
+Fixes DD-
 Fixes EASY-
 
-#### When applied it will
-* 
-* 
-* 
+# Description of changes
 
-#### Where should the reviewer @DANS-KNAW/easy start?
+# How to test
 
-#### How should this be manually tested?
+# Related PRs
 
-#### Related pull requests on github
-repo                       | PR                | note
--------------------------- | ----------------- | ----
-easy-                      | [PR#](PRlink)     | ..
+(Add links)
+
+*
+
+# Notify
+
+@DANS-KNAW/dataversedans
+@DANS-KNAW/easy
