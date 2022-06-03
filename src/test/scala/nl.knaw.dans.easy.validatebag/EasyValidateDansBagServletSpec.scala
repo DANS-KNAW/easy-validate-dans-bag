@@ -149,6 +149,7 @@ class EasyValidateDansBagServletSpec extends TestSupportFixture
     properties.setProperty("schemas.ddm", ddmSchemaUrl)
     properties.setProperty("schemas.files", filesSchemaUrl)
     properties.setProperty("schemas.agreements", agreementsSchemaUrl)
+    properties.setProperty("schemas.provenance", provenanceSchemaUrl)
     properties.setProperty("schemas.amd", amdSchemaUrl)
     properties.setProperty("schemas.emd", emdSchemaUrl)
     properties.setProperty("bagstore-service.base-url", bagsDir.path.toAbsolutePath.toString)

@@ -145,6 +145,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
       "dataset.xml" -> (if(isAvailable(triedDdmSchema)) ddmValidator else xmlValidator),
       "files.xml" -> (if(isAvailable(triedFileSchema)) filesXmlValidator else xmlValidator),
       "agreements.xml" -> (if(isAvailable(triedAgreementSchema, triedDdmSchema)) agreementsXmlValidator else xmlValidator),
+      "provenance.xml" -> (if(isAvailable(triedProvenanceSchema)) agreementsXmlValidator else xmlValidator),
       "amd.xml" -> (if(isAvailable(triedAmdSchema)) agreementsXmlValidator else xmlValidator),
       "emd.xml" -> (if(isAvailable(triedEmdSchema)) agreementsXmlValidator else xmlValidator)
     ) // agreement validation fails at run time when DC schema is not available
