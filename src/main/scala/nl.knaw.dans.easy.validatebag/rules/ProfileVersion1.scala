@@ -112,6 +112,8 @@ object ProfileVersion1 {
     // emd.xml
     NumberedRule("3.7.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY Metadata", xmlValidators("emd.xml"))),
 
+    // emd.xml
+    NumberedRule("3.8.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/provenance.xml"), "DANS Provenance Metadata", xmlValidators("provenance.xml"))),
 
     // message-from-depositor.txt
     NumberedRule("3.4.1", optionalFileIsUtf8Decodable(Paths.get("metadata/depositor-info/message-from-depositor.txt"))),
