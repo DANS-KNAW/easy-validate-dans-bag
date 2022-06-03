@@ -79,6 +79,7 @@ class BatchSpec extends TestSupportFixture with SchemaFixture {
         setProperty("schemas.ddm", ddmSchemaUrl)
         setProperty("schemas.files", filesSchemaUrl)
         setProperty("schemas.agreements", agreementsSchemaUrl)
+        setProperty("schemas.provenance", provenanceSchemaUrl)
         setProperty("schemas.amd", amdSchemaUrl)
         setProperty("schemas.emd", emdSchemaUrl)
         setProperty("bagstore-service.base-url", bagsDir.path.toAbsolutePath.toString)

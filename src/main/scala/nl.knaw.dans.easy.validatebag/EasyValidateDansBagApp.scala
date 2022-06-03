@@ -52,6 +52,7 @@ class EasyValidateDansBagApp(configuration: Configuration) extends DebugEnhanced
     "dataset.xml" -> createValidator(new URL(configuration.properties.getString("schemas.ddm"))),
     "files.xml" -> createValidator(new URL(configuration.properties.getString("schemas.files"))),
     "agreements.xml" -> createValidator(new URL(configuration.properties.getString("schemas.agreements"))),
+    "provenance.xml" -> createValidator(new URL(configuration.properties.getString("schemas.provenance"))),
     "amd.xml" -> createValidator(new URL(configuration.properties.getString("schemas.amd"))),
     "emd.xml" -> createValidator(new URL(configuration.properties.getString("schemas.emd")))
   )

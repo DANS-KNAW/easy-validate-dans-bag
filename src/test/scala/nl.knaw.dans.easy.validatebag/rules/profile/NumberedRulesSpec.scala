@@ -25,6 +25,7 @@ class NumberedRulesSpec extends TestSupportFixture with Inspectors {
     "dataset.xml" -> new XmlValidator(null),
     "files.xml" -> new XmlValidator(null),
     "agreements.xml" -> new XmlValidator(null),
+    "provenance.xml" -> new XmlValidator(schema = null),
     "amd.xml" -> new XmlValidator(null),
     "emd.xml" -> new XmlValidator(null)
   )

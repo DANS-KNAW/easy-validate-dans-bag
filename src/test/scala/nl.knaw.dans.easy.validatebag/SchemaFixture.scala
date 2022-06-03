@@ -26,6 +26,7 @@ trait SchemaFixture {
   val ddmSchemaUrl = "https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"
   val filesSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/files/2018/04/files.xsd"
   val agreementsSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/agreements/2018/12/agreements.xsd"
+  val provenanceSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/prov/provenance.xsd"
   val amdSchemaUrl = "https://easy.dans.knaw.nl/schemas/bag/metadata/amd/amd.xsd"
   val emdSchemaUrl = "https://easy.dans.knaw.nl/schemas/md/emd/emd.xsd"
 
@@ -33,6 +34,7 @@ trait SchemaFixture {
   lazy val triedDdmSchema: Try[Schema] = loadSchema(ddmSchemaUrl)
   lazy val triedFileSchema: Try[Schema] = loadSchema(filesSchemaUrl)
   lazy val triedAgreementSchema: Try[Schema] = loadSchema(agreementsSchemaUrl)
+  lazy val triedProvenanceSchema: Try[Schema] = loadSchema(provenanceSchemaUrl)
   lazy val triedAmdSchema: Try[Schema] = loadSchema(amdSchemaUrl)
   lazy val triedEmdSchema: Try[Schema] = loadSchema(emdSchemaUrl)
 
