@@ -107,7 +107,8 @@ object ProfileVersion1 {
     NumberedRule("3.3.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/depositor-info/agreements.xml"), "Agreements metadata schema", xmlValidators("agreements.xml")), infoPackageType = AIP),
 
     // amd.xml
-    NumberedRule("3.6.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "EASY Administrative Metadata", xmlValidators("amd.xml")), infoPackageType = AIP),
+    // TODO: re-enable? How to deal with the different versions (v0.1 and v1.0)?
+    //NumberedRule("3.6.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/amd.xml"), "EASY Administrative Metadata", xmlValidators("amd.xml")), infoPackageType = AIP),
 
     // emd.xml
     NumberedRule("3.7.1", xmlFileIfExistsConformsToSchema(Paths.get("metadata/emd.xml"), "EASY Metadata", xmlValidators("emd.xml")), infoPackageType = AIP),
