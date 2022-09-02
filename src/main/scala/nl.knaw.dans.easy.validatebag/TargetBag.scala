@@ -22,15 +22,15 @@ import nl.knaw.dans.easy.validatebag.rules.metadata.trace
 import nl.knaw.dans.easy.validatebag.rules.structural.originalFilepathsFile
 import nl.knaw.dans.easy.validatebag.validation.reject
 import nl.knaw.dans.lib.error.TryExtensions
-import org.apache.commons.csv.{CSVFormat, CSVParser, CSVRecord}
+import org.apache.commons.csv.{ CSVFormat, CSVParser, CSVRecord }
 import resource.managed
 
-import java.nio.charset.Charset
+import java.nio.charset.{ Charset, StandardCharsets }
 import java.nio.file.Paths
 import scala.collection.JavaConverters.iterableAsScalaIterableConverter
-import scala.collection.{Iterable, Set}
+import scala.collection.{ Iterable, Set }
 import scala.util.Try
-import scala.xml.{Node, Utility, XML}
+import scala.xml.{ Node, Utility, XML }
 
 /**
  * Interface to the bag under validation.
@@ -78,7 +78,7 @@ class TargetBag(val bagDir: BagDir, profileVersion: ProfileVersion = 0) {
   def readPhysicalToOriginalBagRelativePaths(): Try[Option[Map[String, String]]] = Try {
     val fileToCheck = bagDir / originalFilepathsFile
     if (fileToCheck.exists)
-      Option(fileToCheck.lines.map { line =>
+      Option(fileToCheck.lines(charset=StandardCharsets.UTF_8).map { line =>
         val list = line.split("""\s+""", 2)
         if (list.size != 2) throw new IllegalArgumentException(s"invalid line in $originalFilepathsFile : $line")
         (list(1), list(0))
