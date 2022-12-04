@@ -429,7 +429,7 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     testRuleViolation(
       rule = filesXmlNoDuplicatesAndMatchesWithPayloadPlusPreStagedFiles,
       inputBag = "metadata-pre-staged-csv-all-three-differ",
-      includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder. Difference - only in bag: {data/leeg5.txt, data/leeg4.txt} only in pre-staged.csv: {data/leeg6.txt} only in files.xml: {data/leeg3.txt}"
+      includedInErrorMsg = "Filepaths in files.xml not equal to files found in data folder. Difference - only in bag: {data/leeg4.txt, data/leeg5.txt} only in pre-staged.csv: {data/leeg6.txt} only in files.xml: {data/leeg3.txt}"
     )
   }
 
