@@ -546,10 +546,10 @@ package object metadata extends DebugEnhancedLogging {
 
         if (noDuplicatesFound && fileSetsEqual) ()
         else {
-          def stringDiff[T](name: String, left: Set[T], right: Set[T]): String = {
+          def stringDiff(name: String, left: Set[String], right: Set[String]): String = {
             val set = left diff right
             if (set.isEmpty) ""
-            else s"only in $name: " + set.mkString("{", ", ", "}")
+            else s"only in $name: " + set.toList.sorted.mkString("{", ", ", "}")
           }
 
           lazy val onlyInBag = stringDiff("bag", payloadPaths, pathsInFileXml)
@@ -557,7 +557,7 @@ package object metadata extends DebugEnhancedLogging {
           lazy val onlyInFilesXml = stringDiff("files.xml", pathsInFileXml, payloadAndPreStagedFilePaths)
 
           val msg1 = if (noDuplicatesFound) ""
-          else s"   - Duplicate filepaths found: ${duplicatePathsInFilesXml.mkString("{", ", ", "}")}\n"
+          else s"   - Duplicate filepaths found: ${duplicatePathsInFilesXml.toList.sorted.mkString("{", ", ", "}")}\n"
           val msg2 = if (fileSetsEqual) ""
           else "   - Filepaths in files.xml not equal to files found in data folder. Difference - " +
             s"$onlyInBag $onlyInPreStaged $onlyInFilesXml"
