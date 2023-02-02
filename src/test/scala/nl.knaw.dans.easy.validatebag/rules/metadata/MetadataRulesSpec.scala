@@ -176,17 +176,17 @@ class MetadataRulesSpec extends TestSupportFixture with SchemaFixture with CanCo
     validation.checkRules(bag, rules, infoPackageType)(isReadable = _.isReadable)
   }
 
-  "new test approach" should "report the not configured license" in {
-    val expectedMsg = "Found unknown or unsupported license: http://creativecommons.org/licenses/by-sa/4.0"
-
-    // the next test succeeds with
-    // https://github.com/DANS-KNAW/easy-validate-dans-bag/blob/d67357fe306843adbc4b66e960d36f4364ae9228/src/test/scala/nl.knaw.dans.easy.validatebag/EasyValidateDansBagServletSpec.scala#L42
-    // that test injects the reported license in the configuration
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2", expectedMsg)
-
-    // excluded rules that would cause more errors than the not configured license
-    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2", expectedMsg)
-  }
+//  "new test approach" should "report the not configured license" in {
+//    val expectedMsg = "Found unknown or unsupported license: http://creativecommons.org/licenses/by-sa/4.0"
+//
+//    // the next test succeeds with
+//    // https://github.com/DANS-KNAW/easy-validate-dans-bag/blob/d67357fe306843adbc4b66e960d36f4364ae9228/src/test/scala/nl.knaw.dans.easy.validatebag/EasyValidateDansBagServletSpec.scala#L42
+//    // that test injects the reported license in the configuration
+//    validateRules(new TargetBag(bagsDir / "valid-bag", 0), SIP, allRules) shouldBe aRuleViolation("3.1.2", expectedMsg)
+//
+//    // excluded rules that would cause more errors than the not configured license
+//    validateRules(new TargetBag(bagsDir / "valid-bag", 0), AIP, allRulesBut("1.2.6(a)", "3.1.3(a)")) shouldBe aRuleViolation("3.1.2", expectedMsg)
+//  }
 
   "ddmContainsUrnIdentifier" should "succeed if one or more URN:NBNs are present" in {
     val bag = new TargetBag(bagsDir / "ddm-correct-doi", 0)

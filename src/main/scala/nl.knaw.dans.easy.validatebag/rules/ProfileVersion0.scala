@@ -87,7 +87,11 @@ object ProfileVersion0 {
 
     // dataset.xml
     NumberedRule("3.1.1", xmlFileConformsToSchema(Paths.get("metadata/dataset.xml"), "DANS dataset metadata schema", xmlValidators("dataset.xml")), dependsOn = List("2.2(a)")),
-    NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = List("3.1.1")),
+    /*
+     * See: FD6596
+     * Turned off to help Mendeley asap. Asumption is that in the time period until SWORD2 is live in the data stations
+     */
+    //NumberedRule("3.1.2", ddmMayContainDctermsLicenseFromList(allowedLicences), dependsOn = List("3.1.1")),
     NumberedRule("3.1.3(a)", ddmContainsUrnNbnIdentifier, AIP, dependsOn = List("3.1.1")),
     NumberedRule("3.1.3(b)", ddmDoiIdentifiersAreValid, dependsOn = List("3.1.1")),
     NumberedRule("3.1.4", ddmDaisAreValid, dependsOn = List("3.1.1")),
