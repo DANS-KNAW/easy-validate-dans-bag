@@ -39,7 +39,7 @@ trait BagStore extends DebugEnhancedLogging {
    */
   def bagExists(uuid: UUID): Try[Boolean] = Try {
     trace(uuid)
-    val bagUrl = bagStoreBaseUrl.resolve(s"bags/$uuid").toASCIIString
+    val bagUrl = bagStoreBaseUrl.resolve(s"bags/$uuid/bagit.txt").toASCIIString
     debug(s"Requesting: $bagUrl")
     Http(bagUrl)
       .header("Accept", "text/plain")
@@ -60,7 +60,7 @@ trait BagStore extends DebugEnhancedLogging {
    */
   def bagExistsInThisStore(uuid: UUID): Try[Boolean] = Try {
     trace(uuid)
-    val bagUrl = getBagStoreUrl.resolve(s"bags/$uuid").toASCIIString
+    val bagUrl = getBagStoreUrl.resolve(s"bags/$uuid/bagit.txt").toASCIIString
     debug(s"Requesting: $bagUrl")
     Http(bagUrl)
       .header("Accept", "text/plain")
